@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Instagram, Church } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   const scrollToSection = (id: string) => {
@@ -9,6 +9,10 @@ export const HeroSection: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleInstagramClick = () => {
+    window.open('https://www.instagram.com/umademats/', '_blank');
   };
 
   return (
@@ -29,23 +33,30 @@ export const HeroSection: React.FC = () => {
          </motion.div>
       </div>
 
-      {/* Navigation Buttons Area */}
-      <div className="absolute top-[18%] left-[5%] md:left-[10%] flex gap-3 md:gap-4 z-[60]">
+      {/* Navigation Buttons Area - Fun System Style - SMALLER ON MOBILE */}
+      <div className="absolute top-[18%] left-[5%] md:left-[10%] flex flex-row gap-3 md:gap-4 z-[60] items-start">
         <motion.button
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05, rotate: -3, y: -2 }}
+          whileTap={{ scale: 0.95, rotate: 0 }}
           onClick={() => scrollToSection('action-section')}
-          className="px-4 md:px-8 py-2 md:py-3 border-2 border-white/40 rounded-xl font-display text-lg md:text-2xl uppercase tracking-widest text-white backdrop-blur-md bg-white/5 hover:bg-brand-neon hover:text-black hover:border-brand-neon transition-all duration-300 shadow-lg"
+          className="group relative px-3 py-1.5 md:px-5 md:py-2.5 bg-brand-neon border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-200"
         >
-          Games
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <Gamepad2 className="w-3.5 h-3.5 md:w-5 md:h-5 text-black" />
+            <span className="font-display text-sm md:text-xl uppercase text-black tracking-wider">Games</span>
+          </div>
         </motion.button>
+
         <motion.button
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05, rotate: 3, y: -2 }}
+          whileTap={{ scale: 0.95, rotate: 0 }}
           onClick={() => scrollToSection('event-section')}
-          className="px-4 md:px-8 py-2 md:py-3 border-2 border-white/40 rounded-xl font-display text-lg md:text-2xl uppercase tracking-widest text-white backdrop-blur-md bg-white/5 hover:bg-brand-pink hover:text-white hover:border-brand-pink transition-all duration-300 shadow-lg"
+          className="group relative px-3 py-1.5 md:px-5 md:py-2.5 bg-brand-pink border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-200"
         >
-          Congresso
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <Calendar className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
+            <span className="font-display text-sm md:text-xl uppercase text-white tracking-wider">Congresso</span>
+          </div>
         </motion.button>
       </div>
 
@@ -161,33 +172,34 @@ export const HeroSection: React.FC = () => {
           </motion.h1>
         </div>
 
-        {/* RESTORED TEXT PARAGRAPH */}
+        {/* RESTORED TEXT PARAGRAPH - UPDATED TEXT */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 max-w-xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4"
+          className="mt-6 max-w-2xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4 uppercase"
         >
-          SEJA BEM VINDO AO PORTAL DA UMADEMATS.
-          <br/>
-          <span className="text-sm opacity-60 italic">A safe, inclusive and fun space for youth.</span>
+          ASSEMBLEIA DE DEUS DE MATO GROSSO DO SUL.
         </motion.p>
 
-        {/* Action Button - Social */}
+        {/* Action Button - Social - ADDED LINK */}
         <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 1 }}
            className="mt-8"
         >
-          <button className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-brand-pink via-purple-500 to-brand-purple rounded-2xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20">
+          <button 
+            onClick={handleInstagramClick}
+            className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-brand-pink via-purple-500 to-brand-purple rounded-2xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20"
+          >
             <Instagram className="text-white" size={28} />
           </button>
         </motion.div>
       </div>
 
-      {/* Marquee Transition - Bottom */}
-      <div className="absolute -bottom-8 md:-bottom-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-neon py-4 shadow-2xl">
+      {/* Marquee Transition - Bottom - Changed to Pink */}
+      <div className="absolute -bottom-8 md:-bottom-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-pink py-4 shadow-2xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"
             animate={{ x: ["0%", "-50%"] }}

@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
+import { ContainerScroll } from './ui/container-scroll-animation';
 
 export const ActionSection: React.FC = () => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -21,7 +21,7 @@ export const ActionSection: React.FC = () => {
   };
 
   return (
-    <section id="action-section" className="relative w-full pt-20 pb-4 md:pt-40 md:pb-8 px-2 md:px-4 bg-brand-dark flex flex-col justify-center overflow-visible z-20">
+    <section id="action-section" className="relative w-full bg-brand-dark overflow-hidden z-20">
       
       {/* --- BACKGROUND ANIMATIONS --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -79,32 +79,27 @@ export const ActionSection: React.FC = () => {
         />
       </div>
 
-      {/* --- CONTENT --- */}
-      <div className="relative z-10">
-        {/* Title */}
-        <div className="max-w-7xl mx-auto w-full mb-10 px-2">
-           <motion.h2 
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter"
-           >
+      {/* --- CONTENT WITH SCROLL ANIMATION --- */}
+      <ContainerScroll
+        titleComponent={
+          <div className="flex flex-col items-center justify-center mb-8">
+             <h2 className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter">
              Selecione o que
              <br />
              <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-7xl block mt-2">deseja fazer:</span>
-           </motion.h2>
-        </div>
-
-        {/* Cards Container - Reduced margin-bottom */}
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-3 md:gap-10 mb-8">
+           </h2>
+          </div>
+        }
+      >
+        <div className="w-full h-full grid grid-cols-2 gap-3 md:gap-6 p-4 md:p-8 overflow-y-auto no-scrollbar">
           
           {/* Games Card */}
           <motion.div
             onMouseEnter={() => setHoveredCard('games')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => handleCardClick('https://umadegames.com.br')}
-            whileHover={{ scale: 0.98, rotate: -0.5 }}
-            className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border border-white/10 group shadow-2xl"
+            whileHover={{ scale: 0.98 }}
+            className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border border-white/10 group shadow-2xl"
           >
               <div className="absolute inset-0 z-0 pointer-events-none">
                  <img 
@@ -116,19 +111,19 @@ export const ActionSection: React.FC = () => {
               </div>
 
               <div className="absolute top-0 right-0 p-0 overflow-hidden opacity-10 transition-opacity group-hover:opacity-20">
-                 <Gamepad2 size={150} strokeWidth={0.5} className="md:size-[280px] transform translate-x-6 -translate-y-6 md:translate-x-12 md:-translate-y-12 text-white" />
+                 <Gamepad2 size={100} strokeWidth={0.5} className="md:size-[200px] transform translate-x-4 -translate-y-4 md:translate-x-12 md:-translate-y-12 text-white" />
               </div>
 
               <div className="relative z-10">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform">
-                      <Gamepad2 className="text-black" size={16} md:size={24} />
+                      <Gamepad2 className="text-black w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-5xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9]">
+                  <h3 className="text-xl md:text-4xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9]">
                       Games
                       <br/>
                       <span className="text-brand-pink">Umademats</span>
                   </h3>
-                  <p className="text-gray-200 font-sans text-[10px] md:text-base max-w-xs leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-md">
+                  <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-md">
                       Participe das competições e divirta-se.
                   </p>
               </div>
@@ -139,7 +134,7 @@ export const ActionSection: React.FC = () => {
                     animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
                     className="bg-brand-pink p-1.5 md:p-3 rounded-full text-white shadow-lg"
                   >
-                      <ArrowRight size={14} md:size={20} />
+                      <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
                   </motion.div>
               </div>
           </motion.div>
@@ -149,28 +144,28 @@ export const ActionSection: React.FC = () => {
             onMouseEnter={() => setHoveredCard('shirt')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => handleCardClick('https://projeto-camiseta.vercel.app')}
-            whileHover={{ scale: 0.98, rotate: 0.5 }}
-            className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl"
+            whileHover={{ scale: 0.98 }}
+            className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl"
           >
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20">
                   <motion.div
                      animate={{ rotate: 360 }}
                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                   >
-                      <Star size={180} className="md:size-[350px] text-black" fill="currentColor" />
+                      <Star size={150} className="md:size-[250px] text-black" fill="currentColor" />
                   </motion.div>
               </div>
 
               <div className="relative z-10">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-black rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 -rotate-3 group-hover:rotate-0 transition-transform">
-                      <Shirt className="text-brand-neon" size={16} md:size={24} />
+                      <Shirt className="text-brand-neon w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-5xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
+                  <h3 className="text-xl md:text-4xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
                       Registro
                       <br/>
                       <span className="text-brand-purple">Camisetas</span>
                   </h3>
-                  <p className="text-black/70 font-sans text-[10px] md:text-base max-w-xs leading-tight md:leading-relaxed font-medium line-clamp-2 md:line-clamp-none">
+                  <p className="text-black/70 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed font-medium line-clamp-2 md:line-clamp-none">
                       Garanta sua camiseta oficial.
                   </p>
               </div>
@@ -181,7 +176,7 @@ export const ActionSection: React.FC = () => {
                     animate={{ x: hoveredCard === 'shirt' ? 5 : 0 }}
                     className="bg-black p-1.5 md:p-3 rounded-full text-brand-neon shadow-lg"
                   >
-                      <ArrowRight size={14} md:size={20} />
+                      <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
                   </motion.div>
               </div>
           </motion.div>
@@ -191,7 +186,7 @@ export const ActionSection: React.FC = () => {
             onMouseEnter={() => setHoveredCard('devocional')}
             onMouseLeave={() => setHoveredCard(null)}
             whileHover={{ scale: 0.99 }}
-            className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-12 aspect-[21/9] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border border-white/5"
+            className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-10 aspect-[21/9] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border border-white/5"
           >
               <div className="absolute inset-0 z-0 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
                  <img 
@@ -203,20 +198,20 @@ export const ActionSection: React.FC = () => {
               </div>
 
               <div className="absolute top-1/2 right-10 transform -translate-y-1/2 opacity-10">
-                  <Book size={400} strokeWidth={0.5} className="text-white" />
+                  <Book size={300} strokeWidth={0.5} className="text-white" />
               </div>
 
               <div className="relative z-10">
-                  <div className="w-10 h-10 md:w-16 md:h-16 bg-brand-neon rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-8 group-hover:rotate-6 transition-transform">
-                      <Book className="text-black" size={24} md:size={32} />
+                  <div className="w-10 h-10 md:w-16 md:h-16 bg-brand-neon rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:rotate-6 transition-transform">
+                      <Book className="text-black w-6 h-6 md:w-8 md:h-8" />
                   </div>
-                  <h3 className="text-3xl md:text-7xl font-display uppercase text-white mb-2 leading-[0.8] tracking-tighter">
+                  <h3 className="text-3xl md:text-6xl font-display uppercase text-white mb-2 leading-[0.8] tracking-tighter">
                       Devocional
                       <br/>
                       <span className="text-brand-neon">Umademats</span>
                   </h3>
-                  <p className="text-white/80 font-sans text-xs md:text-xl max-w-md leading-snug md:leading-relaxed font-medium">
-                      Fortaleça sua fé diariamente com meditações exclusivas feitas especialmente para você.
+                  <p className="text-white/80 font-sans text-xs md:text-lg max-w-md leading-snug md:leading-relaxed font-medium">
+                      Fortaleça sua fé diariamente com meditações exclusivas.
                   </p>
               </div>
 
@@ -226,12 +221,12 @@ export const ActionSection: React.FC = () => {
                     animate={{ x: hoveredCard === 'devocional' ? 10 : 0 }}
                     className="bg-brand-neon p-2 md:p-4 rounded-full text-black shadow-xl"
                   >
-                      <ArrowRight size={18} md:size={28} />
+                      <ArrowRight className="w-[18px] h-[18px] md:w-7 md:h-7" />
                   </motion.div>
               </div>
           </motion.div>
         </div>
-      </div>
+      </ContainerScroll>
 
       {/* Animated Transition Section Divider */}
       <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none transform translate-y-[60%] md:translate-y-[50%]">

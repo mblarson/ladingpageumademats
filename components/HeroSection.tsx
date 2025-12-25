@@ -4,7 +4,7 @@ import { Instagram, Church } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-start md:justify-center px-4 pt-48 md:pt-20 pb-20">
+    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-start md:justify-center px-4 pt-20 md:pt-12 pb-20">
       
       {/* Background Elements Wrapper - Now specifically containing background overflow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -82,22 +82,22 @@ export const HeroSection: React.FC = () => {
           ease: "easeInOut"
         }}
       >
-        <div className="w-1.5 h-32 bg-white/40" /> {/* Spider Web String */}
+        <div className="w-1.5 h-20 md:h-24 bg-white/40" /> {/* Reduced web string length */}
         <img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png"
           alt="Spider Mascot"
-          className="w-[70vw] md:w-[35vw] -mt-2 drop-shadow-2xl" 
+          className="w-[60vw] md:w-[30vw] -mt-2 drop-shadow-2xl" 
         />
       </motion.div>
 
       {/* Main Content */}
-      <div className="relative z-10 text-center flex flex-col items-center mt-24 md:mt-16">
+      <div className="relative z-10 text-center flex flex-col items-center mt-12 md:mt-8">
         
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-6 flex items-center justify-center gap-2"
+          className="mb-4 flex items-center justify-center gap-2"
         >
           <span className="bg-white/10 backdrop-blur-md px-5 py-2 rounded-full text-white font-sans text-sm font-bold tracking-widest uppercase border border-white/20">
             Bem vindo ao Portal
@@ -122,7 +122,7 @@ export const HeroSection: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 max-w-xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4"
+          className="mt-4 max-w-xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4"
         >
           SEJA BEM VINDO AO PORTAL DA UMADEMATS.
           <br/>
@@ -134,10 +134,10 @@ export const HeroSection: React.FC = () => {
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 1 }}
-           className="mt-12"
+           className="mt-8"
         >
-          <button className="flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-brand-pink via-purple-500 to-brand-purple rounded-3xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20">
-            <Instagram className="text-white" size={32} />
+          <button className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-brand-pink via-purple-500 to-brand-purple rounded-2xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20">
+            <Instagram className="text-white" size={28} />
           </button>
         </motion.div>
       </div>

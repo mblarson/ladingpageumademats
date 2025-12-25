@@ -159,19 +159,19 @@ export const EventSection: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Date and Location */}
+        {/* Date and Location - SIDE BY SIDE ON MOBILE */}
         <motion.div 
             initial={{ y: 50, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
-            className="flex flex-row flex-wrap items-center justify-center gap-6 md:gap-16 mt-4 md:mt-8 w-full mb-8"
+            className="flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-16 mt-4 md:mt-8 w-full mb-8 max-w-full overflow-hidden"
         >
-          <div className="group flex items-center gap-2 md:gap-3 text-lg md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default">
-            <Calendar className="text-brand-purple w-5 h-5 md:w-8 md:h-8 group-hover:animate-bounce" />
+          <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default flex-shrink-0">
+            <Calendar className="text-brand-purple w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
             <span>03 e 04 de Abril</span>
           </div>
-          <div className="group flex items-center gap-2 md:gap-3 text-lg md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-4 py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default">
-            <MapPin className="text-brand-pink w-5 h-5 md:w-8 md:h-8 group-hover:animate-bounce" />
+          <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default flex-shrink-0">
+            <MapPin className="text-brand-pink w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
             <span>Bosque dos Ipês</span>
           </div>
         </motion.div>

@@ -70,9 +70,9 @@ export const HeroSection: React.FC = () => {
         </svg>
       </div>
 
-      {/* Swinging Spider Mascot - HORIZONTALLY CENTERED */}
+      {/* Swinging Spider Mascot - HORIZONTALLY CENTERED ON MOBILE, RIGHT SHIFTED ON DESKTOP */}
       <motion.div
-        className="absolute top-0 left-1/2 -translate-x-1/2 z-50 origin-top flex flex-col items-center"
+        className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-50 origin-top flex flex-col items-center"
         initial={{ rotate: 5 }}
         animate={{ rotate: [-5, 5] }}
         transition={{

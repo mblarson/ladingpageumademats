@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Mic2, Music } from 'lucide-react';
@@ -16,7 +17,7 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay }
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ delay, duration: 0.5 }}
-    className="group relative overflow-hidden rounded-3xl aspect-[3/4]"
+    className="group relative overflow-hidden rounded-3xl aspect-[3/4] shadow-2xl"
   >
     <img 
       src={image} 
@@ -40,16 +41,16 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay }
 
 export const EventSection: React.FC = () => {
   const guests = [
-    { name: "Pr. João Silva", role: "Preletor", image: "https://picsum.photos/400/600?random=1", color: "bg-brand-neon" },
-    { name: "Band Resgate", role: "Louvor", image: "https://picsum.photos/400/600?random=2", color: "bg-brand-pink" },
+    { name: "Pr. João Silva", role: "Preletor", image: "https://picsum.photos/400/600?random=1", color: "bg-white" },
+    { name: "Band Resgate", role: "Louvor", image: "https://picsum.photos/400/600?random=2", color: "bg-brand-pink text-white" },
     { name: "Pra. Maria", role: "Preletora", image: "https://picsum.photos/400/600?random=3", color: "bg-[#4F46E5] text-white" },
   ];
 
   return (
-    <section className="relative w-full py-32 px-4 bg-brand-dark text-white overflow-hidden">
+    <section className="relative w-full pt-20 pb-32 px-4 bg-brand-neon text-black overflow-hidden z-10">
       <div className="max-w-7xl mx-auto relative z-10">
         
-        {/* Header Info - MATCHING SCREENSHOT STYLE */}
+        {/* Header Info - UPDATED TO LIME GREEN THEME */}
         <div className="flex flex-col items-center text-center mb-16">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -57,7 +58,7 @@ export const EventSection: React.FC = () => {
             viewport={{ once: true }}
             className="flex flex-col items-center"
           >
-            <h2 className="text-8xl md:text-9xl font-display italic font-black uppercase leading-none mb-4 tracking-tighter">
+            <h2 className="text-8xl md:text-9xl font-display italic font-black uppercase leading-none mb-4 tracking-tighter text-black">
               Congresso
             </h2>
             
@@ -67,7 +68,7 @@ export const EventSection: React.FC = () => {
                whileInView={{ width: "100%" }}
                viewport={{ once: true }}
                transition={{ duration: 1, delay: 0.2 }}
-               className="w-full max-w-md h-12 bg-gradient-to-r from-yellow-400 via-yellow-600 to-yellow-400 rounded-sm mb-12 shadow-[0_0_30px_rgba(234,179,8,0.3)]" 
+               className="w-full max-w-md h-12 bg-gradient-to-r from-yellow-400 via-yellow-600 to-yellow-400 rounded-sm mb-12 shadow-[0_10px_30px_rgba(0,0,0,0.15)]" 
             />
           </motion.div>
 
@@ -78,7 +79,7 @@ export const EventSection: React.FC = () => {
              className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 mt-4"
           >
             <div className="flex items-center gap-3 text-2xl md:text-3xl font-bold font-sans">
-              <Calendar className="text-brand-neon" size={32} />
+              <Calendar className="text-brand-purple" size={32} />
               <span>03 e 04 de Abril</span>
             </div>
             <div className="flex items-center gap-3 text-2xl md:text-3xl font-bold font-sans">
@@ -92,23 +93,23 @@ export const EventSection: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="text-gray-400 max-w-lg font-sans mt-10 text-lg md:text-xl text-center leading-relaxed"
+            className="text-black/70 max-w-lg font-sans mt-10 text-lg md:text-xl text-center leading-relaxed font-medium"
           >
             Prepare-se para dois dias inesquecíveis de adoração, comunhão e palavra.
           </motion.p>
         </div>
 
-        {/* Separator Line */}
+        {/* Separator Line - Adjusted for light background */}
         <motion.div 
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
-          className="h-1 w-full bg-white/10 mb-16 origin-center"
+          className="h-1 w-full bg-black/10 mb-16 origin-center"
         />
 
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 px-2">
-           <h3 className="text-2xl font-sans font-bold uppercase tracking-widest text-brand-neon">Line-Up Convidados</h3>
-           <span className="hidden md:block text-xs font-mono text-gray-500 uppercase tracking-widest">Deslize para ver mais</span>
+           <h3 className="text-2xl font-sans font-bold uppercase tracking-widest text-brand-purple">Line-Up Convidados</h3>
+           <span className="hidden md:block text-xs font-mono text-black/40 uppercase tracking-widest">Deslize para ver mais</span>
         </div>
 
         {/* Guest Grid */}
@@ -124,10 +125,10 @@ export const EventSection: React.FC = () => {
 
       </div>
 
-      {/* Wavy Bottom Transition */}
+      {/* Wavy Bottom Transition - Changed to Black to match footer */}
        <div className="absolute bottom-[-1px] left-0 w-full overflow-hidden leading-[0]">
         <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-[calc(100%+1.3px)] h-[60px] md:h-[100px]">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-brand-neon"></path>
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-black"></path>
         </svg>
     </div>
     </section>

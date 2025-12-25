@@ -1,9 +1,19 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % 3);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -15,10 +25,16 @@ export const HeroSection: React.FC = () => {
     window.open('https://www.instagram.com/umademats/', '_blank');
   };
 
+  const slideVariants = {
+    enter: { x: "100%", opacity: 0 },
+    center: { x: 0, opacity: 1 },
+    exit: { x: "-100%", opacity: 0 }
+  };
+
   return (
-    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32">
+    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden">
       
-      {/* Top Marquee Transition - Added based on user feedback */}
+      {/* Top Marquee Transition */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
@@ -33,7 +49,7 @@ export const HeroSection: React.FC = () => {
          </motion.div>
       </div>
 
-      {/* Navigation Buttons Area - Fun System Style - SMALLER ON MOBILE */}
+      {/* Navigation Buttons Area */}
       <div className="absolute top-[18%] left-[5%] md:left-[10%] flex flex-row gap-3 md:gap-4 z-[60] items-start">
         <motion.button
           whileHover={{ scale: 1.05, rotate: -3, y: -2 }}
@@ -145,44 +161,103 @@ export const HeroSection: React.FC = () => {
       </motion.div>
 
       {/* Main Content */}
-      <div className="relative z-10 text-center flex flex-col items-center">
+      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
         
+        {/* Static Welcome Badge - RESTORED & MOVED DOWN */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-4 flex items-center justify-center gap-2"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-[-1rem] md:mb-[-4rem] z-20 relative"
         >
-          <span className="bg-white/10 backdrop-blur-md px-5 py-2 rounded-full text-white font-sans text-sm font-bold tracking-widest uppercase border border-white/20">
-            Bem vindo ao Portal
-          </span>
+            <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg">
+            <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
+                BEM VINDO AO PORTAL
+            </span>
+            </div>
         </motion.div>
 
-        {/* GIANT TEXT */}
-        <div className="relative">
-          <motion.h1 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, type: "spring", bounce: 0.5 }}
-            className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter"
-          >
-            UMADE
-            <br />
-            <span className="text-brand-neon">MATS</span>
-          </motion.h1>
+        {/* Dynamic Title Carousel Container */}
+        <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-hidden">
+          <AnimatePresence mode="wait">
+            
+            {/* STATE 0: UMADEMATS */}
+            {currentIndex === 0 && (
+              <motion.div
+                key="logo"
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <h1 className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter text-center">
+                  UMADE
+                  <br />
+                  <span className="text-brand-neon">MATS</span>
+                </h1>
+              </motion.div>
+            )}
+
+            {/* STATE 1: JOGUE AGORA */}
+            {currentIndex === 1 && (
+              <motion.div
+                key="game"
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0 flex flex-col items-center justify-center px-4"
+              >
+                <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
+                  JOGUE AGORA
+                </h2>
+                <div className="mt-4 md:mt-6 bg-brand-neon border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 -rotate-2 transform">
+                  <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-black uppercase text-center">
+                    "AS AVENTURAS DE PENTECA"
+                  </h3>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STATE 2: LEIA BÍBLIA */}
+            {currentIndex === 2 && (
+              <motion.div
+                key="bible"
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0 flex flex-col items-center justify-center px-4"
+              >
+                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
+                  LEIA BÍBLIA
+                </h2>
+                <div className="mt-4 md:mt-6 bg-brand-pink border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 rotate-2 transform">
+                  <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">
+                    JUNTO COM A UMADEMATS
+                  </h3>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
         </div>
 
-        {/* RESTORED TEXT PARAGRAPH - UPDATED TEXT */}
+        {/* Static Paragraph */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 max-w-2xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4 uppercase"
+          className="mt-4 md:mt-0 max-w-2xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4 uppercase"
         >
           ASSEMBLEIA DE DEUS DE MATO GROSSO DO SUL.
         </motion.p>
 
-        {/* Action Button - Social - ADDED LINK */}
+        {/* Action Button - Social */}
         <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
@@ -198,20 +273,6 @@ export const HeroSection: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Marquee Transition - Bottom - Changed to Pink */}
-      <div className="absolute -bottom-8 md:-bottom-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-pink py-4 shadow-2xl">
-         <motion.div 
-            className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-          >
-            {[...Array(20)].map((_, i) => (
-              <span key={i} className="mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
-              </span>
-            ))}
-         </motion.div>
-      </div>
     </section>
   );
 };

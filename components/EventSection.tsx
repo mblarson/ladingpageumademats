@@ -119,6 +119,21 @@ export const EventSection: React.FC = () => {
         }
       `}</style>
 
+      {/* Marquee Transition - Top of Green Section */}
+      <div className="absolute -top-8 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-pink py-4 shadow-2xl">
+         <motion.div 
+            className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+          >
+            {[...Array(20)].map((_, i) => (
+              <span key={i} className="mx-6 flex items-center gap-4">
+                UMADEMATS 2026 • JUBILEU DE OURO • 
+              </span>
+            ))}
+         </motion.div>
+      </div>
+
       {/* TOP PART: CHANGED TO YELLOW (brand-neon) */}
       <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-32 px-4 overflow-hidden z-20">
          {/* Background Grid - Changed to #4F46E5 for visibility on yellow */}

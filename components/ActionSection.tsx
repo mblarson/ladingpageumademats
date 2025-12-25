@@ -151,7 +151,7 @@ export const ActionSection: React.FC = () => {
             transition={{ delay: 0.2 }}
             onMouseEnter={() => setHoveredCard('shirt')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => handleCardClick('https://projeto-camiseta.vercel.app')}
+            onClick={() => handleCardClick('https://projeto-camiseta.vercel.app/?mode=view')}
             whileHover={{ scale: 0.98, translateY: -5 }}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
           >

@@ -18,7 +18,7 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay }
     viewport={{ once: true }}
     whileHover={{ scale: 1.02, rotate: 1 }}
     transition={{ delay, duration: 0.5 }}
-    className="group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-4 border-black/5 hover:border-black/20 transition-colors"
+    className={`group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 hover:border-brand-neon/50 transition-colors ${color}`}
   >
     <img 
       src={image} 
@@ -51,13 +51,13 @@ export const EventSection: React.FC = () => {
       name: "Pr. Elizeu Rodrigues", 
       role: "Preletor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/elizeu.png", 
-      color: "bg-white" 
+      color: "bg-[#1a1a1a]" 
     },
     { 
       name: "Lukas Agustinho", 
       role: "Louvor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/lukas.png", 
-      color: "bg-brand-pink text-white" 
+      color: "bg-[#1a1a1a]" 
     },
     { 
       name: "Carol Braga", 
@@ -67,14 +67,14 @@ export const EventSection: React.FC = () => {
     },
     {
       name: "Pr. Josué Brandão",
-      role: "Preletor",
+      role: "Preletor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png",
-      color: "bg-white"
+      color: "bg-[#1a1a1a]"
     }
   ];
 
   return (
-    <section id="event-section" className="relative w-full pt-20 pb-28 md:pb-36 px-4 bg-brand-neon text-black overflow-hidden z-10">
+    <section id="event-section" className="relative w-full flex flex-col z-30">
       
       {/* CSS Styles for this section */}
       <style>{`
@@ -85,11 +85,11 @@ export const EventSection: React.FC = () => {
         .animated-bg-stripes {
             background-image: linear-gradient(
                 45deg, 
-                rgba(0,0,0,0.03) 25%, 
+                rgba(204, 255, 0, 0.05) 25%, 
                 transparent 25%, 
                 transparent 50%, 
-                rgba(0,0,0,0.03) 50%, 
-                rgba(0,0,0,0.03) 75%, 
+                rgba(204, 255, 0, 0.05) 50%, 
+                rgba(204, 255, 0, 0.05) 75%, 
                 transparent 75%, 
                 transparent
             );
@@ -113,117 +113,125 @@ export const EventSection: React.FC = () => {
         }
       `}</style>
 
-      {/* Dynamic Background Pattern */}
-      <div className="absolute inset-0 animated-bg-stripes pointer-events-none z-0" />
+      {/* TOP PART: NAVY BLUE */}
+      <div className="relative w-full bg-[#4F46E5] pt-20 pb-16 px-4 overflow-hidden z-20">
+         {/* Background Grid */}
+         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]" />
 
-      {/* Floating Background Shapes */}
-      <div className="absolute bottom-40 right-[-5%] text-brand-pink/20 animate-float" style={{ animationDelay: '2s', animationDuration: '10s' }}>
-          <Zap size={150} fill="currentColor" />
-      </div>
-      <div className="absolute top-1/3 right-[10%] text-black/5 animate-spin" style={{ animationDuration: '20s' }}>
-          <Sparkles size={80} />
-      </div>
+         <div className="max-w-5xl mx-auto relative z-10">
+            {/* Header Info */}
+            <div className="flex flex-col items-center text-center mb-8 relative">
+              
+              {/* Animated Main Title - CONGRESSO */}
+              <motion.div
+                className="relative z-10"
+                initial={{ scale: 0, rotate: -15, y: 50 }}
+                whileInView={{ scale: 1, rotate: -3, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", bounce: 0.6, duration: 1 }}
+              >
+                 <div className="animate-wiggle-slow origin-center">
+                    {/* Updated text color to Neon for contrast on Navy Blue */}
+                    <h2 className="text-[19vw] md:text-[13rem] font-fun text-brand-neon uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
+                      Congresso
+                    </h2>
+                 </div>
+              </motion.div>
 
-      <div className="max-w-5xl mx-auto relative z-10">
-        
-        {/* Header Info */}
-        <div className="flex flex-col items-center text-center mb-8 relative">
-          
-          {/* Animated Main Title - CONGRESSO */}
-          <motion.div
-            className="relative z-10"
-            initial={{ scale: 0, rotate: -15, y: 50 }}
-            whileInView={{ scale: 1, rotate: -3, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", bounce: 0.6, duration: 1 }}
-          >
-             {/* Using CSS animation for continuous movement */}
-             <div className="animate-wiggle-slow origin-center">
-                <h2 className="text-[19vw] md:text-[13rem] font-fun text-brand-purple uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
-                  Congresso
-                </h2>
-             </div>
-          </motion.div>
-
-          {/* Animated Subtitle Badge - JUBILEU DE OURO */}
-          <motion.div
-            initial={{ scale: 0, rotate: 15 }}
-            whileInView={{ scale: 1, rotate: 2 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", bounce: 0.5, duration: 1, delay: 0.2 }}
-            className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
-          >
-            <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none">
-                Jubileu de Ouro
-            </h3>
-          </motion.div>
-        </div>
-
-        {/* Date and Location - SIDE BY SIDE ON MOBILE */}
-        <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-16 mt-4 md:mt-8 w-full mb-8 max-w-full overflow-hidden"
-        >
-          <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default flex-shrink-0">
-            <Calendar className="text-brand-purple w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-            <span>03 e 04 de Abril</span>
-          </div>
-          <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/50 backdrop-blur-sm px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-transparent hover:border-black/10 transition-all hover:scale-105 cursor-default flex-shrink-0">
-            <MapPin className="text-brand-pink w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-            <span>Bosque dos Ipês</span>
-          </div>
-        </motion.div>
-
-        {/* Full Width Blue Strip */}
-        <div className="w-screen relative left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] h-3 md:h-5 bg-blue-600 mb-12 shadow-lg" />
-          
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 mb-10 flex flex-col items-center"
-        >
-            <div className="relative">
-              <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-black leading-none mb-2 z-10 relative">
-                CONFIRMADOS
-              </h3>
-              <div className="absolute -inset-2 bg-brand-neon blur-xl opacity-50 animate-pulse z-0"></div>
+              {/* Animated Subtitle Badge - JUBILEU DE OURO */}
+              <motion.div
+                initial={{ scale: 0, rotate: 15 }}
+                whileInView={{ scale: 1, rotate: 2 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", bounce: 0.5, duration: 1, delay: 0.2 }}
+                className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
+              >
+                <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none">
+                    Jubileu de Ouro
+                </h3>
+              </motion.div>
             </div>
-            
-            <p className="text-black/60 font-sans text-xs md:text-sm font-bold tracking-[0.2em] uppercase">
-              EM BREVE MAIS CONFIRMADOS
-            </p>
-        </motion.div>
 
-        {/* Guest Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {guests.map((guest, index) => (
-            <GuestCard 
-              key={index}
-              {...guest}
-              delay={index * 0.2}
-            />
-          ))}
-        </div>
-
+            {/* Date and Location */}
+            <motion.div 
+                initial={{ y: 50, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                className="flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-16 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
+            >
+              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/10 backdrop-blur-md text-white px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-white/20 hover:border-white transition-all hover:scale-105 cursor-default flex-shrink-0">
+                <Calendar className="text-brand-neon w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+                <span>03 e 04 de Abril</span>
+              </div>
+              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/10 backdrop-blur-md text-white px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-white/20 hover:border-white transition-all hover:scale-105 cursor-default flex-shrink-0">
+                <MapPin className="text-brand-pink w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+                <span>Bosque dos Ipês</span>
+              </div>
+            </motion.div>
+         </div>
       </div>
 
-      {/* Pink Marquee at Bottom (Replacing Wave) */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 border-y-4 border-black bg-brand-pink py-3 md:py-6 overflow-hidden rotate-1 scale-105 origin-bottom-left shadow-2xl hover:rotate-0 transition-transform duration-500">
-         <motion.div 
-            className="flex whitespace-nowrap font-fun text-2xl md:text-5xl text-black uppercase tracking-wide"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+      {/* BOTTOM PART: BLACK WITH NEON STRIPES */}
+      <div className="relative w-full bg-black pt-16 pb-28 md:pb-36 px-4 overflow-visible z-10">
+        
+        {/* Dynamic Background Pattern - Adjusted for Black Background */}
+        <div className="absolute inset-0 animated-bg-stripes pointer-events-none z-0" />
+
+        {/* Floating Background Shapes */}
+        <div className="absolute bottom-40 right-[-5%] text-brand-pink/20 animate-float" style={{ animationDelay: '2s', animationDuration: '10s' }}>
+            <Zap size={150} fill="currentColor" />
+        </div>
+        <div className="absolute top-1/3 right-[10%] text-white/5 animate-spin" style={{ animationDuration: '20s' }}>
+            <Sparkles size={80} />
+        </div>
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mb-10 flex flex-col items-center"
           >
-            {[...Array(20)].map((_, i) => (
-              <span key={i} className="mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
-              </span>
+              <div className="relative">
+                {/* Updated Title Color to Neon */}
+                <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)]">
+                  CONFIRMADOS
+                </h3>
+              </div>
+              
+              <p className="text-white/60 font-sans text-xs md:text-sm font-bold tracking-[0.2em] uppercase">
+                EM BREVE MAIS CONFIRMADOS
+              </p>
+          </motion.div>
+
+          {/* Guest Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
+            {guests.map((guest, index) => (
+              <GuestCard 
+                key={index}
+                {...guest}
+                delay={index * 0.2}
+              />
             ))}
-         </motion.div>
+          </div>
+
+        </div>
+
+        {/* Pink Marquee at Bottom */}
+        <div className="absolute -bottom-6 left-0 right-0 z-50 border-y-4 border-black bg-brand-pink py-3 md:py-6 overflow-hidden rotate-1 scale-105 origin-bottom-left shadow-2xl hover:rotate-0 transition-transform duration-500">
+           <motion.div 
+              className="flex whitespace-nowrap font-fun text-2xl md:text-5xl text-black uppercase tracking-wide"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            >
+              {[...Array(20)].map((_, i) => (
+                <span key={i} className="mx-6 flex items-center gap-4">
+                  UMADEMATS 2026 • JUBILEU DE OURO • 
+                </span>
+              ))}
+           </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -21,7 +21,7 @@ export const Card = ({
 }: {
   rotate: MotionValue<number>;
   scale: MotionValue<number>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) => {
   return (
     <motion.div

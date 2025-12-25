@@ -21,7 +21,7 @@ export const ActionSection: React.FC = () => {
   };
 
   return (
-    <section id="action-section" className="relative w-full py-20 md:py-32 bg-brand-dark overflow-hidden z-20">
+    <section id="action-section" className="relative w-full py-20 md:py-32 bg-[#4F46E5] overflow-hidden z-20">
       
       {/* --- BACKGROUND ANIMATIONS --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -243,9 +243,9 @@ export const ActionSection: React.FC = () => {
       </div>
 
       {/* Animated Transition Section Divider */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none transform translate-y-[60%] md:translate-y-[50%]">
+      <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none">
         <motion.div 
-          className="bg-brand-pink py-2 md:py-4 border-y-2 border-black -rotate-3 scale-110 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
+          className="bg-brand-pink py-2 md:py-4 border-y-2 border-black -rotate-1 scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1.1 }}
           viewport={{ once: true }}

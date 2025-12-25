@@ -120,7 +120,7 @@ export const EventSection: React.FC = () => {
       `}</style>
 
       {/* TOP PART: CHANGED TO YELLOW (brand-neon) */}
-      <div className="relative w-full bg-brand-neon pt-20 pb-16 px-4 overflow-hidden z-20">
+      <div className="relative w-full bg-brand-neon pt-20 pb-10 px-4 overflow-hidden z-20">
          {/* Background Grid - Changed to #4F46E5 for visibility on yellow */}
          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#4F46E5_1px,transparent_1px),linear-gradient(to_bottom,#4F46E5_1px,transparent_1px)] bg-[size:40px_40px]" />
 
@@ -163,7 +163,7 @@ export const EventSection: React.FC = () => {
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
-                className="flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-16 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
+                className="flex flex-col items-center justify-center gap-3 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
             >
               <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
                 <Calendar className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
@@ -171,7 +171,7 @@ export const EventSection: React.FC = () => {
               </div>
               <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
                 <MapPin className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-                <span>Bosque dos Ipês</span>
+                <span>Bosque Expo - Shopping Bosque dos Ipês</span>
               </div>
             </motion.div>
          </div>

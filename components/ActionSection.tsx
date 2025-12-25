@@ -7,57 +7,57 @@ export const ActionSection: React.FC = () => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   return (
-    <section className="relative w-full py-32 px-4 bg-brand-dark min-h-screen flex flex-col justify-center">
+    <section className="relative w-full pt-20 pb-12 md:pt-40 md:pb-24 px-2 md:px-4 bg-brand-dark flex flex-col justify-center">
       
-      {/* Title - Adjusted to white for dark background */}
-      <div className="max-w-7xl mx-auto w-full mb-16 px-2">
+      {/* Title - Increased font size and added top margin for distance from marquee */}
+      <div className="max-w-7xl mx-auto w-full mb-10 px-2">
          <motion.h2 
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-8xl font-display uppercase text-white mb-4 leading-none"
+            className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter"
          >
            Selecione o que
            <br />
-           <span className="italic font-serif font-light text-brand-neon">deseja fazer:</span>
+           <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-7xl block mt-2">deseja fazer:</span>
          </motion.h2>
       </div>
 
-      {/* Cards Container */}
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+      {/* Cards Container - Fixed side-by-side (grid-cols-2) */}
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-3 md:gap-10">
         
         {/* Games Card */}
         <motion.div
           onMouseEnter={() => setHoveredCard('games')}
           onMouseLeave={() => setHoveredCard(null)}
           whileHover={{ scale: 0.98, rotate: -0.5 }}
-          className="relative bg-[#1a1a1a] rounded-[3rem] p-10 md:p-14 aspect-[4/5] md:aspect-square flex flex-col justify-between overflow-hidden cursor-pointer border border-white/10 group"
+          className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border border-white/10 group"
         >
             <div className="absolute top-0 right-0 p-0 overflow-hidden opacity-10 transition-opacity group-hover:opacity-20">
-               <Gamepad2 size={350} strokeWidth={0.5} className="transform translate-x-16 -translate-y-16 text-white" />
+               <Gamepad2 size={150} strokeWidth={0.5} className="md:size-[280px] transform translate-x-6 -translate-y-6 md:translate-x-12 md:-translate-y-12 text-white" />
             </div>
 
             <div className="relative z-10">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 rotate-3 group-hover:rotate-0 transition-transform">
-                    <Gamepad2 className="text-black" size={32} />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform">
+                    <Gamepad2 className="text-black" size={16} md:size={24} />
                 </div>
-                <h3 className="text-5xl md:text-7xl font-display uppercase text-white mb-4 leading-[0.9]">
+                <h3 className="text-xl md:text-5xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9]">
                     Games
                     <br/>
                     <span className="text-brand-pink">Umademats</span>
                 </h3>
-                <p className="text-gray-400 font-sans text-lg max-w-xs leading-relaxed">
-                    Participe das competições, ganhe prêmios e divirta-se com a galera.
+                <p className="text-gray-400 font-sans text-[10px] md:text-base max-w-xs leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none">
+                    Participe das competições e divirta-se.
                 </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between mt-8 border-t border-white/10 pt-8">
-                <span className="text-white font-bold font-sans tracking-widest text-sm">ENTRAR NA ARENA</span>
+            <div className="relative z-10 flex items-center justify-between mt-4 border-t border-white/10 pt-4">
+                <span className="text-white font-bold font-sans tracking-widest text-[8px] md:text-xs">ENTRAR</span>
                 <motion.div 
-                  animate={{ x: hoveredCard === 'games' ? 10 : 0 }}
-                  className="bg-brand-pink p-4 rounded-full text-white shadow-lg"
+                  animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
+                  className="bg-brand-pink p-1.5 md:p-3 rounded-full text-white shadow-lg"
                 >
-                    <ArrowRight size={24} />
+                    <ArrowRight size={14} md:size={20} />
                 </motion.div>
             </div>
         </motion.div>
@@ -67,38 +67,38 @@ export const ActionSection: React.FC = () => {
           onMouseEnter={() => setHoveredCard('shirt')}
           onMouseLeave={() => setHoveredCard(null)}
           whileHover={{ scale: 0.98, rotate: 0.5 }}
-          className="relative bg-brand-neon rounded-[3rem] p-10 md:p-14 aspect-[4/5] md:aspect-square flex flex-col justify-between overflow-hidden cursor-pointer group"
+          className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group"
         >
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20">
                 <motion.div
                    animate={{ rotate: 360 }}
                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                 >
-                    <Star size={450} className="text-black" fill="currentColor" />
+                    <Star size={180} className="md:size-[350px] text-black" fill="currentColor" />
                 </motion.div>
             </div>
 
             <div className="relative z-10">
-                <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-8 -rotate-3 group-hover:rotate-0 transition-transform">
-                    <Shirt className="text-brand-neon" size={32} />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-black rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 -rotate-3 group-hover:rotate-0 transition-transform">
+                    <Shirt className="text-brand-neon" size={16} md:size={24} />
                 </div>
-                <h3 className="text-5xl md:text-7xl font-display uppercase text-black mb-4 leading-[0.9]">
+                <h3 className="text-xl md:text-5xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
                     Registro
                     <br/>
                     <span className="text-brand-purple">Camisetas</span>
                 </h3>
-                <p className="text-black/70 font-sans text-lg max-w-xs leading-relaxed font-medium">
-                    Garanta sua camiseta oficial do Jubileu de Ouro. Edição limitada.
+                <p className="text-black/70 font-sans text-[10px] md:text-base max-w-xs leading-tight md:leading-relaxed font-medium line-clamp-2 md:line-clamp-none">
+                    Garanta sua camiseta oficial.
                 </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between mt-8 border-t border-black/10 pt-8">
-                <span className="text-black font-bold font-sans tracking-widest text-sm uppercase">Fazer Pedido Agora</span>
+            <div className="relative z-10 flex items-center justify-between mt-4 border-t border-black/10 pt-4">
+                <span className="text-black font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">PEDIR</span>
                 <motion.div 
-                  animate={{ x: hoveredCard === 'shirt' ? 10 : 0 }}
-                  className="bg-black p-4 rounded-full text-brand-neon shadow-lg"
+                  animate={{ x: hoveredCard === 'shirt' ? 5 : 0 }}
+                  className="bg-black p-1.5 md:p-3 rounded-full text-brand-neon shadow-lg"
                 >
-                    <ArrowRight size={24} />
+                    <ArrowRight size={14} md:size={20} />
                 </motion.div>
             </div>
         </motion.div>

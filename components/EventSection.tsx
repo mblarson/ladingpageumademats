@@ -9,16 +9,18 @@ interface GuestCardProps {
   image: string;
   color: string;
   delay: number;
+  link: string;
 }
 
-const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay }) => (
+const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, link }) => (
   <motion.div 
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     whileHover={{ scale: 1.02, rotate: 1 }}
     transition={{ delay, duration: 0.5 }}
-    className={`group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 hover:border-brand-neon/50 transition-colors ${color}`}
+    onClick={() => window.open(link, '_blank')}
+    className={`group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 hover:border-brand-neon/50 transition-colors cursor-pointer ${color}`}
   >
     <img 
       src={image} 
@@ -51,25 +53,29 @@ export const EventSection: React.FC = () => {
       name: "Pr. Elizeu Rodrigues", 
       role: "Preletor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/elizeu.png", 
-      color: "bg-[#1a1a1a]" 
+      color: "bg-[#1a1a1a]",
+      link: "https://www.instagram.com/elizeurodriguesoficial/"
     },
     { 
       name: "Lukas Agustinho", 
       role: "Louvor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/lukas.png", 
-      color: "bg-[#1a1a1a]" 
+      color: "bg-[#1a1a1a]",
+      link: "https://www.instagram.com/lukasagustinho/"
     },
     { 
       name: "Carol Braga", 
       role: "Louvor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/carol.png", 
-      color: "bg-[#4F46E5] text-white" 
+      color: "bg-[#4F46E5] text-white",
+      link: "https://www.instagram.com/carolbragabr/"
     },
     {
       name: "Pr. Josué Brandão",
       role: "Preletor", 
       image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png",
-      color: "bg-[#1a1a1a]"
+      color: "bg-[#1a1a1a]",
+      link: "https://www.instagram.com/prjosuebrandao/"
     }
   ];
 

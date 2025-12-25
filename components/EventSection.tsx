@@ -46,36 +46,43 @@ export const EventSection: React.FC = () => {
   ];
 
   return (
-    <section className="relative w-full py-32 px-4 bg-[#111] text-white overflow-hidden">
+    <section className="relative w-full py-32 px-4 bg-brand-dark text-white overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         
-        {/* Header Info - CENTERED */}
-        <div className="flex flex-col items-center text-center mb-20">
+        {/* Header Info - MATCHING SCREENSHOT STYLE */}
+        <div className="flex flex-col items-center text-center mb-16">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
+            className="flex flex-col items-center"
           >
-            <h2 className="text-7xl md:text-9xl font-fun uppercase leading-[0.9] mb-2 tracking-wide">
+            <h2 className="text-8xl md:text-9xl font-display italic font-black uppercase leading-none mb-4 tracking-tighter">
               Congresso
             </h2>
-            <h3 className="text-4xl md:text-6xl font-display uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-8">
-              Jubileu de Ouro
-            </h3>
+            
+            {/* Gold Bar from Screenshot */}
+            <motion.div 
+               initial={{ width: 0 }}
+               whileInView={{ width: "100%" }}
+               viewport={{ once: true }}
+               transition={{ duration: 1, delay: 0.2 }}
+               className="w-full max-w-md h-12 bg-gradient-to-r from-yellow-400 via-yellow-600 to-yellow-400 rounded-sm mb-12 shadow-[0_0_30px_rgba(234,179,8,0.3)]" 
+            />
           </motion.div>
 
           <motion.div 
              initial={{ y: 50, opacity: 0 }}
              whileInView={{ y: 0, opacity: 1 }}
              viewport={{ once: true }}
-             className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12"
+             className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 mt-4"
           >
-            <div className="flex items-center gap-3 text-xl md:text-2xl font-bold font-sans">
-              <Calendar className="text-brand-neon" />
+            <div className="flex items-center gap-3 text-2xl md:text-3xl font-bold font-sans">
+              <Calendar className="text-brand-neon" size={32} />
               <span>03 e 04 de Abril</span>
             </div>
-            <div className="flex items-center gap-3 text-xl md:text-2xl font-bold font-sans">
-              <MapPin className="text-brand-pink" />
+            <div className="flex items-center gap-3 text-2xl md:text-3xl font-bold font-sans">
+              <MapPin className="text-brand-pink" size={32} />
               <span>Bosque dos Ipês</span>
             </div>
           </motion.div>
@@ -85,9 +92,9 @@ export const EventSection: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="text-gray-400 max-w-lg font-sans mt-8 text-center"
+            className="text-gray-400 max-w-lg font-sans mt-10 text-lg md:text-xl text-center leading-relaxed"
           >
-            Prepare-se para dois dias inesquecíveis de adoração, comunhão e palavra. Não fique de fora deste momento histórico.
+            Prepare-se para dois dias inesquecíveis de adoração, comunhão e palavra.
           </motion.p>
         </div>
 
@@ -96,16 +103,16 @@ export const EventSection: React.FC = () => {
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
-          className="h-1 w-full bg-white/20 mb-12 origin-center"
+          className="h-1 w-full bg-white/10 mb-16 origin-center"
         />
 
-        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-           <h3 className="text-2xl font-sans font-bold uppercase tracking-wider text-center md:text-left">Line-Up Convidados</h3>
-           <span className="hidden md:block text-xs font-mono text-gray-500">SCROLL TO REVEAL</span>
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 px-2">
+           <h3 className="text-2xl font-sans font-bold uppercase tracking-widest text-brand-neon">Line-Up Convidados</h3>
+           <span className="hidden md:block text-xs font-mono text-gray-500 uppercase tracking-widest">Deslize para ver mais</span>
         </div>
 
         {/* Guest Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {guests.map((guest, index) => (
             <GuestCard 
               key={index}

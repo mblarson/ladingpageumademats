@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HeroSection } from './components/HeroSection';
 import { EventSection } from './components/EventSection';
@@ -22,10 +23,11 @@ export default function App() {
       />
 
       <HeroSection />
-      <EventSection />
+      {/* Agora a seção de ação vem primeiro, seguindo o pedido do usuário */}
       <ActionSection />
+      <EventSection />
 
-      <footer className="py-8 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs">
+      <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
         <p>© 2024 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2">Desenvolvido para o Reino.</p>
       </footer>

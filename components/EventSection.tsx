@@ -113,10 +113,10 @@ export const EventSection: React.FC = () => {
         }
       `}</style>
 
-      {/* TOP PART: NAVY BLUE */}
-      <div className="relative w-full bg-[#4F46E5] pt-20 pb-16 px-4 overflow-hidden z-20">
-         {/* Background Grid */}
-         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]" />
+      {/* TOP PART: CHANGED TO YELLOW (brand-neon) */}
+      <div className="relative w-full bg-brand-neon pt-20 pb-16 px-4 overflow-hidden z-20">
+         {/* Background Grid - Changed to #4F46E5 for visibility on yellow */}
+         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#4F46E5_1px,transparent_1px),linear-gradient(to_bottom,#4F46E5_1px,transparent_1px)] bg-[size:40px_40px]" />
 
          <div className="max-w-5xl mx-auto relative z-10">
             {/* Header Info */}
@@ -131,8 +131,8 @@ export const EventSection: React.FC = () => {
                 transition={{ type: "spring", bounce: 0.6, duration: 1 }}
               >
                  <div className="animate-wiggle-slow origin-center">
-                    {/* Updated text color to Neon for contrast on Navy Blue */}
-                    <h2 className="text-[19vw] md:text-[13rem] font-fun text-brand-neon uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
+                    {/* Updated text color to #4F46E5 (Purple/Navy) for contrast on Yellow */}
+                    <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
                       Congresso
                     </h2>
                  </div>
@@ -152,19 +152,19 @@ export const EventSection: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Date and Location */}
+            {/* Date and Location - Updated text colors to #4F46E5 for contrast on Yellow */}
             <motion.div 
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
                 className="flex flex-row flex-nowrap items-center justify-center gap-2 md:gap-16 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
             >
-              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/10 backdrop-blur-md text-white px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-white/20 hover:border-white transition-all hover:scale-105 cursor-default flex-shrink-0">
-                <Calendar className="text-brand-neon w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
+                <Calendar className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
                 <span>03 e 04 de Abril</span>
               </div>
-              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-white/10 backdrop-blur-md text-white px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-white/20 hover:border-white transition-all hover:scale-105 cursor-default flex-shrink-0">
-                <MapPin className="text-brand-pink w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
+                <MapPin className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
                 <span>Bosque dos Ipês</span>
               </div>
             </motion.div>

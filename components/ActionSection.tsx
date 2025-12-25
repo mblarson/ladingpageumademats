@@ -16,6 +16,10 @@ export const ActionSection: React.FC = () => {
     delay: Math.random() * 5,
   }));
 
+  const handleCardClick = (url: string) => {
+    window.open(url, '_blank');
+  };
+
   return (
     <section className="relative w-full pt-20 pb-4 md:pt-40 md:pb-8 px-2 md:px-4 bg-brand-dark flex flex-col justify-center overflow-visible z-20">
       
@@ -98,6 +102,7 @@ export const ActionSection: React.FC = () => {
           <motion.div
             onMouseEnter={() => setHoveredCard('games')}
             onMouseLeave={() => setHoveredCard(null)}
+            onClick={() => handleCardClick('https://umadegames.com.br')}
             whileHover={{ scale: 0.98, rotate: -0.5 }}
             className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border border-white/10 group shadow-2xl"
           >
@@ -143,6 +148,7 @@ export const ActionSection: React.FC = () => {
           <motion.div
             onMouseEnter={() => setHoveredCard('shirt')}
             onMouseLeave={() => setHoveredCard(null)}
+            onClick={() => handleCardClick('https://projeto-camiseta.vercel.app')}
             whileHover={{ scale: 0.98, rotate: 0.5 }}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl"
           >
@@ -243,7 +249,7 @@ export const ActionSection: React.FC = () => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="flex items-center gap-6 md:gap-10 mr-10">
-                <span>CONGRESSO 2024</span>
+                <span>CONGRESSO 2026</span>
                 <Zap className="fill-black" size={24} />
                 <span>EXPERIÊNCIA ÚNICA</span>
                 <Star className="fill-black" size={24} />

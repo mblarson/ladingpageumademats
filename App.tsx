@@ -28,7 +28,7 @@ export default function App() {
       <EventSection />
 
       <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
-        <p>© 2024 UMADEMATS. Todos os direitos reservados.</p>
+        <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2">Desenvolvido para o Reino.</p>
       </footer>
     </main>

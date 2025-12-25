@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Instagram, Church } from 'lucide-react';
@@ -152,7 +153,7 @@ export const HeroSection: React.FC = () => {
           >
             {[...Array(20)].map((_, i) => (
               <span key={i} className="mx-6 flex items-center gap-4">
-                UMADEMATS 2024 • JUBILEU DE OURO • 
+                UMADEMATS 2026 • JUBILEU DE OURO • 
               </span>
             ))}
          </motion.div>

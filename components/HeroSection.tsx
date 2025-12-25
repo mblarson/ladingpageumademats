@@ -4,10 +4,52 @@ import { motion } from 'framer-motion';
 import { Instagram, Church } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32">
       
-      {/* Background Elements Wrapper - Now specifically containing background overflow */}
+      {/* Top Marquee Transition - Added based on user feedback */}
+      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
+         <motion.div 
+            className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
+            animate={{ x: ["-50%", "0%"] }}
+            transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+          >
+            {[...Array(20)].map((_, i) => (
+              <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
+                UMADEMATS 2026 • JUBILEU DE OURO • 
+              </span>
+            ))}
+         </motion.div>
+      </div>
+
+      {/* Navigation Buttons Area */}
+      <div className="absolute top-[18%] left-[5%] md:left-[10%] flex gap-3 md:gap-4 z-[60]">
+        <motion.button
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => scrollToSection('action-section')}
+          className="px-4 md:px-8 py-2 md:py-3 border-2 border-white/40 rounded-xl font-display text-lg md:text-2xl uppercase tracking-widest text-white backdrop-blur-md bg-white/5 hover:bg-brand-neon hover:text-black hover:border-brand-neon transition-all duration-300 shadow-lg"
+        >
+          Games
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => scrollToSection('event-section')}
+          className="px-4 md:px-8 py-2 md:py-3 border-2 border-white/40 rounded-xl font-display text-lg md:text-2xl uppercase tracking-widest text-white backdrop-blur-md bg-white/5 hover:bg-brand-pink hover:text-white hover:border-brand-pink transition-all duration-300 shadow-lg"
+        >
+          Congresso
+        </motion.button>
+      </div>
+
+      {/* Background Elements Wrapper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Y2K Grid */}
         <div 
@@ -71,7 +113,7 @@ export const HeroSection: React.FC = () => {
         </svg>
       </div>
 
-      {/* Swinging Spider Mascot - HORIZONTALLY CENTERED ON MOBILE, RIGHT SHIFTED ON DESKTOP */}
+      {/* Swinging Spider Mascot */}
       <motion.div
         className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-50 origin-top flex flex-col items-center"
         initial={{ rotate: 5 }}
@@ -91,7 +133,7 @@ export const HeroSection: React.FC = () => {
         />
       </motion.div>
 
-      {/* Main Content - PUSHED TO BOTTOM */}
+      {/* Main Content */}
       <div className="relative z-10 text-center flex flex-col items-center">
         
         <motion.div
@@ -144,7 +186,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Marquee Transition */}
+      {/* Marquee Transition - Bottom */}
       <div className="absolute -bottom-8 md:-bottom-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-neon py-4 shadow-2xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"

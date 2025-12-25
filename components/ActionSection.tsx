@@ -21,7 +21,7 @@ export const ActionSection: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full pt-20 pb-4 md:pt-40 md:pb-8 px-2 md:px-4 bg-brand-dark flex flex-col justify-center overflow-visible z-20">
+    <section id="action-section" className="relative w-full pt-20 pb-4 md:pt-40 md:pb-8 px-2 md:px-4 bg-brand-dark flex flex-col justify-center overflow-visible z-20">
       
       {/* --- BACKGROUND ANIMATIONS --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -233,7 +233,7 @@ export const ActionSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Animated Transition Section Divider - Adjusted to overlap the next section (EventSection/Green) */}
+      {/* Animated Transition Section Divider */}
       <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none transform translate-y-[60%] md:translate-y-[50%]">
         <motion.div 
           className="bg-brand-pink py-2 md:py-4 border-y-2 border-black -rotate-3 scale-110 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"

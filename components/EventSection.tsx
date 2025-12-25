@@ -47,7 +47,7 @@ export const EventSection: React.FC = () => {
   ];
 
   return (
-    <section className="relative w-full pt-20 pb-32 px-4 bg-brand-neon text-black overflow-hidden z-10">
+    <section id="event-section" className="relative w-full pt-20 pb-32 px-4 bg-brand-neon text-black overflow-hidden z-10">
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header Info - UPDATED TO LIME GREEN THEME */}

@@ -120,7 +120,7 @@ export const EventSection: React.FC = () => {
       `}</style>
 
       {/* TOP PART: CHANGED TO YELLOW (brand-neon) */}
-      <div className="relative w-full bg-brand-neon pt-20 pb-10 px-4 overflow-hidden z-20">
+      <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-32 px-4 overflow-hidden z-20">
          {/* Background Grid - Changed to #4F46E5 for visibility on yellow */}
          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#4F46E5_1px,transparent_1px),linear-gradient(to_bottom,#4F46E5_1px,transparent_1px)] bg-[size:40px_40px]" />
 
@@ -174,6 +174,13 @@ export const EventSection: React.FC = () => {
                 <span>Bosque Expo - Shopping Bosque dos Ipês</span>
               </div>
             </motion.div>
+         </div>
+
+         {/* Wave Transition */}
+         <div className="absolute bottom-0 left-0 right-0 w-full z-20 leading-none translate-y-[1px]">
+            <svg className="w-full h-12 md:h-24 fill-black" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path fillOpacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,202.7C1248,181,1344,171,1392,165.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
          </div>
       </div>
 

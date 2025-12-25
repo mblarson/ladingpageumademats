@@ -4,7 +4,7 @@ import { Instagram, Church } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-start md:justify-center px-4 pt-20 md:pt-12 pb-20">
+    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32">
       
       {/* Background Elements Wrapper - Now specifically containing background overflow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -82,7 +82,7 @@ export const HeroSection: React.FC = () => {
           ease: "easeInOut"
         }}
       >
-        <div className="w-1.5 h-20 md:h-24 bg-white/40" /> {/* Reduced web string length */}
+        <div className="w-1.5 h-20 md:h-24 bg-white/40" />
         <img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png"
           alt="Spider Mascot"
@@ -90,8 +90,8 @@ export const HeroSection: React.FC = () => {
         />
       </motion.div>
 
-      {/* Main Content */}
-      <div className="relative z-10 text-center flex flex-col items-center mt-12 md:mt-8">
+      {/* Main Content - PUSHED TO BOTTOM */}
+      <div className="relative z-10 text-center flex flex-col items-center">
         
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -118,11 +118,12 @@ export const HeroSection: React.FC = () => {
           </motion.h1>
         </div>
 
+        {/* RESTORED TEXT PARAGRAPH */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-4 max-w-xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4"
+          className="mt-6 max-w-xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4"
         >
           SEJA BEM VINDO AO PORTAL DA UMADEMATS.
           <br/>
@@ -142,7 +143,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Marquee Transition - Overlapping Next Section (Ensured z-index and overflow) */}
+      {/* Marquee Transition */}
       <div className="absolute -bottom-8 md:-bottom-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-neon py-4 shadow-2xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"

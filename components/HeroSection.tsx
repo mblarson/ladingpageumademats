@@ -4,7 +4,7 @@ import { Instagram } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-center px-4 py-20 pb-40">
+    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-start md:justify-center px-4 pt-48 md:pt-20 pb-40">
       
       {/* Background Elements Wrapper (Handles Overflow) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -37,16 +37,16 @@ export const HeroSection: React.FC = () => {
           ease: "easeInOut"
         }}
       >
-        <div className="w-1.5 h-12 bg-white/50 mx-auto" /> {/* Spider Web String - Adjusted */}
+        <div className="w-1.5 h-12 bg-white/50 mx-auto" /> {/* Spider Web String */}
         <img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png"
           alt="Spider Mascot"
-          className="w-[80vw] md:w-[45vw] -mt-2 drop-shadow-2xl" 
+          className="w-[1000vw] md:w-[45vw] -mt-2 drop-shadow-2xl" 
         />
       </motion.div>
 
       {/* Main Content */}
-      <div className="relative z-10 text-center flex flex-col items-center">
+      <div className="relative z-10 text-center flex flex-col items-center mt-10 md:mt-0">
         
         <motion.div
           initial={{ opacity: 0, y: 50 }}

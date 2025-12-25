@@ -134,6 +134,32 @@ export const HeroSection: React.FC = () => {
             <Church size={40} strokeWidth={1.5} />
         </motion.div>
         
+        {/* Flying Plane Mascot */}
+        <motion.img
+          src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
+          alt="Flying Mascot"
+          className="absolute top-[58%] md:top-[60%] z-20 w-16 md:w-24 object-contain"
+          initial={{ x: -200, opacity: 1 }}
+          animate={{
+            x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], 
+            y: [0, -15, 0] 
+          }}
+          transition={{
+            x: {
+              duration: 8, 
+              repeat: Infinity,
+              repeatDelay: 1, 
+              ease: "linear",
+            },
+            y: {
+              duration: 2,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut"
+            }
+          }}
+        />
+
         {/* Decorative Scribbles */}
         <svg className="absolute top-20 left-10 w-24 h-24 text-black/10 rotate-12" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
           <path d="M10 50 Q 25 25, 50 50 T 90 50" />

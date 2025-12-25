@@ -168,7 +168,7 @@ export const HeroSection: React.FC = () => {
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mb-[-1rem] md:mb-[-4rem] z-20 relative"
+            className="mb-[-1rem] md:mb-[-3rem] z-20 relative"
         >
             <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg">
             <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">

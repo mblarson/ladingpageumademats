@@ -79,6 +79,38 @@ export const EventSection: React.FC = () => {
     }
   ];
 
+  const addToCalendar = () => {
+    const event = {
+      title: "UMADEMATS 2026 - Jubileu de Ouro",
+      description: "Congresso UMADEMATS 2026 - Jubileu de Ouro. Participe deste momento histórico!",
+      location: "Bosque Expo - Shopping Bosque dos Ipês",
+      start: "20260403T180000",
+      end: "20260404T220000"
+    };
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//UMADEMATS//Portal//PT",
+      "BEGIN:VEVENT",
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.description}`,
+      `LOCATION:${event.location}`,
+      `DTSTART:${event.start}`,
+      `DTEND:${event.end}`,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute('download', 'umademats-2026.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <section id="event-section" className="relative w-full flex flex-col z-30">
       
@@ -116,6 +148,13 @@ export const EventSection: React.FC = () => {
         }
         .animate-wiggle-slow {
             animation: wiggle 3s ease-in-out infinite;
+        }
+        @keyframes pulse-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-pulse-scale {
+            animation: pulse-scale 1.5s ease-in-out infinite;
         }
       `}</style>
 
@@ -180,7 +219,10 @@ export const EventSection: React.FC = () => {
                 viewport={{ once: true }}
                 className="flex flex-col items-center justify-center gap-3 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
             >
-              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
+              <div 
+                onClick={addToCalendar}
+                className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-pointer flex-shrink-0"
+              >
                 <Calendar className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
                 <span>03 e 04 de Abril</span>
               </div>
@@ -223,7 +265,7 @@ export const EventSection: React.FC = () => {
           >
               <div className="relative">
                 {/* Updated Title Color to Neon */}
-                <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)]">
+                <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)] animate-pulse-scale">
                   CONFIRMADOS
                 </h3>
               </div>

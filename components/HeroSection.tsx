@@ -138,7 +138,7 @@ export const HeroSection: React.FC = () => {
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
-          className="absolute top-[58%] md:top-[60%] z-20 w-16 md:w-24 object-contain"
+          className="absolute top-[58%] md:top-[60%] z-20 w-24 md:w-32 object-contain"
           initial={{ x: -200, opacity: 1 }}
           animate={{
             x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], 
@@ -260,7 +260,7 @@ export const HeroSection: React.FC = () => {
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
               >
                  <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
-                  LEIA BÍBLIA
+                  LEIA A BÍBLIA
                 </h2>
                 <div className="mt-4 md:mt-6 bg-brand-pink border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 rotate-2 transform">
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">

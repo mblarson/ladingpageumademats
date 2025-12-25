@@ -69,7 +69,7 @@ export const HeroSection: React.FC = () => {
           >
             UMADE
             <br />
-            <span className="text-brand-neon">MATS</span>
+            <span className="text-orange-500">MATS</span>
           </motion.h1>
         </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
@@ -33,14 +34,15 @@ export const HeroSection: React.FC = () => {
   return (
     <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden">
       
-      {/* Top Marquee Transition */}
+      {/* Top Marquee Transition - OTIMIZAÇÃO: Array reduzido de 20 para 10 */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
             animate={{ x: ["-50%", "0%"] }}
             transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+            style={{ willChange: 'transform' }}
           >
-            {[...Array(20)].map((_, i) => (
+            {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
                 UIMADEMATS 2026 • JUBILEU DE OURO • 
               </span>
@@ -82,24 +84,24 @@ export const HeroSection: React.FC = () => {
             className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]"
         />
 
-        {/* Floating Animated Elements Background */}
-        <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-10%] right-[-10%] w-64 h-64 md:w-96 md:h-96 border-[20px] border-white/10 rounded-full border-dashed z-0"
-        />
-        <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-[10%] left-[-10%] w-48 h-48 md:w-72 md:h-72 bg-brand-neon/20 rounded-full blur-3xl z-0"
+        {/* Floating Animated Elements Background - OTIMIZAÇÃO: CSS Animations ao invés de JS */}
+        <div 
+            className="absolute top-[-10%] right-[-10%] w-64 h-64 md:w-96 md:h-96 border-[20px] border-white/10 rounded-full border-dashed z-0 animate-[spin_20s_linear_infinite]"
         />
         
-        {/* 3D Churches */}
+        {/* OTIMIZAÇÃO: Blur-3xl substituído por Gradient Radial (muito mais leve) */}
+        <div 
+             className="absolute bottom-[10%] left-[-10%] w-48 h-48 md:w-72 md:h-72 rounded-full z-0 animate-[spin_25s_linear_infinite]"
+             style={{ 
+               background: 'radial-gradient(circle, rgba(204, 255, 0, 0.2) 0%, transparent 70%)'
+             }}
+        />
+        
+        {/* 3D Churches - Optimized props */}
         <motion.div
             style={{ perspective: 1000 }}
             animate={{ 
               rotateY: [0, 360],
-              rotateX: [10, -10, 10],
               y: [0, -20, 0]
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
@@ -112,32 +114,20 @@ export const HeroSection: React.FC = () => {
             style={{ perspective: 1000 }}
             animate={{ 
               rotateY: [360, 0],
-              rotateX: [-15, 15, -15],
-              scale: [1, 1.2, 1]
+              scale: [1, 1.1, 1] // Scale reduzido para menos repainting
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             className="absolute bottom-[30%] right-[10%] text-brand-neon opacity-40"
         >
             <Church size={60} strokeWidth={1} fill="currentColor" />
         </motion.div>
-
-        <motion.div
-            style={{ perspective: 1000 }}
-            animate={{ 
-              rotateZ: [0, 360],
-              opacity: [0.2, 0.5, 0.2]
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[40%] right-[5%] text-white"
-        >
-            <Church size={40} strokeWidth={1.5} />
-        </motion.div>
         
-        {/* Flying Plane Mascot */}
+        {/* Flying Plane Mascot - OTIMIZAÇÃO: will-change */}
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
           className="absolute top-[58%] md:top-[60%] z-20 w-24 md:w-32 object-contain"
+          style={{ willChange: 'transform' }}
           initial={{ x: -200, opacity: 1 }}
           animate={{
             x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], 
@@ -176,6 +166,7 @@ export const HeroSection: React.FC = () => {
           repeatType: "reverse",
           ease: "easeInOut"
         }}
+        style={{ willChange: 'transform' }}
       >
         <div className="w-1.5 h-20 md:h-24 bg-white/40" />
         <img
@@ -188,7 +179,7 @@ export const HeroSection: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
         
-        {/* Static Welcome Badge - RESTORED & MOVED DOWN */}
+        {/* Static Welcome Badge */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -301,3 +292,4 @@ export const HeroSection: React.FC = () => {
     </section>
   );
 };
+    

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X } from 'lucide-react';
@@ -15,16 +16,18 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
   <motion.div 
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    whileHover={{ scale: 1.02, rotate: 1 }}
+    viewport={{ once: true, margin: "-50px" }}
+    whileHover={{ scale: 1.02 }}
     transition={{ delay, duration: 0.5 }}
     onClick={() => window.open(link, '_blank')}
     className={`group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 hover:border-brand-neon/50 transition-colors cursor-pointer ${color}`}
+    style={{ willChange: 'transform' }}
   >
     <img 
       src={image} 
       alt={name} 
       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+      loading="lazy"
     />
     <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent`} />
     
@@ -190,14 +193,15 @@ export const EventSection: React.FC = () => {
         }
       `}</style>
 
-      {/* Marquee Transition - Top of Green Section */}
+      {/* Marquee Transition - OTIMIZAÇÃO: Array reduzido */}
       <div className="absolute -top-6 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-2 md:border-y-4 border-black bg-brand-pink py-2 md:py-4 shadow-2xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
             animate={{ x: ["0%", "-50%"] }}
             transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            style={{ willChange: 'transform' }}
           >
-            {[...Array(20)].map((_, i) => (
+            {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-6 flex items-center gap-4">
                 UIMADEMATS 2026 • JUBILEU DE OURO • 
               </span>
@@ -304,7 +308,7 @@ export const EventSection: React.FC = () => {
         {/* Dynamic Background Pattern - Adjusted for Black Background */}
         <div className="absolute inset-0 animated-bg-stripes pointer-events-none z-0" />
 
-        {/* Floating Background Shapes */}
+        {/* Floating Background Shapes - OTIMIZAÇÃO: CSS Animations */}
         <div className="absolute bottom-40 right-[-5%] text-brand-pink/20 animate-float" style={{ animationDelay: '2s', animationDuration: '10s' }}>
             <Zap size={150} fill="currentColor" />
         </div>
@@ -345,14 +349,15 @@ export const EventSection: React.FC = () => {
 
         </div>
 
-        {/* Pink Marquee at Bottom */}
+        {/* Pink Marquee at Bottom - OTIMIZAÇÃO: Array reduzido */}
         <div className="absolute -bottom-6 left-0 right-0 z-50 border-y-4 border-black bg-brand-pink py-3 md:py-6 overflow-hidden rotate-1 scale-105 origin-bottom-left shadow-2xl hover:rotate-0 transition-transform duration-500">
            <motion.div 
               className="flex whitespace-nowrap font-fun text-2xl md:text-5xl text-black uppercase tracking-wide"
               animate={{ x: ["0%", "-50%"] }}
               transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+              style={{ willChange: 'transform' }}
             >
-              {[...Array(20)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <span key={i} className="mx-6 flex items-center gap-4">
                   UIMADEMATS 2026 • JUBILEU DE OURO • 
                 </span>
@@ -441,3 +446,4 @@ export const EventSection: React.FC = () => {
     </section>
   );
 };
+    

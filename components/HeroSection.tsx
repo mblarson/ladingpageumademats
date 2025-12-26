@@ -1,32 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useTransform } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar, Smartphone } from 'lucide-react';
-import { useParallax } from '../hooks/use-parallax';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { x, y, requestAccess } = useParallax();
-
-  // Transformações de Parallax (Profundidade)
-  // Valores negativos movem na direção oposta (fundo), positivos na mesma direção (frente)
-  const bgGridMoveX = useTransform(x, [-1, 1], [-20, 20]);
-  const bgGridMoveY = useTransform(y, [-1, 1], [-20, 20]);
-
-  const churchBackX = useTransform(x, [-1, 1], [-40, 40]);
-  const churchBackY = useTransform(y, [-1, 1], [-10, 10]);
-
-  const churchFrontX = useTransform(x, [-1, 1], [-60, 60]);
-  const churchFrontY = useTransform(y, [-1, 1], [-30, 30]);
-
-  const planeX = useTransform(x, [-1, 1], [30, -30]); // Move oposto para destacar
-  const planeY = useTransform(y, [-1, 1], [30, -30]);
-
-  const spiderRotate = useTransform(x, [-1, 1], [-15, 15]); // Aranha balança com o tilt
-  const spiderX = useTransform(x, [-1, 1], [20, -20]);
-
-  const textTiltX = useTransform(y, [-1, 1], [10, -10]);
-  const textTiltY = useTransform(x, [-1, 1], [-10, 10]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -54,11 +32,7 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section 
-      onClick={requestAccess} // Ativa sensores no primeiro clique (iOS requirement)
-      className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden perspective-1000"
-      style={{ perspective: "1000px" }}
-    >
+    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden">
       
       {/* Top Marquee Transition */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
@@ -104,36 +78,30 @@ export const HeroSection: React.FC = () => {
 
       {/* Background Elements Wrapper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Y2K Grid - Deepest Layer */}
-        <motion.div 
-            style={{ x: bgGridMoveX, y: bgGridMoveY }}
+        {/* Y2K Grid */}
+        <div 
             className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]"
         />
 
-        {/* Floating Animated Elements Background - Slow Movement */}
+        {/* Floating Animated Elements Background */}
         <motion.div 
-            style={{ x: churchBackX, y: churchBackY }}
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             className="absolute top-[-10%] right-[-10%] w-64 h-64 md:w-96 md:h-96 border-[20px] border-white/10 rounded-full border-dashed z-0"
         />
         <motion.div 
-            style={{ x: churchFrontX, y: churchFrontY }}
             animate={{ rotate: -360 }}
             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
             className="absolute bottom-[10%] left-[-10%] w-48 h-48 md:w-72 md:h-72 bg-brand-neon/20 rounded-full blur-3xl z-0"
         />
         
-        {/* 3D Churches - Middle Layer */}
+        {/* 3D Churches */}
         <motion.div
-            style={{ 
-              perspective: 1000,
-              x: churchBackX,
-              y: churchBackY
-            }}
+            style={{ perspective: 1000 }}
             animate={{ 
               rotateY: [0, 360],
               rotateX: [10, -10, 10],
+              y: [0, -20, 0]
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-[20%] left-[10%] text-brand-pink opacity-40"
@@ -142,11 +110,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
 
         <motion.div
-            style={{ 
-              perspective: 1000, 
-              x: churchFrontX,
-              y: churchFrontY
-            }}
+            style={{ perspective: 1000 }}
             animate={{ 
               rotateY: [360, 0],
               rotateX: [-15, 15, -15],
@@ -159,11 +123,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
 
         <motion.div
-            style={{ 
-              perspective: 1000,
-              x: bgGridMoveX,
-              y: bgGridMoveY
-            }}
+            style={{ perspective: 1000 }}
             animate={{ 
               rotateZ: [0, 360],
               opacity: [0.2, 0.5, 0.2]
@@ -174,49 +134,42 @@ export const HeroSection: React.FC = () => {
             <Church size={40} strokeWidth={1.5} />
         </motion.div>
         
-        {/* Flying Plane Mascot - Front Layer (High movement) */}
+        {/* Flying Plane Mascot */}
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
           className="absolute top-[58%] md:top-[60%] z-20 w-24 md:w-32 object-contain"
-          style={{ 
-            x: planeX, // Combine manual parallax with animation
-            y: planeY 
-          }}
           initial={{ x: -200, opacity: 1 }}
           animate={{
-            // Note: Combining layout animations with useTransform in Framer can be tricky. 
-            // Here we rely on the container offset or add the values if needed.
-            // Simplified: The parallax offset is applied via style, the flight path via animate.
-            left: ["-10%", "110%"],
+            x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], 
+            y: [0, -15, 0] 
           }}
           transition={{
-            duration: 8, 
-            repeat: Infinity,
-            repeatDelay: 1, 
-            ease: "linear",
+            x: {
+              duration: 8, 
+              repeat: Infinity,
+              repeatDelay: 1, 
+              ease: "linear",
+            },
+            y: {
+              duration: 2,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut"
+            }
           }}
         />
 
         {/* Decorative Scribbles */}
-        <motion.svg 
-            style={{ x: bgGridMoveX, y: bgGridMoveY }}
-            className="absolute top-20 left-10 w-24 h-24 text-black/10 rotate-12" 
-            viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3"
-        >
+        <svg className="absolute top-20 left-10 w-24 h-24 text-black/10 rotate-12" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
           <path d="M10 50 Q 25 25, 50 50 T 90 50" />
-        </motion.svg>
+        </svg>
       </div>
 
-      {/* Swinging Spider Mascot - Front/Top Layer */}
+      {/* Swinging Spider Mascot */}
       <motion.div
         className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-50 origin-top flex flex-col items-center"
-        style={{
-             rotate: spiderRotate,
-             x: spiderX
-        }}
-        // Remove animation loop on rotate here to let gyroscope control it, 
-        // OR combine them carefully. Let's keep the swing but ADD tilt.
+        initial={{ rotate: 5 }}
         animate={{ rotate: [-5, 5] }}
         transition={{
           duration: 4,
@@ -234,24 +187,17 @@ export const HeroSection: React.FC = () => {
       </motion.div>
 
       {/* Main Content */}
-      <motion.div 
-        className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto perspective-1000"
-        style={{ 
-            rotateX: textTiltX, 
-            rotateY: textTiltY 
-        }}
-      >
+      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
         
         {/* Static Welcome Badge - RESTORED & MOVED DOWN */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mb-[-1rem] md:mb-[-2rem] z-20 relative"
+            className="mb-[-1rem] md:mb-[-3rem] z-20 relative"
         >
             <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg">
-            <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase flex items-center gap-2">
-                <Smartphone size={14} className="animate-pulse" />
+            <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
                 BEM VINDO AO PORTAL
             </span>
             </div>
@@ -271,9 +217,8 @@ export const HeroSection: React.FC = () => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ zIndex: 30 }}
               >
-                <h1 className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter text-center drop-shadow-2xl">
+                <h1 className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter text-center">
                   UMADE
                   <br />
                   <span className="text-brand-neon">MATS</span>
@@ -291,7 +236,6 @@ export const HeroSection: React.FC = () => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
-                style={{ zIndex: 30 }}
               >
                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
                   JOGUE AGORA
@@ -314,7 +258,6 @@ export const HeroSection: React.FC = () => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
-                style={{ zIndex: 30 }}
               >
                  <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
                   LEIA A BÍBLIA
@@ -336,7 +279,6 @@ export const HeroSection: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           className="mt-4 md:mt-0 max-w-2xl text-lg md:text-xl text-white/90 font-sans font-medium text-center px-4 uppercase"
-          style={{ zIndex: 30 }}
         >
           ASSEMBLEIA DE DEUS DE MATO GROSSO DO SUL.
         </motion.p>
@@ -347,7 +289,6 @@ export const HeroSection: React.FC = () => {
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 1 }}
            className="mt-8"
-           style={{ zIndex: 40 }}
         >
           <button 
             onClick={handleInstagramClick}
@@ -356,7 +297,7 @@ export const HeroSection: React.FC = () => {
             <Instagram className="text-white" size={28} />
           </button>
         </motion.div>
-      </motion.div>
+      </div>
 
     </section>
   );

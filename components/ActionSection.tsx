@@ -159,22 +159,13 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
             whileHover={{ scale: 0.98, translateY: -5 }}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
           >
-              {/* Background Image Added */}
+              {/* Background Image Added - Occupy full card */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                  <img 
                    src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetapedidio.png" 
-                   alt="Camiseta Background"
-                   className="w-full h-full object-cover opacity-20 mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-out"
+                   alt="Camiseta Pedido"
+                   className="w-full h-full object-cover opacity-50 mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-out"
                  />
-              </div>
-
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20">
-                  <motion.div
-                     animate={{ rotate: 360 }}
-                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                  >
-                      <Star size={150} className="md:size-[250px] text-black" fill="currentColor" />
-                  </motion.div>
               </div>
 
               <div className="relative z-10">
@@ -224,12 +215,12 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
                   </motion.div>
               </div>
               
-              {/* Mascot Image Added */}
+              {/* Mascot Image Added - Fixed: No Rotation */}
               <div className="absolute right-[-2rem] bottom-[-2rem] md:right-0 md:bottom-0 h-[120%] md:h-[110%] w-auto z-0 pointer-events-none opacity-40 group-hover:opacity-60 transition-opacity">
                   <img 
                       src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
                       alt="Mascote Bíblia"
-                      className="h-full w-auto object-contain rotate-[-10deg] group-hover:rotate-0 transition-transform duration-500 drop-shadow-2xl"
+                      className="h-full w-auto object-contain drop-shadow-2xl"
                   />
               </div>
 

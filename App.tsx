@@ -9,7 +9,15 @@ import { X, LogIn, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   // Simple state-based router
-  const [currentPage, setCurrentPage] = useState<'home' | 'bible'>('home');
+  // Inicializa verificando a URL para manter a página após reload/login
+  const [currentPage, setCurrentPage] = useState<'home' | 'bible'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('page') === 'bible' ? 'bible' : 'home';
+    }
+    return 'home';
+  });
+  
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { scrollYProgress } = useScroll();
@@ -19,14 +27,25 @@ export default function App() {
     restDelta: 0.001
   });
 
+  // Atualiza a URL quando a página muda (para permitir F5 e persistência)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (currentPage === 'bible') {
+      url.searchParams.set('page', 'bible');
+    } else {
+      url.searchParams.delete('page');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [currentPage]);
+
   // Check session only when entering the Bible page
   useEffect(() => {
     if (currentPage === 'bible') {
       const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          // Delay slightly for smooth entrance after page transition
-          setTimeout(() => setShowLoginModal(true), 1000);
+          // Delay reduced for faster entrance
+          setTimeout(() => setShowLoginModal(true), 500);
         }
       };
       checkSession();
@@ -34,13 +53,20 @@ export default function App() {
   }, [currentPage]);
 
   const handleGoogleLogin = async () => {
+    /* 
+       IMPORTANTE: Certifique-se de adicionar a URL atual (window.location.origin) 
+       na lista de "Redirect URLs" no painel do Supabase (Auth > URL Configuration).
+    */
+    // Adiciona ?page=bible para garantir que o usuário volte para a página da bíblia
+    const redirectTo = `${window.location.origin}?page=bible`;
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.href,
+        redirectTo, // Usa a URL com o parametro de página
         queryParams: {
           access_type: 'offline',
-          prompt: 'consent',
+          prompt: 'select_account', // Forces account selection to ensure user context
         },
       },
     });
@@ -84,12 +110,12 @@ export default function App() {
                   <LogIn size={32} className="text-black ml-1" strokeWidth={3} />
                </div>
 
-               <h2 className="text-3xl font-display uppercase text-white mb-2 leading-none">
-                 Salve seu <span className="text-brand-neon">Progresso</span>
+               <h2 className="text-4xl font-display uppercase text-white mb-2 leading-none">
+                 Login <span className="text-brand-neon">UIMADEMATS</span>
                </h2>
                
                <p className="text-gray-400 font-sans text-sm leading-relaxed mb-8 max-w-xs">
-                 Para não perder sua sequência de leitura bíblica, acesse com sua conta Google.
+                 Entre para salvar seu histórico de leitura e acompanhar seu progresso no Jubileu.
                </p>
 
                <div className="w-full flex flex-col gap-3">

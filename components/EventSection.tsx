@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Sparkles, Zap } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation } from 'lucide-react';
 
 interface GuestCardProps {
   name: string;
@@ -111,6 +111,13 @@ export const EventSection: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const openMap = () => {
+    const address = "Av. Cônsul Assaf Trad, 4796 - Parque dos Novos Estados, Campo Grande - MS, 79035-900";
+    // Using Google Maps search query format which works well across devices to open the native map app
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    window.open(mapUrl, '_blank');
+  };
+
   return (
     <section id="event-section" className="relative w-full flex flex-col z-30">
       
@@ -155,6 +162,25 @@ export const EventSection: React.FC = () => {
         }
         .animate-pulse-scale {
             animation: pulse-scale 1.5s ease-in-out infinite;
+        }
+        
+        /* ANIMAÇÃO STICKER 1 (Direita Superior) */
+        @keyframes sticker-wiggle {
+            0%, 100% { transform: rotate(6deg); }
+            50% { transform: rotate(12deg) scale(1.05); }
+        }
+        .animate-sticker {
+            animation: sticker-wiggle 2s ease-in-out infinite;
+        }
+
+        /* ANIMAÇÃO STICKER 2 (Direita Inferior / Invertido) */
+        @keyframes sticker-wiggle-reverse {
+            0%, 100% { transform: rotate(-6deg); }
+            50% { transform: rotate(-12deg) scale(1.05); }
+        }
+        .animate-sticker-reverse {
+            animation: sticker-wiggle-reverse 2.5s ease-in-out infinite;
+            animation-delay: 0.5s; /* Delay para dessincronizar do outro */
         }
       `}</style>
 
@@ -217,17 +243,40 @@ export const EventSection: React.FC = () => {
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
-                className="flex flex-col items-center justify-center gap-3 mt-4 md:mt-8 w-full max-w-full overflow-hidden"
+                // Increased margin-top to give space for the sticker above the button
+                className="flex flex-col items-center justify-center gap-6 mt-12 md:mt-16 w-full max-w-full overflow-visible"
             >
+              {/* BUTTON 1: CALENDAR */}
               <div 
                 onClick={addToCalendar}
-                className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-pointer flex-shrink-0"
+                className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-6 md:py-3 rounded-xl border-2 border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0 shadow-[0_0_15px_rgba(79,70,229,0.3)] animate-pulse-scale"
               >
-                <Calendar className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+                {/* STICKER 1: CLIQUE P/ AGENDAR (Canto Superior Direito) */}
+                <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left pointer-events-none">
+                    <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                         <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
+                         <MousePointer2 size={12} className="text-black fill-black rotate-[-15deg]" />
+                    </div>
+                </div>
+
+                <Calendar className="w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
                 <span>03 e 04 de Abril</span>
               </div>
-              <div className="group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] transition-all hover:scale-105 cursor-default flex-shrink-0">
-                <MapPin className="text-[#4F46E5] w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+              
+              {/* BUTTON 2: LOCATION */}
+              <div 
+                onClick={openMap}
+                className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0"
+              >
+                 {/* STICKER 2: ABRIR NO GPS (Canto Inferior Direito - Invertido) */}
+                <div className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left pointer-events-none">
+                    <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                         <Navigation size={12} className="text-brand-pink fill-brand-pink" />
+                         <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">ABRIR NO GPS</span>
+                    </div>
+                </div>
+
+                <MapPin className="text-[#4F46E5] group-hover:text-white w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
                 <span>Bosque Expo - Shopping Bosque dos Ipês</span>
               </div>
             </motion.div>

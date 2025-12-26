@@ -9,9 +9,17 @@ import { X, LogIn, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   // Simple state-based router
-  // Inicializa verificando a URL para manter a página após reload/login
+  // Inicializa verificando localStorage OU URL para manter a página após reload/login
   const [currentPage, setCurrentPage] = useState<'home' | 'bible'>(() => {
     if (typeof window !== 'undefined') {
+      // 1. Verifica se salvamos a intenção de ir para a bíblia antes do login
+      const shouldReturnToBible = localStorage.getItem('return_to_bible');
+      if (shouldReturnToBible) {
+        localStorage.removeItem('return_to_bible'); // Limpa para não ficar preso lá pra sempre
+        return 'bible';
+      }
+
+      // 2. Fallback para verificação de URL (caso usem links diretos)
       const params = new URLSearchParams(window.location.search);
       return params.get('page') === 'bible' ? 'bible' : 'home';
     }
@@ -26,17 +34,6 @@ export default function App() {
     damping: 30,
     restDelta: 0.001
   });
-
-  // Atualiza a URL quando a página muda (para permitir F5 e persistência)
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (currentPage === 'bible') {
-      url.searchParams.set('page', 'bible');
-    } else {
-      url.searchParams.delete('page');
-    }
-    window.history.replaceState({}, '', url.toString());
-  }, [currentPage]);
 
   // Check session only when entering the Bible page
   useEffect(() => {
@@ -54,19 +51,19 @@ export default function App() {
 
   const handleGoogleLogin = async () => {
     /* 
-       IMPORTANTE: Certifique-se de adicionar a URL atual (window.location.origin) 
-       na lista de "Redirect URLs" no painel do Supabase (Auth > URL Configuration).
+       Salva a intenção no LocalStorage. 
+       Isso sobrevive ao redirecionamento do Google melhor que parametros de URL.
     */
-    // Adiciona ?page=bible para garantir que o usuário volte para a página da bíblia
-    const redirectTo = `${window.location.origin}?page=bible`;
+    localStorage.setItem('return_to_bible', 'true');
+    const redirectTo = window.location.origin;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo, // Usa a URL com o parametro de página
+        redirectTo, 
         queryParams: {
           access_type: 'offline',
-          prompt: 'select_account', // Forces account selection to ensure user context
+          prompt: 'select_account',
         },
       },
     });
@@ -111,7 +108,7 @@ export default function App() {
                </div>
 
                <h2 className="text-4xl font-display uppercase text-white mb-2 leading-none">
-                 Login <span className="text-brand-neon">UIMADEMATS</span>
+                 Login <span className="text-brand-neon">UMADEMATS</span>
                </h2>
                
                <p className="text-gray-400 font-sans text-sm leading-relaxed mb-8 max-w-xs">
@@ -165,7 +162,7 @@ export default function App() {
           <ActionSection onNavigateToBible={() => setCurrentPage('bible')} />
 
           <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
-            <p>© 2026 UIMADEMATS. Todos os direitos reservados.</p>
+            <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
             <p className="mt-2">Desenvolvido para o Reino.</p>
           </footer>
         </>

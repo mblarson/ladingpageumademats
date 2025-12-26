@@ -88,8 +88,9 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
 
   // --- AUTH HANDLERS ---
   const handleLogin = async () => {
-    // Redireciona para a mesma página com ?page=bible para garantir que o usuário retorne aqui
-    const redirectTo = `${window.location.origin}?page=bible`;
+    // Salva a intenção no LocalStorage.
+    localStorage.setItem('return_to_bible', 'true');
+    const redirectTo = window.location.origin;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -413,7 +414,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             
             <div className="flex flex-col justify-center h-full pt-1">
               <h1 className="font-display uppercase text-2xl tracking-tight text-white leading-[0.8]">
-                UIMADE<span className="text-brand-neon">MATS</span>
+                UMADE<span className="text-brand-neon">MATS</span>
               </h1>
               <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">
                 Leitura Bíblica 2026

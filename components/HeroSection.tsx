@@ -34,7 +34,7 @@ export const HeroSection: React.FC = () => {
   return (
     <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden">
       
-      {/* Top Marquee Transition - OTIMIZAÇÃO: Array reduzido de 20 para 10 */}
+      {/* Top Marquee Transition */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
@@ -50,37 +50,39 @@ export const HeroSection: React.FC = () => {
          </motion.div>
       </div>
 
-      {/* CUSTOM NAV MENU - FULL WIDTH RECTANGLE BAR */}
-      <nav className="absolute top-[14%] left-0 w-full z-[80]">
-        <ul className="flex w-full border-y-4 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
+      {/* CUSTOM NAV MENU - PILL SHAPE (ONDULADO) */}
+      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-5xl z-[80]">
+        <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden">
           
           {/* Item 1: Congresso - Green #69AF23 */}
           <li className="flex-1">
             <button
               onClick={() => scrollToSection('event-section')}
-              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
             >
               <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
               <span className="uppercase tracking-wider">Congresso</span>
             </button>
           </li>
 
-          {/* Item 2: Games - Pink #E62D87 */}
-           <li className="flex-1 border-l-2 border-black">
+          {/* Item 2: GAMES - Pink #E62D87 */}
+          {/* Borda lateral fina (border-l) para separar suavemente */}
+           <li className="flex-1 border-l border-black/80">
             <button
               onClick={() => scrollToSection('action-section')}
-              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
             >
               <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider">Games</span>
+              <span className="uppercase tracking-wider">GAMES</span>
             </button>
           </li>
 
           {/* Item 3: Quem Somos - Yellow #FFC300 */}
-          <li className="flex-1 border-l-2 border-black">
+          {/* Borda lateral fina (border-l) */}
+          <li className="flex-1 border-l border-black/80">
             <button
               onClick={() => scrollToSection('about-section')}
-              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
             >
               <Users className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
               <span className="uppercase tracking-wider whitespace-nowrap">Quem Somos</span>

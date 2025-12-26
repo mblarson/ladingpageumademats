@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X } from 'lucide-react';
 
 interface GuestCardProps {
   name: string;
@@ -48,6 +48,8 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
 );
 
 export const EventSection: React.FC = () => {
+  const [showMapModal, setShowMapModal] = useState(false);
+
   const guests = [
     { 
       name: "Pr. Elizeu Rodrigues", 
@@ -111,11 +113,16 @@ export const EventSection: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const address = "Av. Cônsul Assaf Trad, 4796 - Parque dos Novos Estados, Campo Grande - MS, 79035-900";
+  const encodedAddress = encodeURIComponent(address);
+
   const openMap = () => {
-    const address = "Av. Cônsul Assaf Trad, 4796 - Parque dos Novos Estados, Campo Grande - MS, 79035-900";
-    // Using Google Maps search query format which works well across devices to open the native map app
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    window.open(mapUrl, '_blank');
+    setShowMapModal(true);
+  };
+
+  const handleMapChoice = (url: string) => {
+    window.open(url, '_blank');
+    setShowMapModal(false);
   };
 
   return (
@@ -185,9 +192,9 @@ export const EventSection: React.FC = () => {
       `}</style>
 
       {/* Marquee Transition - Top of Green Section */}
-      <div className="absolute -top-8 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-4 border-black bg-brand-pink py-4 shadow-2xl">
+      <div className="absolute -top-6 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-2 md:border-y-4 border-black bg-brand-pink py-2 md:py-4 shadow-2xl">
          <motion.div 
-            className="flex whitespace-nowrap font-fun text-3xl md:text-5xl text-black uppercase tracking-wide"
+            className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
             animate={{ x: ["0%", "-50%"] }}
             transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
           >
@@ -352,6 +359,84 @@ export const EventSection: React.FC = () => {
            </motion.div>
         </div>
       </div>
+
+      {/* MODAL DE SELEÇÃO DE GPS */}
+      <AnimatePresence>
+        {showMapModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+             {/* Backdrop */}
+             <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMapModal(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+             />
+             
+             {/* Modal Content */}
+             <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative bg-[#1a1a1a] border-4 border-brand-neon p-6 md:p-8 rounded-3xl w-full max-w-sm shadow-[0_0_50px_rgba(204,255,0,0.3)] overflow-hidden"
+             >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
+
+                <button 
+                  onClick={() => setShowMapModal(false)}
+                  className="absolute top-4 right-4 text-white/50 hover:text-white hover:rotate-90 transition-all"
+                >
+                  <X size={24} />
+                </button>
+
+                <div className="flex flex-col items-center mb-6">
+                   <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mb-4 border-2 border-white shadow-lg">
+                      <Navigation size={32} className="text-black fill-black" />
+                   </div>
+                   <h3 className="text-2xl font-display uppercase text-white text-center leading-none">
+                      Abrir com
+                   </h3>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleMapChoice(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`)}
+                    className="group w-full py-4 px-4 rounded-2xl bg-[#1a1a1a] border-2 border-white/10 hover:border-[#4285F4] hover:bg-[#4285F4]/10 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-[#4285F4] flex items-center justify-center text-white font-bold">G</div>
+                       <span className="text-white font-bold uppercase tracking-wide group-hover:text-[#4285F4] transition-colors">Google Maps</span>
+                    </div>
+                    <MapPin size={18} className="text-white/30 group-hover:text-[#4285F4]" />
+                  </button>
+
+                  <button
+                    onClick={() => handleMapChoice(`https://waze.com/ul?q=${encodedAddress}&navigate=yes`)}
+                    className="group w-full py-4 px-4 rounded-2xl bg-[#1a1a1a] border-2 border-white/10 hover:border-[#33CCFF] hover:bg-[#33CCFF]/10 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-[#33CCFF] flex items-center justify-center text-white font-bold">W</div>
+                       <span className="text-white font-bold uppercase tracking-wide group-hover:text-[#33CCFF] transition-colors">Waze</span>
+                    </div>
+                    <MapPin size={18} className="text-white/30 group-hover:text-[#33CCFF]" />
+                  </button>
+
+                  <button
+                    onClick={() => handleMapChoice(`http://maps.apple.com/?q=${encodedAddress}`)}
+                    className="group w-full py-4 px-4 rounded-2xl bg-[#1a1a1a] border-2 border-white/10 hover:border-white hover:bg-white/10 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold">A</div>
+                       <span className="text-white font-bold uppercase tracking-wide group-hover:text-white transition-colors">Apple Maps</span>
+                    </div>
+                    <MapPin size={18} className="text-white/30 group-hover:text-white" />
+                  </button>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </section>
   );
 };

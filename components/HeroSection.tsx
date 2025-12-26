@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar, Users } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,32 +50,45 @@ export const HeroSection: React.FC = () => {
          </motion.div>
       </div>
 
-      {/* Navigation Buttons Area */}
-      <div className="absolute top-[18%] left-[5%] md:left-[10%] flex flex-row gap-3 md:gap-4 z-[60] items-start">
-        <motion.button
-          whileHover={{ scale: 1.05, rotate: -3, y: -2 }}
-          whileTap={{ scale: 0.95, rotate: 0 }}
-          onClick={() => scrollToSection('action-section')}
-          className="group relative px-3 py-1.5 md:px-5 md:py-2.5 bg-brand-neon border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-200"
-        >
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <Gamepad2 className="w-3.5 h-3.5 md:w-5 md:h-5 text-black" />
-            <span className="font-display text-sm md:text-xl uppercase text-black tracking-wider">Games</span>
-          </div>
-        </motion.button>
+      {/* CUSTOM NAV MENU - FULL WIDTH RECTANGLE BAR */}
+      <nav className="absolute top-[14%] left-0 w-full z-[80]">
+        <ul className="flex w-full border-y-4 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
+          
+          {/* Item 1: Congresso - Green #69AF23 */}
+          <li className="flex-1">
+            <button
+              onClick={() => scrollToSection('event-section')}
+              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-2 group"
+            >
+              <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider">Congresso</span>
+            </button>
+          </li>
 
-        <motion.button
-          whileHover={{ scale: 1.05, rotate: 3, y: -2 }}
-          whileTap={{ scale: 0.95, rotate: 0 }}
-          onClick={() => scrollToSection('event-section')}
-          className="group relative px-3 py-1.5 md:px-5 md:py-2.5 bg-brand-pink border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-200"
-        >
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <Calendar className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
-            <span className="font-display text-sm md:text-xl uppercase text-white tracking-wider">Congresso</span>
-          </div>
-        </motion.button>
-      </div>
+          {/* Item 2: Games - Pink #E62D87 */}
+           <li className="flex-1 border-l-2 border-black">
+            <button
+              onClick={() => scrollToSection('action-section')}
+              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-2 group"
+            >
+              <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider">Games</span>
+            </button>
+          </li>
+
+          {/* Item 3: Quem Somos - Yellow #FFC300 */}
+          <li className="flex-1 border-l-2 border-black">
+            <button
+              onClick={() => scrollToSection('about-section')}
+              className="w-full h-full py-3 md:py-5 text-sm md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-2 group"
+            >
+              <Users className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider whitespace-nowrap">Quem Somos</span>
+            </button>
+          </li>
+
+        </ul>
+      </nav>
 
       {/* Background Elements Wrapper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -155,9 +168,9 @@ export const HeroSection: React.FC = () => {
         </svg>
       </div>
 
-      {/* Swinging Spider Mascot */}
+      {/* Swinging Spider Mascot - SIGNIFICANTLY INCREASED WEB SIZE */}
       <motion.div
-        className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-50 origin-top flex flex-col items-center"
+        className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-[90] origin-top flex flex-col items-center"
         initial={{ rotate: 5 }}
         animate={{ rotate: [-5, 5] }}
         transition={{
@@ -168,11 +181,12 @@ export const HeroSection: React.FC = () => {
         }}
         style={{ willChange: 'transform' }}
       >
-        <div className="w-1.5 h-20 md:h-24 bg-white/40" />
+        {/* Teia alongada para 48 (mobile) e 80 (desktop) */}
+        <div className="w-1 h-48 md:w-1.5 md:h-80 bg-white/60 shadow-lg" />
         <img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png"
           alt="Spider Mascot"
-          className="w-[60vw] md:w-[30vw] -mt-2 drop-shadow-2xl" 
+          className="w-[60vw] md:w-[30vw] -mt-2 drop-shadow-2xl hover:scale-110 transition-transform cursor-grab active:cursor-grabbing" 
         />
       </motion.div>
 

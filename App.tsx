@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { HeroSection } from './components/HeroSection';
 import { EventSection } from './components/EventSection';
+import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { BibleReadingPage } from './components/BibleReadingPage';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
@@ -160,6 +162,7 @@ export default function App() {
           <HeroSection />
           <EventSection />
           <ActionSection onNavigateToBible={() => setCurrentPage('bible')} />
+          <AboutSection />
 
           <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
             <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>

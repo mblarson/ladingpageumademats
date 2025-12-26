@@ -26,8 +26,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
   };
 
   return (
-    <section id="action-section" className="relative w-full py-20 md:py-32 bg-[#4F46E5] overflow-hidden z-20">
+    <section id="action-section" className="relative w-full py-24 md:py-32 bg-[#4F46E5] overflow-hidden z-20">
       
+      {/* TOP DIVIDER (Transition from Black to Indigo) */}
+      <div className="absolute top-0 left-0 right-0 leading-none z-10">
+        <svg className="w-full h-16 md:h-24 fill-black" viewBox="0 0 1440 100" preserveAspectRatio="none">
+           <path d="M0,0 C240,90 480,90 720,50 C960,10 1200,10 1440,50 L1440,0 L0,0 Z" />
+        </svg>
+      </div>
+
       {/* --- BACKGROUND ANIMATIONS --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Animated Moving Grid - Reduced Opacity slightly for performance */}
@@ -304,4 +311,3 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
     </section>
   );
 };
-    

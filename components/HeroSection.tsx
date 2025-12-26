@@ -18,6 +18,8 @@ export const HeroSection: React.FC = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      console.warn(`Elemento com id ${id} não encontrado.`);
     }
   };
 
@@ -51,14 +53,15 @@ export const HeroSection: React.FC = () => {
       </div>
 
       {/* CUSTOM NAV MENU - PILL SHAPE (ONDULADO) */}
-      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-5xl z-[80]">
-        <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden">
+      {/* Z-INDEX AUMENTADO PARA 95 PARA FICAR ACIMA DA ARANHA (que é z-90) */}
+      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-5xl z-[95]">
+        <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden bg-white/5 backdrop-blur-sm">
           
           {/* Item 1: Congresso - Green #69AF23 */}
           <li className="flex-1">
             <button
               onClick={() => scrollToSection('event-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
               <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
               <span className="uppercase tracking-wider">Congresso</span>
@@ -66,11 +69,12 @@ export const HeroSection: React.FC = () => {
           </li>
 
           {/* Item 2: GAMES - Pink #E62D87 */}
-          {/* Borda lateral fina (border-l) para separar suavemente */}
-           <li className="flex-1 border-l border-black/80">
+          {/* Direciona para action-section (Selecione o que deseja fazer) */}
+          {/* Borda lateral suavizada (opacity) para diminuir peso visual */}
+           <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('action-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
               <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
               <span className="uppercase tracking-wider">GAMES</span>
@@ -78,11 +82,11 @@ export const HeroSection: React.FC = () => {
           </li>
 
           {/* Item 3: Quem Somos - Yellow #FFC300 */}
-          {/* Borda lateral fina (border-l) */}
-          <li className="flex-1 border-l border-black/80">
+          {/* Direciona para about-section */}
+          <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('about-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
               <Users className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
               <span className="uppercase tracking-wider whitespace-nowrap">Quem Somos</span>
@@ -171,6 +175,7 @@ export const HeroSection: React.FC = () => {
       </div>
 
       {/* Swinging Spider Mascot - SIGNIFICANTLY INCREASED WEB SIZE */}
+      {/* Z-Index 90 é menor que o menu (95), evitando bloqueio de clique */}
       <motion.div
         className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-[90] origin-top flex flex-col items-center"
         initial={{ rotate: 5 }}

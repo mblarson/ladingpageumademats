@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Instagram, Church, Gamepad2, Calendar } from 'lucide-react';
@@ -43,7 +42,7 @@ export const HeroSection: React.FC = () => {
           >
             {[...Array(20)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
+                UIMADEMATS 2026 • JUBILEU DE OURO • 
               </span>
             ))}
          </motion.div>
@@ -207,7 +206,7 @@ export const HeroSection: React.FC = () => {
         <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-hidden">
           <AnimatePresence mode="wait">
             
-            {/* STATE 0: UMADEMATS */}
+            {/* STATE 0: UIMADEMATS */}
             {currentIndex === 0 && (
               <motion.div
                 key="logo"
@@ -219,7 +218,7 @@ export const HeroSection: React.FC = () => {
                 className="absolute inset-0 flex items-center justify-center"
               >
                 <h1 className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter text-center">
-                  UMADE
+                  UIMADE
                   <br />
                   <span className="text-brand-neon">MATS</span>
                 </h1>
@@ -264,7 +263,7 @@ export const HeroSection: React.FC = () => {
                 </h2>
                 <div className="mt-4 md:mt-6 bg-brand-pink border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 rotate-2 transform">
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">
-                    JUNTO COM A UMADEMATS
+                    JUNTO COM A UIMADEMATS
                   </h3>
                 </div>
               </motion.div>

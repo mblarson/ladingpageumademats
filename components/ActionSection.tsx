@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
 
-export const ActionSection: React.FC = () => {
+interface ActionSectionProps {
+  onNavigateToBible?: () => void;
+}
+
+export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   // Background shapes for animation
@@ -189,7 +193,7 @@ export const ActionSection: React.FC = () => {
               </div>
           </motion.div>
 
-          {/* Devocional Card */}
+          {/* Devocional Card (Updated to use onNavigateToBible) */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -197,7 +201,7 @@ export const ActionSection: React.FC = () => {
             transition={{ delay: 0.3 }}
             onMouseEnter={() => setHoveredCard('devocional')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => handleCardClick('https://www.instagram.com/umademats/')}
+            onClick={onNavigateToBible}
             whileHover={{ scale: 0.99, translateY: -5 }}
             className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
           >

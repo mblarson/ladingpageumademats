@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star } from 'lucide-react';
 
 interface GuestCardProps {
   name: string;
@@ -51,6 +51,14 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
 
 export const EventSection: React.FC = () => {
   const [showMapModal, setShowMapModal] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0); // 0: Text, 1: Shirt 1, 2: Shirt 2
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   const guests = [
     { 
@@ -75,9 +83,9 @@ export const EventSection: React.FC = () => {
       link: "https://www.instagram.com/carolbragabr/"
     },
     {
-      name: "Pr. Josué Brandão",
+      name: "Pr. Josué Brandão", 
       role: "Preletor", 
-      image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png",
+      image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png", 
       color: "bg-[#1a1a1a]",
       link: "https://www.instagram.com/prjosuebrandao/"
     }
@@ -191,9 +199,14 @@ export const EventSection: React.FC = () => {
             animation: sticker-wiggle-reverse 2.5s ease-in-out infinite;
             animation-delay: 0.5s; /* Delay para dessincronizar do outro */
         }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
       `}</style>
 
-      {/* Marquee Transition - OTIMIZAÇÃO: Array reduzido */}
+      {/* Marquee Transition */}
       <div className="absolute -top-6 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-2 md:border-y-4 border-black bg-brand-pink py-2 md:py-4 shadow-2xl">
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
@@ -209,92 +222,199 @@ export const EventSection: React.FC = () => {
          </motion.div>
       </div>
 
-      {/* TOP PART: CHANGED TO YELLOW (brand-neon) */}
+      {/* TOP PART: GREEN SECTION */}
       <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-32 px-4 overflow-hidden z-20">
-         {/* Background Grid - Changed to #4F46E5 for visibility on yellow */}
+         {/* Background Grid */}
          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#4F46E5_1px,transparent_1px),linear-gradient(to_bottom,#4F46E5_1px,transparent_1px)] bg-[size:40px_40px]" />
 
+         {/* CONTENT WRAPPER */}
+         {/* IMPORTANTE: Este container define a altura baseada no conteúdo de texto, evitando reflow. */}
          <div className="max-w-5xl mx-auto relative z-10">
-            {/* Header Info */}
-            <div className="flex flex-col items-center text-center mb-8 relative">
-              
-              {/* Animated Main Title - CONGRESSO */}
-              <motion.div
-                className="relative z-10"
-                initial={{ scale: 0, rotate: -15, y: 50 }}
-                whileInView={{ scale: 1, rotate: -3, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", bounce: 0.6, duration: 1 }}
-              >
-                 <div className="animate-wiggle-slow origin-center">
-                    {/* Updated text color to #4F46E5 (Purple/Navy) for contrast on Yellow */}
-                    <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
-                      Congresso
-                    </h2>
-                 </div>
-              </motion.div>
-
-              {/* Animated Subtitle Badge - JUBILEU DE OURO */}
-              <motion.div
-                initial={{ scale: 0, rotate: 15 }}
-                whileInView={{ scale: 1, rotate: 2 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", bounce: 0.5, duration: 1, delay: 0.2 }}
-                className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
-              >
-                <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none">
-                    Jubileu de Ouro
-                </h3>
-              </motion.div>
-            </div>
-
-            {/* Date and Location - Updated text colors to #4F46E5 for contrast on Yellow */}
-            <motion.div 
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                // Increased margin-top to give space for the sticker above the button
-                className="flex flex-col items-center justify-center gap-6 mt-12 md:mt-16 w-full max-w-full overflow-visible"
+            
+            {/* 1. ORIGINAL CONTENT (TEXTO) */}
+            {/* Mantemos este conteúdo RELATIVE para que ele ocupe espaço físico e defina a altura da div pai. */}
+            {/* Quando não for o slide 0, apenas reduzimos a opacidade e movemos visualmente, mas o espaço continua lá. */}
+            <motion.div
+                animate={{
+                    x: slideIndex === 0 ? 0 : -30,
+                    opacity: slideIndex === 0 ? 1 : 0,
+                    pointerEvents: slideIndex === 0 ? 'auto' : 'none', // Impede clique quando invisível
+                }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="flex flex-col items-center justify-center w-full"
             >
-              {/* BUTTON 1: CALENDAR */}
-              <div 
-                onClick={addToCalendar}
-                className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-6 md:py-3 rounded-xl border-2 border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0 shadow-[0_0_15px_rgba(79,70,229,0.3)] animate-pulse-scale"
-              >
-                {/* STICKER 1: CLIQUE P/ AGENDAR (Canto Superior Direito) */}
-                <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left pointer-events-none">
-                    <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
-                         <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
-                         <MousePointer2 size={12} className="text-black fill-black rotate-[-15deg]" />
-                    </div>
+                {/* Header Info */}
+                <div className="flex flex-col items-center text-center mb-8 relative">
+                  
+                  {/* Animated Main Title - CONGRESSO */}
+                  <motion.div
+                    className="relative z-10"
+                    initial={{ scale: 0.9 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                  >
+                     <div className="animate-wiggle-slow origin-center">
+                        <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
+                          Congresso
+                        </h2>
+                     </div>
+                  </motion.div>
+
+                  {/* Animated Subtitle Badge - JUBILEU DE OURO */}
+                  <div
+                    className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
+                  >
+                    <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none">
+                        Jubileu de Ouro
+                    </h3>
+                  </div>
                 </div>
 
-                <Calendar className="w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-                <span>03 e 04 de Abril</span>
-              </div>
-              
-              {/* BUTTON 2: LOCATION */}
-              <div 
-                onClick={openMap}
-                className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0"
-              >
-                 {/* STICKER 2: ABRIR NO GPS (Canto Inferior Direito - Invertido) */}
+                {/* Date and Location - BOTOES REVERTIDOS AO TAMANHO ORIGINAL */}
                 <div 
-                  className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-6 mt-12 md:mt-16 w-full max-w-full overflow-visible"
                 >
-                    <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
-                         <Navigation size={12} className="text-brand-pink fill-brand-pink" />
-                         <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">ABRIR NO GPS</span>
+                  {/* BUTTON 1: CALENDAR */}
+                  <div 
+                    onClick={addToCalendar}
+                    className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-6 md:py-3 rounded-xl border-2 border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0 shadow-[0_0_15px_rgba(79,70,229,0.3)] animate-pulse-scale"
+                  >
+                    <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left pointer-events-none">
+                        <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                             <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
+                             <MousePointer2 size={12} className="text-black fill-black rotate-[-15deg]" />
+                        </div>
                     </div>
-                </div>
 
-                <MapPin className="text-[#4F46E5] group-hover:text-white w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-                <span>Bosque Expo - Shopping Bosque dos Ipês</span>
-              </div>
+                    <Calendar className="w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+                    <span>03 e 04 de Abril</span>
+                  </div>
+                  
+                  {/* BUTTON 2: LOCATION */}
+                  <div 
+                    onClick={openMap}
+                    className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-4 md:py-2 rounded-xl border-2 border-[#4F46E5]/20 hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0"
+                  >
+                     <div 
+                      className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left cursor-pointer"
+                    >
+                        <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                             <Navigation size={12} className="text-brand-pink fill-brand-pink" />
+                             <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">ABRIR NO GPS</span>
+                        </div>
+                    </div>
+
+                    <MapPin className="text-[#4F46E5] group-hover:text-white w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
+                    <span>Bosque Expo - Shopping Bosque dos Ipês</span>
+                  </div>
+                </div>
             </motion.div>
+
+            {/* 2. OVERLAY LAYER FOR SHIRTS */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <AnimatePresence mode="wait">
+                    {/* SLIDE 1: CAMISETA TERRACOTA */}
+                    {slideIndex === 1 && (
+                        <motion.div
+                            key="shirt-terracota"
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -50, opacity: 0 }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                            className="absolute inset-0"
+                        >
+                             <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                 {/* BACKGROUND DECORATIONS (CSS LIGHTWEIGHT) */}
+                                 <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
+                                     {/* Rotating Ring */}
+                                     <div className="absolute w-[50vh] h-[50vh] md:w-[60vh] md:h-[60vh] border-[2px] border-dashed border-[#4F46E5] rounded-full animate-[spin_20s_linear_infinite]" />
+                                     <div className="absolute w-[40vh] h-[40vh] md:w-[50vh] md:h-[50vh] border border-[#4F46E5]/30 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
+                                     {/* Glow Center */}
+                                     <div className="absolute w-[30vh] h-[30vh] bg-brand-pink/20 blur-3xl rounded-full animate-pulse" />
+                                     {/* Floating Stars */}
+                                     <div className="absolute top-[20%] right-[20%] text-brand-pink animate-bounce"><Star size={24} fill="currentColor" /></div>
+                                     <div className="absolute bottom-[30%] left-[20%] text-[#4F46E5] animate-bounce" style={{ animationDelay: '0.5s' }}><Star size={16} fill="currentColor" /></div>
+                                 </div>
+                                 
+                                 {/* TOP TEXT: CAMISETA CONGRESSO (Reduzido) */}
+                                 <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
+                                     <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 select-none mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm">
+                                         CAMISETA CONGRESSO
+                                     </h2>
+                                 </div>
+
+                                 {/* IMG - Ocupando espaço de forma inteligente */}
+                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
+                                    <img 
+                                        src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png"
+                                        alt="Camiseta Terracota Oficial"
+                                        className="h-[50vh] md:h-[65vh] w-auto object-contain drop-shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500"
+                                    />
+                                    
+                                    {/* Spotlight on floor */}
+                                    <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
+                                 </div>
+
+                                 {/* BADGE - Positioned BELOW the shirt (Absolute Bottom) */}
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform">
+                                     <span className="font-display text-sm md:text-2xl text-brand-pink uppercase tracking-wide">Garanta a sua</span>
+                                 </div>
+                             </div>
+                        </motion.div>
+                    )}
+
+                    {/* SLIDE 2: CAMISETA VERDE */}
+                    {slideIndex === 2 && (
+                        <motion.div
+                            key="shirt-green"
+                            initial={{ x: 50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -50, opacity: 0 }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                            className="absolute inset-0"
+                        >
+                            <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                 {/* BACKGROUND DECORATIONS (CSS LIGHTWEIGHT) */}
+                                 <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
+                                     {/* Rotating Sunburst Effect */}
+                                      <div 
+                                        className="absolute w-[80vh] h-[80vh] animate-[spin_30s_linear_infinite]"
+                                        style={{ background: 'repeating-conic-gradient(from 0deg, rgba(79, 70, 229, 0.05) 0deg 10deg, transparent 10deg 20deg)' }}
+                                     />
+                                     <div className="absolute w-[50vh] h-[50vh] border-4 border-dashed border-white/40 rounded-full animate-spin-slow" />
+                                     <div className="absolute top-[15%] left-[10%] text-[#4F46E5] animate-pulse"><Zap size={32} fill="currentColor" /></div>
+                                 </div>
+
+                                 {/* TOP TEXT: CAMISETA CONGRESSO (Reduzido) */}
+                                 <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
+                                     <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 select-none mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm">
+                                         CAMISETA CONGRESSO
+                                     </h2>
+                                 </div>
+
+                                 {/* IMG - Ocupando espaço de forma inteligente */}
+                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
+                                    <img 
+                                        src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png"
+                                        alt="Camiseta Verde Oficial"
+                                        className="h-[50vh] md:h-[65vh] w-auto object-contain drop-shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-500"
+                                    />
+                                    {/* Spotlight on floor */}
+                                    <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
+                                 </div>
+
+                                 {/* BADGE - Positioned BELOW the shirt (Absolute Bottom) */}
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform">
+                                     <span className="font-display text-sm md:text-2xl text-white uppercase tracking-wide">Edição Especial</span>
+                                 </div>
+                             </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
          </div>
 
-         {/* Wave Transition */}
+         {/* Wave Transition (MANTIDO INTACTO) */}
          <div className="absolute bottom-0 left-0 right-0 w-full z-20 leading-none translate-y-[1px]">
             <svg className="w-full h-12 md:h-24 fill-black" viewBox="0 0 1440 320" preserveAspectRatio="none">
               <path fillOpacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,202.7C1248,181,1344,171,1392,165.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>

@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Star, Zap, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, Zap, User, MousePointer2, X, Instagram, ExternalLink } from 'lucide-react';
 
 interface LeaderCardProps {
   role: string;
@@ -12,6 +12,8 @@ interface LeaderCardProps {
   className?: string; // Classe extra para o container (ex: col-span)
   imageAspect?: string; // Aspect ratio da imagem
   objectPosition?: string; // Posição da imagem (object-top, object-center, etc)
+  onClick?: () => void; // Função de clique opcional
+  showHighlight?: boolean; // Se deve mostrar o sticker de destaque
 }
 
 const LeaderCard: React.FC<LeaderCardProps> = ({ 
@@ -22,14 +24,24 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
   rotate, 
   className = "", 
   imageAspect = "aspect-[4/5]",
-  objectPosition = "object-center"
+  objectPosition = "object-center",
+  onClick,
+  showHighlight = false
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-50px" }}
     whileHover={{ scale: 1.03, rotate: 0 }}
-    className={`relative group bg-white border-[3px] md:border-4 border-black rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 flex flex-col items-center text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 ${rotate} ${className}`}
+    onClick={onClick}
+    className={`
+        relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
+        ${onClick ? 'cursor-pointer' : ''}
+        ${showHighlight 
+            ? 'bg-white border-4 border-brand-neon shadow-[0_0_30px_rgba(204,255,0,0.5)] hover:shadow-[0_0_50px_rgba(204,255,0,0.8)]' 
+            : 'bg-white border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+        }
+    `}
   >
     {/* Decorative Tape/Sticker */}
     <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 ${color} border-2 border-black rotate-[-2deg] opacity-100 z-20`} />
@@ -62,10 +74,30 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
         {name}
       </h3>
     </div>
+
+    {/* Sticker de Destaque (Se ativado) - Posicionado na quina inferior direita, levemente para fora para não cobrir o nome */}
+    {showHighlight && (
+       <div className="absolute -bottom-3 -right-2 md:-bottom-5 md:-right-4 z-40 animate-bounce cursor-pointer pointer-events-none">
+           <div className="bg-brand-neon border-2 border-black px-2 py-1 md:px-3 md:py-1.5 shadow-[3px_3px_0px_rgba(0,0,0,1)] -rotate-12 flex flex-col items-center justify-center hover:scale-110 transition-transform pointer-events-auto">
+                <div className="flex items-center gap-1">
+                    <MousePointer2 size={14} className="fill-black text-black" />
+                    <span className="font-fun text-[10px] md:text-xs text-black leading-none uppercase">CLIQUE AQUI</span>
+                </div>
+                <span className="font-sans text-[8px] font-bold text-black leading-none uppercase tracking-tighter">Para conhecê-los</span>
+           </div>
+       </div>
+    )}
   </motion.div>
 );
 
 export const AboutSection: React.FC = () => {
+  const [showLeadersModal, setShowLeadersModal] = useState(false);
+
+  const handleInstagramRedirect = (url: string) => {
+    window.open(url, '_blank');
+    setShowLeadersModal(false);
+  };
+
   return (
     <section id="about-section" className="relative w-full bg-[#0a0a2a] pt-24 pb-32 overflow-hidden z-20">
       
@@ -156,7 +188,7 @@ export const AboutSection: React.FC = () => {
             {/* Card 1 */}
             <LeaderCard 
                 role="Pastores IEADMS"
-                name="Pr. Elial e Jane"
+                name="Pr. Eliel e Jane"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/elieljane.jpg" 
                 color="bg-brand-neon text-black"
                 rotate="rotate-[-2deg]"
@@ -182,11 +214,11 @@ export const AboutSection: React.FC = () => {
                 rotate="rotate-[-1deg]"
                 className="col-span-2 md:col-span-1"
                 imageAspect="aspect-[16/9] md:aspect-[4/5]"
+                objectPosition="object-[center_30%]"
                 
-                // ALTERE O VALOR ABAIXO PARA AJUSTAR O POSICIONAMENTO DA FOTO
-                // [center_25%] significa: Centralizado horizontalmente, 25% do topo verticalmente.
-                // Aumente a % para mostrar mais a parte de baixo da foto. Diminua para mostrar o topo.
-                objectPosition="object-[center_30%]" 
+                // --- NOVAS PROPS PARA INTERATIVIDADE ---
+                onClick={() => setShowLeadersModal(true)}
+                showHighlight={true}
             />
 
         </div>
@@ -198,6 +230,85 @@ export const AboutSection: React.FC = () => {
             <path d="M0,60 C320,140 640,0 960,60 C1280,120 1440,60 1440,60 V120 H0 V60 Z"></path>
          </svg>
       </div>
+
+      {/* --- MODAL DE SELEÇÃO DE INSTAGRAM --- */}
+      <AnimatePresence>
+        {showLeadersModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+             {/* Backdrop */}
+             <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowLeadersModal(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+             />
+             
+             {/* Modal Content */}
+             <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative bg-[#1a1a1a] border-4 border-brand-purple p-6 md:p-8 rounded-3xl w-full max-w-sm shadow-[0_0_50px_rgba(91,33,182,0.5)] overflow-hidden"
+             >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
+
+                <button 
+                  onClick={() => setShowLeadersModal(false)}
+                  className="absolute top-4 right-4 text-white/50 hover:text-white hover:rotate-90 transition-all"
+                >
+                  <X size={24} />
+                </button>
+
+                <div className="flex flex-col items-center mb-8">
+                   <div className="w-16 h-16 bg-brand-purple rounded-full flex items-center justify-center mb-4 border-2 border-white shadow-lg animate-pulse">
+                      <Instagram size={32} className="text-white" />
+                   </div>
+                   <h3 className="text-2xl font-display uppercase text-white text-center leading-none">
+                      Quem você quer conhecer?
+                   </h3>
+                   <p className="text-white/50 text-xs mt-2 uppercase tracking-wide">Selecione um perfil para visitar</p>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {/* Option 1: Joelson */}
+                  <button
+                    onClick={() => handleInstagramRedirect('https://www.instagram.com/joelsonsilva_santos/')}
+                    className="group w-full py-4 px-4 rounded-2xl bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-brand-neon flex items-center justify-center text-white group-hover:text-black font-bold transition-colors">
+                         <User size={20} />
+                       </div>
+                       <div className="flex flex-col items-start">
+                          <span className="text-white font-bold uppercase tracking-wide group-hover:text-brand-neon transition-colors">Pr. Joelson</span>
+                          <span className="text-white/40 text-[10px]">@joelsonsilva_santos</span>
+                       </div>
+                    </div>
+                    <ExternalLink size={18} className="text-white/30 group-hover:text-brand-neon" />
+                  </button>
+
+                  {/* Option 2: Mariana */}
+                  <button
+                    onClick={() => handleInstagramRedirect('https://www.instagram.com/marianalima_rb/')}
+                    className="group w-full py-4 px-4 rounded-2xl bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-pink hover:bg-brand-pink/10 transition-all flex items-center justify-between"
+                  >
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-brand-pink flex items-center justify-center text-white font-bold transition-colors">
+                         <User size={20} />
+                       </div>
+                       <div className="flex flex-col items-start">
+                          <span className="text-white font-bold uppercase tracking-wide group-hover:text-brand-pink transition-colors">Mariana</span>
+                          <span className="text-white/40 text-[10px]">@marianalima_rb</span>
+                       </div>
+                    </div>
+                    <ExternalLink size={18} className="text-white/30 group-hover:text-brand-pink" />
+                  </button>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </section>
   );

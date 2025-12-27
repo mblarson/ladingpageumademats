@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, PanInfo, useInView } from 'framer-motion';
 import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star } from 'lucide-react';
 
 interface GuestCardProps {
@@ -52,13 +52,33 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
 export const EventSection: React.FC = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0); // 0: Text, 1: Shirt 1, 2: Shirt 2
+  
+  // Referência para saber se a seção está visível na tela
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { amount: 0.3, once: false });
 
+  // Só inicia o timer SE a seção estiver visível.
+  // Isso garante que slideIndex permaneça em 0 enquanto o usuário está na HeroSection.
   useEffect(() => {
+    if (!isInView) return; 
+
     const timer = setInterval(() => {
       setSlideIndex((prev) => (prev + 1) % 3);
-    }, 3000);
+    }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isInView]);
+
+  // Lógica de Swipe/Arrastar
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const threshold = 50; // Mínimo de pixels para considerar um swipe
+    if (info.offset.x < -threshold) {
+        // Swipe Esquerda -> Próximo
+        setSlideIndex((prev) => (prev + 1) % 3);
+    } else if (info.offset.x > threshold) {
+        // Swipe Direita -> Anterior
+        setSlideIndex((prev) => (prev === 0 ? 2 : prev - 1));
+    }
+  };
 
   const guests = [
     { 
@@ -136,7 +156,7 @@ export const EventSection: React.FC = () => {
   };
 
   return (
-    <section id="event-section" className="relative w-full flex flex-col z-30">
+    <section id="event-section" ref={sectionRef} className="relative w-full flex flex-col z-30">
       
       {/* CSS Styles for this section */}
       <style>{`
@@ -229,16 +249,19 @@ export const EventSection: React.FC = () => {
 
          {/* CONTENT WRAPPER */}
          {/* IMPORTANTE: Este container define a altura baseada no conteúdo de texto, evitando reflow. */}
-         <div className="max-w-5xl mx-auto relative z-10">
+         <div className="max-w-5xl mx-auto relative z-10 cursor-grab active:cursor-grabbing">
             
             {/* 1. ORIGINAL CONTENT (TEXTO) */}
-            {/* Mantemos este conteúdo RELATIVE para que ele ocupe espaço físico e defina a altura da div pai. */}
-            {/* Quando não for o slide 0, apenas reduzimos a opacidade e movemos visualmente, mas o espaço continua lá. */}
+            {/* Adicionado drag="x" para permitir deslizar mesmo quando o texto está visível */}
             <motion.div
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={handleDragEnd}
                 animate={{
                     x: slideIndex === 0 ? 0 : -30,
                     opacity: slideIndex === 0 ? 1 : 0,
-                    pointerEvents: slideIndex === 0 ? 'auto' : 'none', // Impede clique quando invisível
+                    pointerEvents: slideIndex === 0 ? 'auto' : 'none', 
                 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="flex flex-col items-center justify-center w-full"
@@ -311,20 +334,24 @@ export const EventSection: React.FC = () => {
             </motion.div>
 
             {/* 2. OVERLAY LAYER FOR SHIRTS */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <div className="absolute inset-0 flex items-center justify-center z-20">
                 <AnimatePresence mode="wait">
                     {/* SLIDE 1: CAMISETA TERRACOTA */}
                     {slideIndex === 1 && (
                         <motion.div
                             key="shirt-terracota"
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.2}
+                            onDragEnd={handleDragEnd}
                             initial={{ x: 50, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -50, opacity: 0 }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
-                            className="absolute inset-0"
+                            className="absolute inset-0 cursor-grab active:cursor-grabbing"
                         >
                              <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                 {/* BACKGROUND DECORATIONS (CSS LIGHTWEIGHT) */}
+                                 {/* BACKGROUND DECORATIONS */}
                                  <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
                                      {/* Rotating Ring */}
                                      <div className="absolute w-[50vh] h-[50vh] md:w-[60vh] md:h-[60vh] border-[2px] border-dashed border-[#4F46E5] rounded-full animate-[spin_20s_linear_infinite]" />
@@ -336,27 +363,28 @@ export const EventSection: React.FC = () => {
                                      <div className="absolute bottom-[30%] left-[20%] text-[#4F46E5] animate-bounce" style={{ animationDelay: '0.5s' }}><Star size={16} fill="currentColor" /></div>
                                  </div>
                                  
-                                 {/* TOP TEXT: CAMISETA CONGRESSO (Reduzido) */}
+                                 {/* TOP TEXT: CAMISETA CONGRESSO */}
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
                                      <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 select-none mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm">
                                          CAMISETA CONGRESSO
                                      </h2>
                                  </div>
 
-                                 {/* IMG - Ocupando espaço de forma inteligente */}
+                                 {/* IMG - AUMENTADO TAMANHO SIGNIFICATIVAMENTE */}
                                  <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
                                     <img 
                                         src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png"
                                         alt="Camiseta Terracota Oficial"
-                                        className="h-[50vh] md:h-[65vh] w-auto object-contain drop-shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500"
+                                        className="h-[60vh] md:h-[80vh] w-auto object-contain drop-shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500 scale-110"
+                                        style={{ maxWidth: '120%' }}
                                     />
                                     
                                     {/* Spotlight on floor */}
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
 
-                                 {/* BADGE - Positioned BELOW the shirt (Absolute Bottom) */}
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform">
+                                 {/* BADGE */}
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform pointer-events-none">
                                      <span className="font-display text-sm md:text-2xl text-brand-pink uppercase tracking-wide">Garanta a sua</span>
                                  </div>
                              </div>
@@ -367,14 +395,18 @@ export const EventSection: React.FC = () => {
                     {slideIndex === 2 && (
                         <motion.div
                             key="shirt-green"
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.2}
+                            onDragEnd={handleDragEnd}
                             initial={{ x: 50, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -50, opacity: 0 }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
-                            className="absolute inset-0"
+                            className="absolute inset-0 cursor-grab active:cursor-grabbing"
                         >
                             <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                 {/* BACKGROUND DECORATIONS (CSS LIGHTWEIGHT) */}
+                                 {/* BACKGROUND DECORATIONS */}
                                  <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
                                      {/* Rotating Sunburst Effect */}
                                       <div 
@@ -385,26 +417,27 @@ export const EventSection: React.FC = () => {
                                      <div className="absolute top-[15%] left-[10%] text-[#4F46E5] animate-pulse"><Zap size={32} fill="currentColor" /></div>
                                  </div>
 
-                                 {/* TOP TEXT: CAMISETA CONGRESSO (Reduzido) */}
+                                 {/* TOP TEXT: CAMISETA CONGRESSO */}
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
                                      <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 select-none mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm">
                                          CAMISETA CONGRESSO
                                      </h2>
                                  </div>
 
-                                 {/* IMG - Ocupando espaço de forma inteligente */}
+                                 {/* IMG - AUMENTADO TAMANHO SIGNIFICATIVAMENTE */}
                                  <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
                                     <img 
                                         src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png"
                                         alt="Camiseta Verde Oficial"
-                                        className="h-[50vh] md:h-[65vh] w-auto object-contain drop-shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-500"
+                                        className="h-[60vh] md:h-[80vh] w-auto object-contain drop-shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-500 scale-110"
+                                        style={{ maxWidth: '120%' }}
                                     />
                                     {/* Spotlight on floor */}
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
 
-                                 {/* BADGE - Positioned BELOW the shirt (Absolute Bottom) */}
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform">
+                                 {/* BADGE */}
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap hover:scale-105 transition-transform pointer-events-none">
                                      <span className="font-display text-sm md:text-2xl text-white uppercase tracking-wide">Edição Especial</span>
                                  </div>
                              </div>

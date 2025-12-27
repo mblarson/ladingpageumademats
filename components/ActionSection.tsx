@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
+import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface ActionSectionProps {
   onNavigateToBible?: () => void;
+  previewConfig?: SiteConfig;
 }
 
-export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible }) => {
+export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible, previewConfig }) => {
+  const { config: storedConfig, loading } = useSiteConfig();
+  const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   // OTIMIZAÇÃO: Reduzido de 15 para 6 partículas. 
@@ -108,9 +113,9 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
         {/* Title */}
         <div className="flex flex-col items-center justify-center mb-12 md:mb-20 text-center">
              <h2 className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
-             Selecione o que
+             {activeConfig.action_title1}
              <br />
-             <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-7xl block mt-2">deseja fazer:</span>
+             <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-7xl block mt-2">{activeConfig.action_title2}</span>
            </h2>
         </div>
 
@@ -125,7 +130,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
             transition={{ delay: 0.1 }}
             onMouseEnter={() => setHoveredCard('games')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => handleCardClick('https://umadegames.com.br')}
+            onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }} // Simplificado (removido translateY)
             className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
@@ -177,7 +182,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
             transition={{ delay: 0.2 }}
             onMouseEnter={() => setHoveredCard('shirt')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => handleCardClick('https://projeto-camiseta.vercel.app/?mode=view')}
+            onClick={() => handleCardClick(activeConfig.action_shirtLink)}
             whileHover={{ scale: 0.98 }}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
             style={{ willChange: 'transform' }}

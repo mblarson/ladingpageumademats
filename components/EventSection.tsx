@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo, useInView } from 'framer-motion';
 import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star } from 'lucide-react';
+import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface GuestCardProps {
   name: string;
@@ -59,7 +60,14 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
   </motion.div>
 );
 
-export const EventSection: React.FC = () => {
+interface EventSectionProps {
+  previewConfig?: SiteConfig;
+}
+
+export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => {
+  const { config: storedConfig, loading } = useSiteConfig();
+  const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+
   const [showMapModal, setShowMapModal] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0); // 0: Text, 1: Shirt 1, 2: Shirt 2
   
@@ -123,9 +131,9 @@ export const EventSection: React.FC = () => {
 
   const addToCalendar = () => {
     const event = {
-      title: "UMADEMATS 2026 - Jubileu de Ouro",
-      description: "Congresso UMADEMATS 2026 - Jubileu de Ouro. Participe deste momento histórico!",
-      location: "Bosque Expo - Shopping Bosque dos Ipês",
+      title: `${activeConfig.event_title} - ${activeConfig.event_badge}`,
+      description: `Congresso UMADEMATS. Participe deste momento histórico!`,
+      location: activeConfig.event_location,
       start: "20260403T180000",
       end: "20260404T220000"
     };
@@ -153,7 +161,7 @@ export const EventSection: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const address = "Av. Cônsul Assaf Trad, 4796 - Parque dos Novos Estados, Campo Grande - MS, 79035-900";
+  const address = activeConfig.event_location;
   const encodedAddress = encodeURIComponent(address);
 
   const openMap = () => {
@@ -252,7 +260,7 @@ export const EventSection: React.FC = () => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
+                {activeConfig.event_marqueeText}
               </span>
             ))}
          </motion.div>
@@ -304,7 +312,7 @@ export const EventSection: React.FC = () => {
                   >
                      <div className="animate-wiggle-slow origin-center">
                         <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
-                          Congresso
+                          {activeConfig.event_title}
                         </h2>
                      </div>
                   </motion.div>
@@ -314,7 +322,7 @@ export const EventSection: React.FC = () => {
                     className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
                   >
                     <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none">
-                        Jubileu de Ouro
+                        {activeConfig.event_badge}
                     </h3>
                   </div>
                 </div>
@@ -336,7 +344,7 @@ export const EventSection: React.FC = () => {
                     </div>
 
                     <Calendar className="w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-                    <span>03 e 04 de Abril</span>
+                    <span>{activeConfig.event_date}</span>
                   </div>
                   
                   {/* BUTTON 2: LOCATION */}
@@ -354,7 +362,7 @@ export const EventSection: React.FC = () => {
                     </div>
 
                     <MapPin className="text-[#4F46E5] group-hover:text-white w-3.5 h-3.5 md:w-8 md:h-8 group-hover:animate-bounce" />
-                    <span>Bosque Expo - Shopping Bosque dos Ipês</span>
+                    <span className="max-w-[200px] md:max-w-none truncate">{activeConfig.event_location}</span>
                   </div>
                 </div>
             </motion.div>
@@ -507,7 +515,7 @@ export const EventSection: React.FC = () => {
               <div className="relative">
                 {/* Updated Title Color to Neon */}
                 <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)] animate-pulse-scale">
-                  CONFIRMADOS
+                  {activeConfig.event_guestTitle}
                 </h3>
               </div>
               
@@ -539,7 +547,7 @@ export const EventSection: React.FC = () => {
             >
               {[...Array(10)].map((_, i) => (
                 <span key={i} className="mx-6 flex items-center gap-4">
-                  UMADEMATS 2026 • JUBILEU DE OURO • 
+                  {activeConfig.event_marqueeText}
                 </span>
               ))}
            </motion.div>

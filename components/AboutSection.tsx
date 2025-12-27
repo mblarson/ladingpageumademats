@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, User, MousePointer2, X, Instagram, ExternalLink } from 'lucide-react';
+import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface LeaderCardProps {
   role: string;
@@ -89,7 +90,14 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
   </motion.div>
 );
 
-export const AboutSection: React.FC = () => {
+interface AboutSectionProps {
+  previewConfig?: SiteConfig;
+}
+
+export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => {
+  const { config: storedConfig, loading } = useSiteConfig();
+  const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+
   const [showLeadersModal, setShowLeadersModal] = useState(false);
 
   const handleInstagramRedirect = (url: string) => {
@@ -136,8 +144,7 @@ export const AboutSection: React.FC = () => {
                className="relative z-10"
              >
                 <h2 className="text-[15vw] md:text-9xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
-                    QUEM
-                    <span className="text-brand-neon block md:inline md:ml-6">SOMOS</span>
+                    {activeConfig.about_title}
                 </h2>
                 
                 {/* Decorative Elements around Title */}
@@ -163,7 +170,7 @@ export const AboutSection: React.FC = () => {
                 className="w-full md:max-w-5xl aspect-video rounded-[1rem] md:rounded-[2rem] overflow-hidden border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white relative z-10"
             >
                 <img 
-                    src="https://raw.githubusercontent.com/mblarson/imagens/main/ieadms.png" 
+                    src={activeConfig.about_bannerUrl} 
                     alt="IEADMS Banner"
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -177,7 +184,7 @@ export const AboutSection: React.FC = () => {
               transition={{ delay: 0.2 }}
               className="mt-6 text-white text-center font-sans text-sm md:text-xl font-medium max-w-4xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
             >
-              Igreja com visão para o século XXI, dedicada a apresentar Deus ao mundo, cumprir o evangelho de Cristo, incentivar a fé e fortalecer uma comunidade vitoriosa sustentada pela promessa de que as portas do inferno não prevalecerão. Estamos em Campo Grande - MS no endereço Av. Dr. João Rosa Píres, 482 - Amambai.
+              {activeConfig.about_text}
             </motion.p>
         </div>
 

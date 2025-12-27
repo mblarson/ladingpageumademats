@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Instagram, Church, Gamepad2, Calendar, Users } from 'lucide-react';
+import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  // Se passado, usa essa config (modo Preview do Admin). Se não, busca do hook.
+  previewConfig?: SiteConfig; 
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
+  const { config: storedConfig, loading } = useSiteConfig();
+  
+  // Decide qual config usar: A prop (se editando) ou a do banco (se visitando)
+  const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -17,8 +28,6 @@ export const HeroSection: React.FC = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      console.warn(`Elemento com id ${id} não encontrado.`);
     }
   };
 
@@ -33,10 +42,16 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full min-h-screen bg-[#4F46E5] flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden">
+    <section 
+      className="relative w-full min-h-screen flex flex-col items-center justify-end px-4 pb-24 md:pb-32 overflow-hidden transition-colors duration-500"
+      style={{ backgroundColor: activeConfig.hero_bgColor }}
+    >
       
-      {/* Top Marquee Transition */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black bg-brand-neon py-2 md:py-4 shadow-xl">
+      {/* Top Marquee Transition - Dinâmico */}
+      <div 
+        className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-4 shadow-xl"
+        style={{ backgroundColor: activeConfig.hero_accentColor }}
+      >
          <motion.div 
             className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide"
             animate={{ x: ["-50%", "0%"] }}
@@ -45,102 +60,86 @@ export const HeroSection: React.FC = () => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
+                {activeConfig.hero_marqueeText}
               </span>
             ))}
          </motion.div>
       </div>
 
-      {/* CUSTOM NAV MENU - PILL SHAPE (ONDULADO) */}
-      {/* Z-INDEX AUMENTADO PARA 95 PARA FICAR ACIMA DA ARANHA (que é z-90) */}
+      {/* CUSTOM NAV MENU - Cores Dinâmicas */}
       <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-5xl z-[95]">
         <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden bg-white/5 backdrop-blur-sm">
           
-          {/* Item 1: Congresso - Green #69AF23 */}
           <li className="flex-1">
             <button
               onClick={() => scrollToSection('event-section')}
               className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
               <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider">Congresso</span>
+              <span className="uppercase tracking-wider">{activeConfig.hero_button1}</span>
             </button>
           </li>
 
-          {/* Item 2: GAMES - Pink #E62D87 */}
-          {/* Direciona para action-section (Selecione o que deseja fazer) */}
-          {/* Borda lateral suavizada (opacity) para diminuir peso visual */}
            <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('action-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#E62D87] hover:bg-[#ff4aa3] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+              style={{ backgroundColor: activeConfig.hero_secondaryColor }}
             >
               <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider">GAMES</span>
+              <span className="uppercase tracking-wider">{activeConfig.hero_button2}</span>
             </button>
           </li>
 
-          {/* Item 3: Quem Somos - Yellow #FFC300 */}
-          {/* Direciona para about-section */}
           <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('about-section')}
               className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
               <Users className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider whitespace-nowrap">Quem Somos</span>
+              <span className="uppercase tracking-wider whitespace-nowrap">{activeConfig.hero_button3}</span>
             </button>
           </li>
 
         </ul>
       </nav>
 
-      {/* Background Elements Wrapper */}
+      {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Y2K Grid */}
         <div 
             className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]"
         />
 
-        {/* Floating Animated Elements Background - OTIMIZAÇÃO: CSS Animations ao invés de JS */}
         <div 
             className="absolute top-[-10%] right-[-10%] w-64 h-64 md:w-96 md:h-96 border-[20px] border-white/10 rounded-full border-dashed z-0 animate-[spin_20s_linear_infinite]"
         />
         
-        {/* OTIMIZAÇÃO: Blur-3xl substituído por Gradient Radial (muito mais leve) */}
         <div 
              className="absolute bottom-[10%] left-[-10%] w-48 h-48 md:w-72 md:h-72 rounded-full z-0 animate-[spin_25s_linear_infinite]"
              style={{ 
-               background: 'radial-gradient(circle, rgba(204, 255, 0, 0.2) 0%, transparent 70%)'
+               background: `radial-gradient(circle, ${activeConfig.hero_accentColor}33 0%, transparent 70%)` // Hex + 33 = 20% opacity
              }}
         />
         
-        {/* 3D Churches - Optimized props */}
         <motion.div
-            style={{ perspective: 1000 }}
-            animate={{ 
-              rotateY: [0, 360],
-              y: [0, -20, 0]
-            }}
+            style={{ perspective: 1000, color: activeConfig.hero_secondaryColor }}
+            animate={{ rotateY: [0, 360], y: [0, -20, 0] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[20%] left-[10%] text-brand-pink opacity-40"
+            className="absolute top-[20%] left-[10%] opacity-40"
         >
             <Church size={80} strokeWidth={1} fill="currentColor" />
         </motion.div>
 
         <motion.div
-            style={{ perspective: 1000 }}
-            animate={{ 
-              rotateY: [360, 0],
-              scale: [1, 1.1, 1] // Scale reduzido para menos repainting
-            }}
+            style={{ perspective: 1000, color: activeConfig.hero_accentColor }}
+            animate={{ rotateY: [360, 0], scale: [1, 1.1, 1] }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-[30%] right-[10%] text-brand-neon opacity-40"
+            className="absolute bottom-[30%] right-[10%] opacity-40"
         >
             <Church size={60} strokeWidth={1} fill="currentColor" />
         </motion.div>
         
-        {/* Flying Plane Mascot - OTIMIZAÇÃO: will-change */}
+        {/* Flying Mascot */}
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
@@ -152,55 +151,34 @@ export const HeroSection: React.FC = () => {
             y: [0, -15, 0] 
           }}
           transition={{
-            x: {
-              duration: 8, 
-              repeat: Infinity,
-              repeatDelay: 1, 
-              ease: "linear",
-            },
-            y: {
-              duration: 2,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut"
-            }
+            x: { duration: 8, repeat: Infinity, repeatDelay: 1, ease: "linear" },
+            y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }
           }}
         />
-
-        {/* Decorative Scribbles */}
-        <svg className="absolute top-20 left-10 w-24 h-24 text-black/10 rotate-12" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-          <path d="M10 50 Q 25 25, 50 50 T 90 50" />
-        </svg>
       </div>
 
-      {/* Swinging Spider Mascot - SIGNIFICANTLY INCREASED WEB SIZE */}
-      {/* Z-Index 90 é menor que o menu (95), evitando bloqueio de clique */}
-      <motion.div
-        className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-[90] origin-top flex flex-col items-center"
-        initial={{ rotate: 5 }}
-        animate={{ rotate: [-5, 5] }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut"
-        }}
-        style={{ willChange: 'transform' }}
-      >
-        {/* Teia alongada para 48 (mobile) e 80 (desktop) */}
-        <div className="w-1 h-48 md:w-1.5 md:h-80 bg-white/60 shadow-lg" />
-        <img
-          src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png"
-          alt="Spider Mascot"
-          className="w-[60vw] md:w-[30vw] -mt-2 drop-shadow-2xl hover:scale-110 transition-transform cursor-grab active:cursor-grabbing" 
-        />
-      </motion.div>
+      {/* Swinging Spider Mascot - Dynamic */}
+      {activeConfig.hero_showMascot && (
+        <motion.div
+            className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-[90] origin-top flex flex-col items-center"
+            initial={{ rotate: 5 }}
+            animate={{ rotate: [-5, 5] }}
+            transition={{ duration: 4, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+            style={{ willChange: 'transform' }}
+        >
+            <div className="w-1 h-48 md:w-1.5 md:h-80 bg-white/60 shadow-lg" />
+            <img
+            src={activeConfig.hero_mascotUrl}
+            alt="Mascot"
+            className="w-[60vw] md:w-[30vw] -mt-2 drop-shadow-2xl hover:scale-110 transition-transform cursor-grab active:cursor-grabbing" 
+            />
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
         
-        {/* Static Welcome Badge */}
-        {/* MODIFIED: Increased margin-bottom to move the badge up relative to the title below it */}
+        {/* Badge */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -214,11 +192,10 @@ export const HeroSection: React.FC = () => {
             </div>
         </motion.div>
 
-        {/* Dynamic Title Carousel Container */}
+        {/* Dynamic Title Carousel */}
         <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-visible">
           <AnimatePresence mode="wait">
             
-            {/* STATE 0: UMADEMATS */}
             {currentIndex === 0 && (
               <motion.div
                 key="logo"
@@ -229,21 +206,14 @@ export const HeroSection: React.FC = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                {/* 
-                    UPDATED: Increased Text Size and Scale for Width/Height 
-                    Mobile: text-[34vw] (was 28vw)
-                    Desktop: text-[15vw] (was 12vw)
-                    Scale: scale-y-110 (stretches height), scale-x-105 (stretches width)
-                */}
                 <h1 className="text-[34vw] md:text-[15vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl">
-                  UMADE
+                  {activeConfig.hero_titleLine1}
                   <br />
-                  <span className="text-brand-neon">MATS</span>
+                  <span style={{ color: activeConfig.hero_accentColor }}>{activeConfig.hero_titleLine2}</span>
                 </h1>
               </motion.div>
             )}
 
-            {/* STATE 1: JOGUE AGORA */}
             {currentIndex === 1 && (
               <motion.div
                 key="game"
@@ -257,7 +227,10 @@ export const HeroSection: React.FC = () => {
                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
                   JOGUE AGORA
                 </h2>
-                <div className="mt-4 md:mt-6 bg-brand-neon border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 -rotate-2 transform">
+                <div 
+                    className="mt-4 md:mt-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 -rotate-2 transform"
+                    style={{ backgroundColor: activeConfig.hero_accentColor }}
+                >
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-black uppercase text-center">
                     "AS AVENTURAS DE PENTECA"
                   </h3>
@@ -265,7 +238,6 @@ export const HeroSection: React.FC = () => {
               </motion.div>
             )}
 
-            {/* STATE 2: LEIA BÍBLIA */}
             {currentIndex === 2 && (
               <motion.div
                 key="bible"
@@ -279,7 +251,10 @@ export const HeroSection: React.FC = () => {
                  <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
                   LEIA A BÍBLIA
                 </h2>
-                <div className="mt-4 md:mt-6 bg-brand-pink border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 rotate-2 transform">
+                <div 
+                    className="mt-4 md:mt-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-2 md:px-8 md:py-4 rotate-2 transform"
+                    style={{ backgroundColor: activeConfig.hero_secondaryColor }}
+                >
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">
                     JUNTO COM A UMADEMATS
                   </h3>
@@ -290,7 +265,6 @@ export const HeroSection: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Static Paragraph */}
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -300,7 +274,6 @@ export const HeroSection: React.FC = () => {
           ASSEMBLEIA DE DEUS DE MATO GROSSO DO SUL.
         </motion.p>
 
-        {/* Action Button - Social */}
         <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
@@ -309,7 +282,8 @@ export const HeroSection: React.FC = () => {
         >
           <button 
             onClick={handleInstagramClick}
-            className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-brand-pink via-purple-500 to-brand-purple rounded-2xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20"
+            className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl hover:scale-110 transition-transform cursor-pointer border-2 border-white/20"
+            style={{ background: `linear-gradient(to top right, ${activeConfig.hero_secondaryColor}, #a855f7, ${activeConfig.hero_bgColor})` }}
           >
             <Instagram className="text-white" size={28} />
           </button>

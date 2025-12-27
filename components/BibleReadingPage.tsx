@@ -1,75 +1,72 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, ArrowLeft, BookOpen, Calendar, Trash2, AlertCircle, LogIn, User, ShieldCheck } from 'lucide-react';
+import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User } from 'lucide-react';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { supabase } from '../lib/supabaseClient';
 
-// --- TYPES ---
-interface ReadingItem {
-  id: string; // unique string: "m1-d1-i1"
-  ref: string; // e.g. "Gênesis 1"
-  text: string[]; // Content
-}
+// --- DADOS FIXOS DO PLANO DE LEITURA (FONTE ÚNICA DE VERDADE) ---
+const RAW_PLAN = [
+  {
+    month: "Janeiro",
+    readings: "Gênesis 1–3; Gênesis 4–7; Gênesis 8–11; Gênesis 12–15; Gênesis 16–18; Gênesis 19–20; Gênesis 21–23; Gênesis 24–25; Gênesis 26–28; Gênesis 29–30; Gênesis 31–32; Gênesis 33–35; Gênesis 36–38; Gênesis 39–41; Gênesis 42–44; Gênesis 45–47; Gênesis 48–50; Êxodo 1–2; Êxodo 3–5; Êxodo 6–9; Êxodo 10–12; Êxodo 13–15; Êxodo 16–18; Êxodo 19–21; Êxodo 22–24; Êxodo 25–27; Êxodo 28–29; Êxodo 30–31; Êxodo 32–34; Êxodo 35–37; Êxodo 38–40"
+  },
+  {
+    month: "Fevereiro",
+    readings: "Levítico 1–4; Levítico 5–7; Levítico 8–9; Levítico 10–12; Levítico 13; Levítico 14–15; Levítico 16–18; Levítico 19–21; Levítico 22–23; Levítico 24–25; Levítico 26–27; Números 1–2; Números 3–4; Números 5–6; Números 7; Números 8–10; Números 11–13; Números 14; Números 15–17; Números 18–21; Números 22–24; Números 25–26; Números 27–29; Números 30–31; Números 32–33; Números 34–36; Deuteronômio 1–2; Deuteronômio 3–4"
+  },
+  {
+    month: "Março",
+    readings: "Deuteronômio 5–7; Deuteronômio 8–10; Deuteronômio 11–13; Deuteronômio 14–17; Deuteronômio 18–20; Deuteronômio 21–23; Deuteronômio 24–26; Deuteronômio 27–28; Deuteronômio 29–31; Deuteronômio 32–34; Josué 1–4; Josué 5–7; Josué 8–9; Josué 10–11; Josué 12–14; Josué 15–17; Josué 18–20; Josué 21–22; Josué 23–24; Juízes 1–3; Juízes 4–5; Juízes 6–8; Juízes 9–10; Juízes 11–12; Juízes 13–16; Juízes 17–18; Juízes 19–21; Rute 1–4; 1 Samuel 1–3; 1 Samuel 4–7; 1 Samuel 8–10"
+  },
+  {
+    month: "Abril",
+    readings: "1 Samuel 11–13; 1 Samuel 14–15; 1 Samuel 16–17; 1 Samuel 18–20; 1 Samuel 21–24; 1 Samuel 25–27; 1 Samuel 28–31; 2 Samuel 1–3; 2 Samuel 4–7; 2 Samuel 8–11; 2 Samuel 12–13; 2 Samuel 14–15; 2 Samuel 16–17; 2 Samuel 18–19; 2 Samuel 20–22; 2 Samuel 23–24; 1 Reis 1; 1 Reis 2–3; 1 Reis 4–6; 1 Reis 7; 1 Reis 8; 1 Reis 9–10; 1 Reis 11–12; 1 Reis 13–14; 1 Reis 15–16; 1 Reis 17–19; 1 Reis 20–22; 2 Reis 1–2; 2 Reis 3–4; 2 Reis 5–7"
+  },
+  {
+    month: "Maio",
+    readings: "2 Reis 8–9; 2 Reis 10–12; 2 Reis 13–14; 2 Reis 15–16; 2 Reis 17–18; 2 Reis 19–21; 2 Reis 22–25; 1 Crônicas 1–2; 1 Crônicas 3–4; 1 Crônicas 5–6; 1 Crônicas 7–9; 1 Crônicas 10–12; 1 Crônicas 13–16; 1 Crônicas 17–19; 1 Crônicas 20–23; 1 Crônicas 24–26; 1 Crônicas 27–29; 2 Crônicas 1–4; 2 Crônicas 5–7; 2 Crônicas 8–10; 2 Crônicas 11–14; 2 Crônicas 15–18; 2 Crônicas 19–22; 2 Crônicas 23–25; 2 Crônicas 26–28; 2 Crônicas 29–30; 2 Crônicas 31–33; 2 Crônicas 34–36; Esdras 1–2; Esdras 3–5; Esdras 6–8"
+  },
+  {
+    month: "Junho",
+    readings: "Esdras 9–10; Neemias 1–3; Neemias 4–6; Neemias 7–8; Neemias 9–10; Neemias 11–13; Ester 1–3; Ester 4–7; Ester 8–10; Jó 1–5; Jó 6–10; Jó 11–15; Jó 16–21; Jó 22–28; Jó 29–33; Jó 34–37; Jó 38–42; Salmos 1–9; Salmos 10–17; Salmos 18–22; Salmos 23–31; Salmos 32–37; Salmos 38–44; Salmos 45–51; Salmos 52–59; Salmos 60–67; Salmos 68–77; Salmos 78–81; Salmos 82–89"
+  },
+  {
+    month: "Julho",
+    readings: "Salmos 90–97; Salmos 98–104; Salmos 105–107; Salmos 108–116; Salmos 117–119:72; Salmos 119:73–176; Salmos 120–134; Salmos 135–142; Salmos 143–150; Provérbios 1–4; Provérbios 5–8; Provérbios 9–13; Provérbios 14–17; Provérbios 18–21; Provérbios 22–24; Provérbios 25–28; Provérbios 29–31; Eclesiastes 1–6; Eclesiastes 7–12; Cantares 1–8; Isaías 1–4; Isaías 5–8; Isaías 9–12; Isaías 13–16; Isaías 17–21; Isaías 22–25; Isaías 26–28; Isaías 29–31; Isaías 32–35; Isaías 36–39; Isaías 40–42"
+  },
+  {
+    month: "Agosto",
+    readings: "Isaías 43–47; Isaías 48–51; Isaías 52–56; Isaías 57–59; Isaías 60–63; Isaías 64–66; Jeremias 1–3; Jeremias 4–6; Jeremias 7–9; Jeremias 10–12; Jeremias 13–15; Jeremias 16–18; Jeremias 19–22; Jeremias 23–25; Jeremias 26–28; Jeremias 29–30; Jeremias 31–32; Jeremias 33–35; Jeremias 36–38; Jeremias 39–41; Jeremias 42–44; Jeremias 45–48; Jeremias 49–50; Jeremias 51–52; Lamentações 1–2; Lamentações 3–5; Ezequiel 1–4; Ezequiel 5–8; Ezequiel 9–12; Ezequiel 13–15; Ezequiel 16"
+  },
+  {
+    month: "Setembro",
+    readings: "Ezequiel 17–19; Ezequiel 20–21; Ezequiel 22–23; Ezequiel 24–26; Ezequiel 27–28; Ezequiel 29–31; Ezequiel 32–33; Ezequiel 34–36; Ezequiel 37–38; Ezequiel 39–40; Ezequiel 41–43; Ezequiel 44–45; Ezequiel 46–48; Daniel 1–2; Daniel 3–4; Daniel 5–6; Daniel 7–8; Daniel 9–10; Daniel 11–12; Oséias 1–6; Oséias 7–12; Oséias 13–14; Amós 1–5; Amós 6–9; Obadias; Jonas 1–4; Miquéias 1–7; Naum; Habacuque; Sofonias; Ageu; Zacarias 1–6; Zacarias 7–10"
+  },
+  {
+    month: "Outubro",
+    readings: "Zacarias 11–14; Malaquias 1–4; Mateus 1–4; Mateus 5–7; Mateus 8–9; Mateus 10–12; Mateus 13–14; Mateus 15–17; Mateus 18–20; Mateus 21–22; Mateus 23–24; Mateus 25–26; Mateus 27–28; Marcos 1–3; Marcos 4–5; Marcos 6–7; Marcos 8–9; Marcos 10–11; Marcos 12–13; Marcos 14–16; Lucas 1; Lucas 2–3; Lucas 4–5; Lucas 6–7; Lucas 8; Lucas 9; Lucas 10–11; Lucas 12–13; Lucas 14–16; Lucas 17–18; Lucas 19–20"
+  },
+  {
+    month: "Novembro",
+    readings: "Lucas 21–22; Lucas 23–24; João 1–3; João 4–5; João 6–7; João 8–9; João 10–11; João 12–13; João 14–16; João 17–18; João 19–21; Atos 1–4; Atos 5–7; Atos 8–9; Atos 10–11; Atos 12–13; Atos 14–15; Atos 16–18; Atos 19–20; Atos 21–23; Atos 24–26; Atos 27–28; Romanos 1–3; Romanos 4–7; Romanos 8–11; Romanos 12–14; Romanos 15–16; 1 Coríntios 1–4; 1 Coríntios 5–8; 1 Coríntios 9–11"
+  },
+  {
+    month: "Dezembro",
+    readings: "1 Coríntios 12–14; 1 Coríntios 15–16; 2 Coríntios 1–3; 2 Coríntios 4–7; 2 Coríntios 8–13; Gálatas 1–6; Efésios 1–3; Efésios 4–6; Filipenses 1–4; Colossenses 1–4; 1 Tessalonicenses 1–5; 2 Tessalonicenses 1–3; 1 Timóteo 1–4; 1 Timóteo 5–6; 2 Timóteo 1–4; Tito; Filemom; Hebreus 1–4; Hebreus 5–9; Hebreus 10–11; Hebreus 12–13; Tiago 1–5; 1 Pedro 1–5; 2 Pedro 1–3; 1 João 1–5; 2 João; 3 João; Judas; Apocalipse 1–5; Apocalipse 6–9; Apocalipse 10–12; Apocalipse 13–16; Apocalipse 17–19; Apocalipse 20–22"
+  },
+];
 
-interface DayPlan {
-  day: number;
-  date: string;
-  items: ReadingItem[];
-}
-
-interface MonthPlan {
-  id: number; // 0-11
-  name: string;
-  days: DayPlan[];
-}
-
-// --- MOCK DATA GENERATOR ---
-const generateMockData = (): MonthPlan[] => {
-  const months = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-
-  return months.map((monthName, mIndex) => {
-    const daysInMonth = 30; // Simplified
-    const days: DayPlan[] = Array.from({ length: daysInMonth }, (_, dIndex) => {
-      const dayNum = dIndex + 1;
-      
-      // Mocking references based on day
-      const items: ReadingItem[] = [
-        {
-          id: `m${mIndex}-d${dayNum}-i1`,
-          ref: `Gênesis ${dayNum}`,
-          text: [
-            `Texto bíblico de Gênesis capítulo ${dayNum}.`,
-            "No princípio criou Deus o céu e a terra.",
-            "E a terra era sem forma e vazia; e havia trevas sobre a face do abismo.",
-            "Esta é uma simulação do texto completo que só aparece ao clicar."
-          ]
-        },
-        {
-          id: `m${mIndex}-d${dayNum}-i2`,
-          ref: `Salmos ${dayNum}`,
-          text: [
-            `Texto bíblico de Salmos capítulo ${dayNum}.`,
-            "Bem-aventurado o homem que não anda segundo o conselho dos ímpios.",
-            "Antes tem o seu prazer na lei do Senhor."
-          ]
-        }
-      ];
-
-      return {
-        day: dayNum,
-        date: `${dayNum.toString().padStart(2, '0')}/${(mIndex + 1).toString().padStart(2, '0')}`,
-        items
-      };
-    });
-
-    return { id: mIndex, name: monthName, days };
-  });
-};
-
-const fullYearPlan = generateMockData();
+// Processamento dos dados para formato utilizável
+// ID structure: "m{monthIndex}-i{itemIndex}"
+const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
+  id: mIdx,
+  name: m.month,
+  items: m.readings.split('; ').map((ref, rIdx) => ({
+    id: `m${mIdx}-i${rIdx}`,
+    ref: ref.trim()
+  }))
+}));
 
 interface BibleReadingPageProps {
   onBack: () => void;
@@ -77,98 +74,103 @@ interface BibleReadingPageProps {
 
 // --- MAIN COMPONENT ---
 export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) => {
-  // Navigation State
-  const [view, setView] = useState<'months' | 'days' | 'reading'>('months');
+  // Navigation State: 'months' (Grid) or 'details' (List of readings for a month)
+  const [view, setView] = useState<'months' | 'details'>('months');
   const [selectedMonthId, setSelectedMonthId] = useState<number>(0);
-  const [selectedReadingItem, setSelectedReadingItem] = useState<ReadingItem | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   
-  // Data Logic (Extracted to Hook)
+  // Hook de Progresso
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
 
-  // --- AUTH HANDLERS ---
+  // --- CALCS ---
+  
+  const getMonthStats = (monthId: number) => {
+    const month = ANNUAL_PLAN[monthId];
+    const total = month.items.length;
+    const completed = month.items.filter(item => completedItems.includes(item.id)).length;
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { total, completed, percentage };
+  };
+
+  const totalAnnualProgress = useMemo(() => {
+    let totalItems = 0;
+    let totalCompleted = 0;
+    ANNUAL_PLAN.forEach(m => {
+      totalItems += m.items.length;
+      totalCompleted += m.items.filter(i => completedItems.includes(i.id)).length;
+    });
+    return totalItems === 0 ? 0 : Math.round((totalCompleted / totalItems) * 100);
+  }, [completedItems]);
+
+  // --- ACTIONS ---
+
   const handleLogin = async () => {
-    // Salva a intenção no LocalStorage.
     localStorage.setItem('return_to_bible', 'true');
     const redirectTo = window.location.origin;
-    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
+      options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } },
     });
-    if (error) {
-      console.error("Erro detalhado do login:", error);
-      alert('Erro ao conectar com Google: ' + (error.message || JSON.stringify(error)));
-    }
+    if (error) alert('Erro ao conectar: ' + error.message);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
-  // Handle visual confirmation reset
-  const handleResetConfirmAction = () => {
-    resetProgress();
-    setShowResetConfirm(false);
-  };
-
-  // --- HELPERS ---
-  const isDayComplete = (day: DayPlan) => {
-    return day.items.every(item => completedItems.includes(item.id));
-  };
-
-  const getMonthProgress = (monthId: number) => {
-    const month = fullYearPlan[monthId];
-    let totalItems = 0;
-    let readItems = 0;
-    
-    month.days.forEach(day => {
-      day.items.forEach(item => {
-        totalItems++;
-        if (completedItems.includes(item.id)) readItems++;
-      });
-    });
-
-    return totalItems === 0 ? 0 : Math.round((readItems / totalItems) * 100);
-  };
-
-  // --- HANDLERS ---
   const handleMonthSelect = (id: number) => {
     setSelectedMonthId(id);
-    setView('days');
+    setView('details');
   };
 
-  const handleReadingSelect = (item: ReadingItem) => {
-    setSelectedReadingItem(item);
-    setView('reading');
+  const handleBackNavigation = () => {
+    if (view === 'details') setView('months');
+    else onBack();
   };
 
-  const handleBack = () => {
-    if (view === 'reading') {
-      setView('days');
-      setSelectedReadingItem(null);
-    } else if (view === 'days') {
-      setView('months');
-    } else {
-      onBack();
-    }
+  const markMonthAsRead = (monthId: number) => {
+    const month = ANNUAL_PLAN[monthId];
+    // Encontrar itens não marcados
+    const unreadItems = month.items.filter(item => !completedItems.includes(item.id));
+    
+    // Se tiver itens não lidos, marca eles. Se tudo estiver lido, não faz nada (ou poderia desmarcar, mas o botão diz "Marcar como lido")
+    unreadItems.forEach(item => {
+      toggleItemCompletion(item.id);
+    });
   };
 
   // --- RENDERERS ---
 
-  // 1. MONTHS GRID (Home)
+  // 1. MONTHS GRID
   const renderMonths = () => (
     <div className="flex flex-col w-full">
+      
+      {/* Barra de Progresso Anual */}
+      <div className="px-4 mb-6">
+        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4">
+           <div className="bg-brand-neon/10 p-3 rounded-full">
+              <BarChart3 className="text-brand-neon" size={24} />
+           </div>
+           <div className="flex-1">
+              <div className="flex justify-between text-xs font-bold uppercase mb-2">
+                 <span className="text-white">Progresso Anual</span>
+                 <span className="text-brand-neon">{totalAnnualProgress}%</span>
+              </div>
+              <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${totalAnnualProgress}%` }}
+                  className="h-full bg-gradient-to-r from-brand-pink to-brand-neon rounded-full"
+                />
+              </div>
+           </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 pb-12">
-        {fullYearPlan.map((month) => {
-          const progress = getMonthProgress(month.id);
-          const isComplete = progress === 100;
+        {ANNUAL_PLAN.map((month) => {
+          const stats = getMonthStats(month.id);
+          const isComplete = stats.percentage === 100;
           
           return (
             <motion.button
@@ -180,7 +182,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
               onClick={() => handleMonthSelect(month.id)}
               className={`
                 relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left
-                border transition-all duration-300
+                border transition-all duration-300 group
                 ${isComplete 
                   ? 'bg-brand-neon/10 border-brand-neon text-white' 
                   : 'bg-[#1a1a1a] border-white/5 hover:border-white/20 text-gray-300'}
@@ -188,15 +190,17 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             >
               {isComplete && (
                 <div className="absolute top-0 right-0 p-3">
-                  <div className="bg-brand-neon rounded-full p-1">
+                  <div className="bg-brand-neon rounded-full p-1 shadow-lg">
                     <Check size={12} className="text-black" strokeWidth={3} />
                   </div>
                 </div>
               )}
               
               <div>
-                <span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">Mês {(month.id + 1).toString().padStart(2,'0')}</span>
-                <h3 className={`text-2xl font-display uppercase tracking-wide ${isComplete ? 'text-brand-neon' : 'text-white'}`}>
+                <span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">
+                  Mês {(month.id + 1).toString().padStart(2,'0')}
+                </span>
+                <h3 className={`text-2xl font-display uppercase tracking-wide group-hover:text-brand-neon transition-colors ${isComplete ? 'text-brand-neon' : 'text-white'}`}>
                   {month.name}
                 </h3>
               </div>
@@ -204,12 +208,12 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
               <div className="w-full">
                 <div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-70">
                   <span>Progresso</span>
-                  <span>{progress}%</span>
+                  <span>{stats.percentage}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
+                    animate={{ width: `${stats.percentage}%` }}
                     className={`h-full rounded-full ${isComplete ? 'bg-brand-neon' : 'bg-brand-pink'}`}
                   />
                 </div>
@@ -227,24 +231,24 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
              className="text-white/30 text-xs uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-2"
            >
              <Trash2 size={14} />
-             Reiniciar Histórico de Leitura
+             Reiniciar Histórico
            </button>
          ) : (
-            <div className="flex flex-col items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+            <div className="flex flex-col items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl w-full max-w-sm">
                <div className="flex items-center gap-2 text-red-400">
                   <AlertCircle size={16} />
                   <span className="text-sm font-bold">Apagar todo o progresso?</span>
                </div>
-               <div className="flex gap-3">
+               <div className="flex gap-3 w-full">
                  <button 
                    onClick={() => setShowResetConfirm(false)}
-                   className="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-wide text-white"
+                   className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-wide text-white"
                  >
                    Cancelar
                  </button>
                  <button 
-                   onClick={handleResetConfirmAction}
-                   className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-xs font-bold uppercase tracking-wide text-white shadow-lg"
+                   onClick={() => { resetProgress(); setShowResetConfirm(false); }}
+                   className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-xs font-bold uppercase tracking-wide text-white shadow-lg"
                  >
                    Sim, Apagar
                  </button>
@@ -255,146 +259,107 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
     </div>
   );
 
-  // 2. DAYS LIST (Inside a Month)
-  const renderDays = () => {
-    const month = fullYearPlan[selectedMonthId];
-    
+  // 2. READINGS LIST (Checklist View)
+  const renderReadingsList = () => {
+    const month = ANNUAL_PLAN[selectedMonthId];
+    const stats = getMonthStats(selectedMonthId);
+    const isAllRead = stats.percentage === 100;
+
     return (
       <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
-        <div className="mb-6">
-           <h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Visualizando</h2>
-           <h1 className="text-4xl md:text-5xl font-display text-white uppercase">{month.name}</h1>
-        </div>
-
-        {month.days.map((day) => {
-          const dayComplete = isDayComplete(day);
-          
-          return (
-            <div 
-              key={day.day} 
-              className={`
-                rounded-xl border transition-all duration-300 overflow-hidden
-                ${dayComplete ? 'border-brand-neon/30 bg-brand-neon/5' : 'border-white/5 bg-[#1a1a1a]'}
-              `}
-            >
-              {/* Day Header */}
-              <div className="px-5 py-3 flex items-center justify-between bg-black/20 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className={`
-                    w-8 h-8 rounded-lg flex items-center justify-center font-bold font-display text-lg
-                    ${dayComplete ? 'bg-brand-neon text-black' : 'bg-white/10 text-white'}
-                  `}>
-                    {day.day}
-                  </div>
-                  <span className="text-white/60 font-sans text-xs font-bold uppercase tracking-wider">
-                    {day.date}
-                  </span>
-                </div>
-                {dayComplete && <Check size={16} className="text-brand-neon" />}
-              </div>
-
-              {/* References List - Clickable Items */}
-              <div className="divide-y divide-white/5">
-                {day.items.map((item) => {
-                  const itemCompleted = isItemComplete(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleReadingSelect(item)}
-                      className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                         <div className={`
-                           w-4 h-4 rounded border flex items-center justify-center transition-colors
-                           ${itemCompleted ? 'bg-brand-pink border-brand-pink' : 'border-white/30 group-hover:border-white'}
-                         `}>
-                           {itemCompleted && <Check size={10} className="text-white" strokeWidth={4} />}
-                         </div>
-                         <span className={`
-                           font-serif text-lg transition-colors
-                           ${itemCompleted ? 'text-white/50 line-through decoration-brand-pink/50' : 'text-white group-hover:text-brand-neon'}
-                         `}>
-                           {item.ref}
-                         </span>
-                      </div>
-                      
-                      <ChevronRight size={16} className="text-white/20 group-hover:text-white transition-colors" />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // 3. READING VIEW (Full Text)
-  const renderReading = () => {
-    if (!selectedReadingItem) return null;
-    const isCompleted = isItemComplete(selectedReadingItem.id);
-
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="max-w-2xl mx-auto w-full px-6 py-8 pb-32 flex flex-col h-full"
-      >
-        <div className="flex-1">
-          <div className="mb-8 border-b border-white/10 pb-6">
-            <span className="text-brand-neon font-sans text-xs font-bold uppercase tracking-widest mb-2 block">
-              Leitura de Hoje
-            </span>
-            <h1 className="text-4xl md:text-5xl font-display text-white mb-4">
-              {selectedReadingItem.ref}
-            </h1>
-            <div className="flex items-center gap-2 text-white/40 text-sm">
-               <BookOpen size={16} />
-               <span>Versão NVI</span>
-            </div>
-          </div>
-
-          <article className="prose prose-invert prose-lg md:prose-xl leading-relaxed text-gray-200 font-serif">
-            {selectedReadingItem.text.map((paragraph, idx) => (
-              <p key={idx} className="mb-6 opacity-90">
-                {paragraph}
-              </p>
-            ))}
-          </article>
-        </div>
-
-        {/* Floating Action Bar */}
-        <div className="fixed bottom-8 left-0 right-0 px-6 flex justify-center z-50 pointer-events-none">
-           <motion.button
-             whileTap={{ scale: 0.95 }}
-             onClick={() => {
-               toggleItemCompletion(selectedReadingItem.id);
-               if (!isCompleted) {
-                   handleBack(); // Optional: Auto go back on complete
-               }
-             }}
+        {/* Header Content */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+           <div>
+              <h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2>
+              <h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{month.name}</h1>
+           </div>
+           
+           {/* Botão Marcar Tudo */}
+           <button 
+             onClick={() => markMonthAsRead(selectedMonthId)}
+             disabled={isAllRead}
              className={`
-               pointer-events-auto shadow-2xl flex items-center gap-3 px-8 py-4 rounded-full transition-all duration-300 border-2
-               ${isCompleted 
-                 ? 'bg-[#1a1a1a] border-brand-neon text-brand-neon' 
-                 : 'bg-brand-neon border-brand-neon text-black'}
+                flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs transition-all shadow-lg
+                ${isAllRead 
+                  ? 'bg-green-500/20 text-green-500 cursor-default border border-green-500/50' 
+                  : 'bg-brand-neon hover:bg-brand-neon/80 text-black border border-transparent'}
              `}
            >
-             {isCompleted ? (
+             {isAllRead ? (
                <>
-                 <span className="font-sans font-bold uppercase tracking-widest text-sm">Marcar como não lido</span>
+                 <CheckCircle2 size={18} />
+                 Mês Concluído
                </>
              ) : (
                <>
-                 <Check size={20} />
-                 <span className="font-sans font-bold uppercase tracking-widest text-sm">Concluir Leitura</span>
+                 <CheckCircle2 size={18} />
+                 Marcar mês como lido
                </>
              )}
-           </motion.button>
+           </button>
         </div>
-      </motion.div>
+
+        {/* Progress Bar do Mês */}
+        <div className="mb-8">
+            <div className="flex justify-between text-xs text-white/50 mb-1 font-mono">
+                <span>{stats.completed} / {stats.total} leituras</span>
+                <span>{stats.percentage}%</span>
+            </div>
+            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${stats.percentage}%` }}
+                    className="h-full bg-brand-neon"
+                />
+            </div>
+        </div>
+
+        {/* Lista de Leituras */}
+        <div className="flex flex-col gap-2">
+           {month.items.map((item, index) => {
+             const isRead = isItemComplete(item.id);
+             return (
+               <motion.div
+                 key={item.id}
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ delay: index * 0.03 }}
+                 onClick={() => toggleItemCompletion(item.id)}
+                 className={`
+                    group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none
+                    ${isRead 
+                      ? 'bg-[#1a1a1a] border-brand-neon/30 opacity-60 hover:opacity-100' 
+                      : 'bg-[#151515] border-white/5 hover:bg-[#202020] hover:border-white/20'}
+                 `}
+               >
+                  <div className="flex items-center gap-4">
+                      {/* Checkbox Visual */}
+                      <div className={`
+                         w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors
+                         ${isRead ? 'bg-brand-neon border-brand-neon' : 'border-white/20 group-hover:border-white/50'}
+                      `}>
+                         {isRead && <Check size={16} className="text-black" strokeWidth={3} />}
+                      </div>
+
+                      <span className={`
+                        font-serif text-lg md:text-xl transition-colors
+                        ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}
+                      `}>
+                        {item.ref}
+                      </span>
+                  </div>
+               </motion.div>
+             );
+           })}
+        </div>
+
+        <div className="mt-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-3 text-blue-200">
+             <ShieldCheck className="shrink-0" />
+             <p className="text-xs leading-relaxed">
+                Este sistema apenas organiza o seu progresso. Lembre-se de ler a Bíblia Sagrada em seu momento devocional para edificação espiritual.
+             </p>
+        </div>
+      </div>
     );
   };
 
@@ -406,7 +371,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
             <button 
-              onClick={handleBack}
+              onClick={handleBackNavigation}
               className="p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
             >
               <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
@@ -423,14 +388,10 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
           </div>
 
           <div className="flex items-center gap-3">
-             {/* LOGIN BUTTON / AVATAR */}
              {!loading && (
                <>
                  {user ? (
-                   <button 
-                     onClick={handleLogout}
-                     className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-full border border-white/10 transition-all group"
-                   >
+                   <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-full border border-white/10 transition-all group">
                       <div className="w-6 h-6 rounded-full overflow-hidden border border-white/20">
                          {user.user_metadata.avatar_url ? (
                            <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
@@ -438,58 +399,17 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
                            <User size={14} className="text-white/70 m-auto mt-1" />
                          )}
                       </div>
-                      <span className="hidden md:block text-xs font-bold uppercase tracking-wider opacity-70 group-hover:opacity-100">
-                        Sair
-                      </span>
+                      <span className="hidden md:block text-xs font-bold uppercase tracking-wider opacity-70 group-hover:opacity-100">Sair</span>
                    </button>
                  ) : (
-                   <button 
-                     onClick={handleLogin}
-                     className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full border border-gray-300 hover:bg-gray-100 transition-colors shadow-lg"
-                   >
-                      {/* Google "G" Icon simulation */}
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      <span className="text-xs font-bold font-sans text-gray-700 tracking-wide">
-                        Entrar com Google
-                      </span>
+                   <button onClick={handleLogin} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full hover:bg-gray-100 transition-colors shadow-lg">
+                      <span className="text-xs font-bold font-sans text-gray-700 tracking-wide">Entrar com Google</span>
                    </button>
                  )}
                </>
              )}
           </div>
         </div>
-        
-        {/* Breadcrumb / Progress Bar when inside */}
-        {view !== 'months' && (
-           <motion.div 
-             initial={{ opacity: 0, height: 0 }}
-             animate={{ opacity: 1, height: 'auto' }}
-             className="w-full bg-brand-purple/10 border-t border-white/5"
-           >
-             <div className="max-w-6xl mx-auto px-16 py-1">
-                <span className="text-[10px] uppercase tracking-widest text-brand-purple font-bold">
-                  {view === 'days' ? 'Selecione o dia e o texto' : 'Modo Leitura'}
-                </span>
-             </div>
-           </motion.div>
-        )}
       </header>
 
       {/* --- CONTENT AREA --- */}
@@ -505,40 +425,21 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             >
                <div className="px-6 pt-8 pb-4">
                   <h2 className="text-3xl font-display uppercase text-white">Selecione o Mês</h2>
-                  <div className="flex items-center gap-2 text-white/50 text-sm">
-                    <p>Acompanhe seu progresso anual.</p>
-                    {/* Small Security Badge */}
-                    <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
-                      <ShieldCheck size={10} className="text-green-500" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider">Site Seguro</span>
-                    </div>
-                  </div>
+                  <p className="text-white/50 text-sm">Visualize o plano completo de leitura.</p>
                </div>
                {renderMonths()}
             </motion.div>
           )}
 
-          {view === 'days' && (
+          {view === 'details' && (
             <motion.div 
-              key="days"
+              key="details"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               className="w-full"
             >
-               {renderDays()}
-            </motion.div>
-          )}
-
-          {view === 'reading' && (
-            <motion.div 
-              key="reading"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full"
-            >
-               {renderReading()}
+               {renderReadingsList()}
             </motion.div>
           )}
         </AnimatePresence>

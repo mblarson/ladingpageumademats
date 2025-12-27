@@ -1,11 +1,10 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User } from 'lucide-react';
+import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2 } from 'lucide-react';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { supabase } from '../lib/supabaseClient';
 
-// --- DADOS FIXOS DO PLANO DE LEITURA (FONTE ÚNICA DE VERDADE) ---
+// --- DADOS FIXOS DO PLANO DE LEITURA ---
 const RAW_PLAN = [
   {
     month: "Janeiro",
@@ -57,8 +56,7 @@ const RAW_PLAN = [
   },
 ];
 
-// Processamento dos dados para formato utilizável
-// ID structure: "m{monthIndex}-i{itemIndex}"
+// Processamento dos dados
 const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
   id: mIdx,
   name: m.month,
@@ -72,18 +70,139 @@ interface BibleReadingPageProps {
   onBack: () => void;
 }
 
-// --- MAIN COMPONENT ---
+interface BibleTextResponse {
+  reference: string;
+  text: string;
+  verses: { book_name: string; chapter: number; verse: number; text: string }[];
+  error?: string;
+}
+
+// --- COMPONENTS ---
+
+// Leitor Modal
+const ReadingReader: React.FC<{ 
+  item: { id: string; ref: string } | null; 
+  onClose: () => void; 
+  onComplete: (id: string) => void;
+}> = ({ item, onClose, onComplete }) => {
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState<BibleTextResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!item) return;
+
+    const fetchText = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Sanitiza a referência (troca traços longos por curto) e codifica
+        const sanitizedRef = item.ref.replace(/–|—/g, '-');
+        const encodedRef = encodeURIComponent(sanitizedRef);
+        
+        // Usa API pública (bible-api.com) com tradução Almeida
+        const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida`);
+        
+        if (!res.ok) throw new Error("Não foi possível carregar o texto.");
+        
+        const data = await res.json();
+        setContent(data);
+      } catch (err) {
+        setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchText();
+  }, [item]);
+
+  if (!item) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+       <motion.div 
+         initial={{ opacity: 0 }} 
+         animate={{ opacity: 1 }} 
+         exit={{ opacity: 0 }}
+         onClick={onClose}
+         className="absolute inset-0 bg-black/90 backdrop-blur-md"
+       />
+       
+       <motion.div 
+         initial={{ scale: 0.9, y: 50, opacity: 0 }}
+         animate={{ scale: 1, y: 0, opacity: 1 }}
+         exit={{ scale: 0.9, y: 50, opacity: 0 }}
+         className="relative bg-[#1a1a1a] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden"
+       >
+          {/* Header */}
+          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#151515]">
+             <div>
+               <h3 className="text-brand-neon font-sans text-xs font-bold uppercase tracking-wider mb-1">Leitura de Hoje</h3>
+               <h2 className="text-2xl md:text-3xl font-display uppercase text-white">{item.ref}</h2>
+             </div>
+             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
+                <X size={24} />
+             </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+             {loading ? (
+               <div className="flex flex-col items-center justify-center py-20 text-white/30">
+                  <Loader2 size={40} className="animate-spin mb-4" />
+                  <p className="uppercase tracking-widest text-xs">Carregando as Escrituras...</p>
+               </div>
+             ) : error ? (
+               <div className="flex flex-col items-center justify-center py-20 text-red-400 text-center">
+                  <AlertCircle size={40} className="mb-4" />
+                  <p>{error}</p>
+                  <button onClick={onClose} className="mt-4 text-white underline text-sm">Voltar</button>
+               </div>
+             ) : (
+               <div className="prose prose-invert max-w-none">
+                  {content?.verses?.map((verse, idx) => (
+                    <span key={idx} className="text-gray-300 text-lg md:text-xl leading-relaxed font-serif">
+                       <span className="text-brand-neon/50 text-xs font-sans mr-1 align-top select-none">{verse.verse}</span>
+                       {verse.text}
+                       {verse.text.endsWith('\n') ? <br/> : ' '}
+                    </span>
+                  ))}
+                  
+                  {/* Copyright Notice for API */}
+                  <div className="mt-12 text-center text-white/20 text-xs uppercase tracking-widest">
+                     Texto: João Ferreira de Almeida
+                  </div>
+               </div>
+             )}
+          </div>
+
+          {/* Footer Action */}
+          <div className="p-4 border-t border-white/10 bg-[#151515] flex justify-center">
+             <button 
+               onClick={() => { onComplete(item.id); onClose(); }}
+               disabled={loading || !!error}
+               className="w-full md:w-auto px-8 py-4 bg-brand-neon hover:bg-brand-neon/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"
+             >
+                <CheckCircle2 size={20} />
+                Concluir Leitura
+             </button>
+          </div>
+       </motion.div>
+    </div>
+  );
+};
+
+
+// --- MAIN PAGE ---
 export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) => {
-  // Navigation State: 'months' (Grid) or 'details' (List of readings for a month)
   const [view, setView] = useState<'months' | 'details'>('months');
   const [selectedMonthId, setSelectedMonthId] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [readingItem, setReadingItem] = useState<{id: string, ref: string} | null>(null);
   
-  // Hook de Progresso
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
 
-  // --- CALCS ---
-  
   const getMonthStats = (monthId: number) => {
     const month = ANNUAL_PLAN[monthId];
     const total = month.items.length;
@@ -101,8 +220,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
     });
     return totalItems === 0 ? 0 : Math.round((totalCompleted / totalItems) * 100);
   }, [completedItems]);
-
-  // --- ACTIONS ---
 
   const handleLogin = async () => {
     localStorage.setItem('return_to_bible', 'true');
@@ -130,22 +247,18 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
 
   const markMonthAsRead = (monthId: number) => {
     const month = ANNUAL_PLAN[monthId];
-    // Encontrar itens não marcados
     const unreadItems = month.items.filter(item => !completedItems.includes(item.id));
-    
-    // Se tiver itens não lidos, marca eles. Se tudo estiver lido, não faz nada (ou poderia desmarcar, mas o botão diz "Marcar como lido")
-    unreadItems.forEach(item => {
-      toggleItemCompletion(item.id);
-    });
+    unreadItems.forEach(item => toggleItemCompletion(item.id));
+  };
+
+  const openReading = (item: {id: string, ref: string}) => {
+    setReadingItem(item);
   };
 
   // --- RENDERERS ---
 
-  // 1. MONTHS GRID
   const renderMonths = () => (
     <div className="flex flex-col w-full">
-      
-      {/* Barra de Progresso Anual */}
       <div className="px-4 mb-6">
         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4">
            <div className="bg-brand-neon/10 p-3 rounded-full">
@@ -223,7 +336,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
         })}
       </div>
 
-      {/* Footer Settings Area */}
       <div className="w-full px-6 py-8 border-t border-white/5 mt-auto flex justify-center">
          {!showResetConfirm ? (
            <button 
@@ -259,7 +371,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
     </div>
   );
 
-  // 2. READINGS LIST (Checklist View)
   const renderReadingsList = () => {
     const month = ANNUAL_PLAN[selectedMonthId];
     const stats = getMonthStats(selectedMonthId);
@@ -267,14 +378,12 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
 
     return (
       <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
-        {/* Header Content */}
         <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
            <div>
               <h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2>
               <h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{month.name}</h1>
            </div>
            
-           {/* Botão Marcar Tudo */}
            <button 
              onClick={() => markMonthAsRead(selectedMonthId)}
              disabled={isAllRead}
@@ -299,7 +408,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
            </button>
         </div>
 
-        {/* Progress Bar do Mês */}
         <div className="mb-8">
             <div className="flex justify-between text-xs text-white/50 mb-1 font-mono">
                 <span>{stats.completed} / {stats.total} leituras</span>
@@ -314,7 +422,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             </div>
         </div>
 
-        {/* Lista de Leituras */}
         <div className="flex flex-col gap-2">
            {month.items.map((item, index) => {
              const isRead = isItemComplete(item.id);
@@ -324,7 +431,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
                  initial={{ opacity: 0, y: 10 }}
                  animate={{ opacity: 1, y: 0 }}
                  transition={{ delay: index * 0.03 }}
-                 onClick={() => toggleItemCompletion(item.id)}
+                 onClick={() => openReading(item)} // OPEN READER
                  className={`
                     group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none
                     ${isRead 
@@ -333,12 +440,12 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
                  `}
                >
                   <div className="flex items-center gap-4">
-                      {/* Checkbox Visual */}
+                      {/* Status Icon */}
                       <div className={`
-                         w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors
-                         ${isRead ? 'bg-brand-neon border-brand-neon' : 'border-white/20 group-hover:border-white/50'}
+                         w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors
+                         ${isRead ? 'bg-brand-neon border-brand-neon' : 'bg-transparent border-white/20 group-hover:border-white/50'}
                       `}>
-                         {isRead && <Check size={16} className="text-black" strokeWidth={3} />}
+                         {isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}
                       </div>
 
                       <span className={`
@@ -347,6 +454,10 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
                       `}>
                         {item.ref}
                       </span>
+                  </div>
+
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-neon text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                      Ler Agora <ChevronRight size={14} />
                   </div>
                </motion.div>
              );
@@ -366,7 +477,19 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] text-gray-200 flex flex-col font-sans">
       
-      {/* --- HEADER --- */}
+      {/* READER MODAL */}
+      <AnimatePresence>
+        {readingItem && (
+          <ReadingReader 
+            item={readingItem} 
+            onClose={() => setReadingItem(null)} 
+            onComplete={(id) => {
+               if(!isItemComplete(id)) toggleItemCompletion(id);
+            }} 
+          />
+        )}
+      </AnimatePresence>
+
       <header className="sticky top-0 z-40 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5">
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
@@ -379,7 +502,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             
             <div className="flex flex-col justify-center h-full pt-1">
               <h1 className="font-display uppercase text-2xl tracking-tight text-white leading-[0.8]">
-                UMADE<span className="text-brand-neon">MATS</span>
+                UIMADE<span className="text-brand-neon">MATS</span>
               </h1>
               <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">
                 Leitura Bíblica 2026
@@ -412,7 +535,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
         </div>
       </header>
 
-      {/* --- CONTENT AREA --- */}
       <main className="flex-1 w-full max-w-6xl mx-auto relative">
         <AnimatePresence mode="wait">
           {view === 'months' && (

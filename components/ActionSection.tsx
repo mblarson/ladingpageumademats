@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
@@ -152,7 +151,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
                   <h3 className="text-xl md:text-4xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
                       Games
                       <br/>
-                      <span className="text-brand-pink">Umademats</span>
+                      <span className="text-brand-pink">Uimademats</span>
                   </h3>
                   <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-md">
                       Participe das competições e divirta-se.

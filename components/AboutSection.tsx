@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, User, MousePointer2, X, Instagram, ExternalLink } from 'lucide-react';
@@ -207,7 +206,7 @@ export const AboutSection: React.FC = () => {
 
             {/* Card 3 - Full Width on Mobile with 16:9 Image */}
             <LeaderCard 
-                role="Líderes UMADEMATS"
+                role="Líderes UIMADEMATS"
                 name="Pr. Joelson e Mariana"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/IMG_0043.jpeg" 
                 color="bg-brand-purple text-white"

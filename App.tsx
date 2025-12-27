@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HeroSection } from './components/HeroSection';
 import { EventSection } from './components/EventSection';
@@ -110,7 +109,7 @@ export default function App() {
                </div>
 
                <h2 className="text-4xl font-display uppercase text-white mb-2 leading-none">
-                 Login <span className="text-brand-neon">UMADEMATS</span>
+                 Login <span className="text-brand-neon">UIMADEMATS</span>
                </h2>
                
                <p className="text-gray-400 font-sans text-sm leading-relaxed mb-8 max-w-xs">
@@ -165,7 +164,7 @@ export default function App() {
           <AboutSection />
 
           <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
-            <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
+            <p>© 2026 UIMADEMATS. Todos os direitos reservados.</p>
             <p className="mt-2">Desenvolvido para o Reino.</p>
           </footer>
         </>

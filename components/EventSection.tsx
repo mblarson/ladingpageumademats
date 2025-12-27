@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo, useInView } from 'framer-motion';
 import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star } from 'lucide-react';
@@ -124,8 +123,8 @@ export const EventSection: React.FC = () => {
 
   const addToCalendar = () => {
     const event = {
-      title: "UMADEMATS 2026 - Jubileu de Ouro",
-      description: "Congresso UMADEMATS 2026 - Jubileu de Ouro. Participe deste momento histórico!",
+      title: "UIMADEMATS 2026 - Jubileu de Ouro",
+      description: "Congresso UIMADEMATS 2026 - Jubileu de Ouro. Participe deste momento histórico!",
       location: "Bosque Expo - Shopping Bosque dos Ipês",
       start: "20260403T180000",
       end: "20260404T220000"
@@ -134,7 +133,7 @@ export const EventSection: React.FC = () => {
     const icsContent = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//UMADEMATS//Portal//PT",
+      "PRODID:-//UIMADEMATS//Portal//PT",
       "BEGIN:VEVENT",
       `SUMMARY:${event.title}`,
       `DESCRIPTION:${event.description}`,
@@ -148,7 +147,7 @@ export const EventSection: React.FC = () => {
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
-    link.setAttribute('download', 'umademats-2026.ics');
+    link.setAttribute('download', 'uimademats-2026.ics');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -253,7 +252,7 @@ export const EventSection: React.FC = () => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-6 flex items-center gap-4">
-                UMADEMATS 2026 • JUBILEU DE OURO • 
+                UIMADEMATS 2026 • JUBILEU DE OURO • 
               </span>
             ))}
          </motion.div>
@@ -540,7 +539,7 @@ export const EventSection: React.FC = () => {
             >
               {[...Array(10)].map((_, i) => (
                 <span key={i} className="mx-6 flex items-center gap-4">
-                  UMADEMATS 2026 • JUBILEU DE OURO • 
+                  UIMADEMATS 2026 • JUBILEU DE OURO • 
                 </span>
               ))}
            </motion.div>

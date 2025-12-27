@@ -80,11 +80,12 @@ export const useSiteConfig = () => {
 
   const fetchConfig = async () => {
     try {
+      // .maybeSingle() não retorna erro 406 se a linha não existir (retorna null)
       const { data, error } = await supabase
         .from('site_config')
         .select('value')
         .eq('key', 'landing_page')
-        .single();
+        .maybeSingle();
 
       if (data) {
         // Merge com defaults para garantir que novos campos não quebrem

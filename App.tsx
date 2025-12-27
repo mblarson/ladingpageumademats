@@ -4,9 +4,9 @@ import { EventSection } from './components/EventSection';
 import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { BibleReadingPage } from './components/BibleReadingPage';
-import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
-import { X, LogIn, ShieldCheck } from 'lucide-react';
+import { X, LogIn, ShieldCheck, Zap } from 'lucide-react';
 
 export default function App() {
   // Simple state-based router
@@ -30,11 +30,16 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { scrollYProgress } = useScroll();
+  
+  // Barra Horizontal (Topo)
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   });
+
+  // Rastreador Vertical (Lateral) - Mapeia 0 (topo) a 1 (fundo) para 0% a 92% da altura da barra
+  const yPath = useTransform(scrollYProgress, [0, 1], ["0%", "92%"]);
 
   // Check session only when entering the Bible page
   useEffect(() => {
@@ -148,10 +153,28 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Sticky Progress Bar */}
+      {/* --- ANIMAÇÕES DE SCROLL --- */}
+
+      {/* 1. Barra Horizontal no Topo */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-2 bg-brand-neon origin-left z-50"
+        className="fixed top-0 left-0 right-0 h-1.5 bg-brand-neon origin-left z-[100]"
         style={{ scaleX }}
+      />
+
+      {/* 2. Rastreador Vertical na Direita (Desce junto com o usuário) */}
+      <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[50vh] w-[2px] bg-white/10 rounded-full z-[90] hidden md:block pointer-events-none">
+          {/* Indicador que se move */}
+          <motion.div
+             style={{ top: yPath }}
+             className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"
+          >
+             <Zap size={12} className="fill-black text-black" />
+          </motion.div>
+      </div>
+
+      {/* 3. Textura de Fundo Fixa (Granulação) - Dá a sensação de que o fundo está "preso" na tela */}
+      <div className="fixed inset-0 pointer-events-none z-[-1] opacity-[0.03]" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} 
       />
 
       {currentPage === 'bible' ? (

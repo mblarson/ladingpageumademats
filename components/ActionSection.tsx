@@ -185,7 +185,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible 
               {/* Background Image Added - Occupy full card */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                  <img 
-                   src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetapedidio.png" 
+                   src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetapedido.png" 
                    alt="Camiseta Pedido"
                    className="w-full h-full object-cover opacity-50 mix-blend-multiply transition-transform duration-700 ease-out group-hover:scale-105"
                    loading="lazy"

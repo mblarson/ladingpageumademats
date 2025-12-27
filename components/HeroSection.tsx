@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar, Users } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar, Users, Book } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface HeroSectionProps {
@@ -67,37 +67,48 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
       </div>
 
       {/* CUSTOM NAV MENU - Cores Dinâmicas */}
-      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[95%] md:w-full max-w-5xl z-[95]">
+      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[98%] md:w-full max-w-5xl z-[95]">
         <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden bg-white/5 backdrop-blur-sm">
           
           <li className="flex-1">
             <button
               onClick={() => scrollToSection('event-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
-              <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider">{activeConfig.hero_button1}</span>
+              <Calendar className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button1}</span>
             </button>
           </li>
 
            <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('action-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
               style={{ backgroundColor: activeConfig.hero_secondaryColor }}
             >
-              <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider">{activeConfig.hero_button2}</span>
+              <Gamepad2 className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button2}</span>
+            </button>
+          </li>
+
+          {/* NOVO BOTÃO: LEIA A BÍBLIA */}
+          <li className="flex-1 border-l border-black/40">
+            <button
+              onClick={() => scrollToSection('bible-card')}
+              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-brand-purple hover:bg-[#4c1d95] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+            >
+              <Book className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider truncate">LEIA A BÍBLIA</span>
             </button>
           </li>
 
           <li className="flex-1 border-l border-black/40">
             <button
               onClick={() => scrollToSection('about-section')}
-              className="w-full h-full py-3 md:py-4 text-xs md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
+              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
             >
-              <Users className="w-4 h-4 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider whitespace-nowrap">{activeConfig.hero_button3}</span>
+              <Users className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
+              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button3}</span>
             </button>
           </li>
 

@@ -224,6 +224,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
 
           {/* Devocional Card */}
           <motion.div
+            id="bible-card"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}

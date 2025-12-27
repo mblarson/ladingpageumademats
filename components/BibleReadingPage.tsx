@@ -83,7 +83,7 @@ interface BibleTextResponse {
 const ReadingReader: React.FC<{ 
   item: { id: string; ref: string } | null; 
   onClose: () => void; 
-  onComplete: (id: string) => void;
+  onComplete: (id: string, ref: string) => void;
 }> = ({ item, onClose, onComplete }) => {
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<BibleTextResponse | null>(null);
@@ -180,7 +180,7 @@ const ReadingReader: React.FC<{
           {/* Footer Action */}
           <div className="p-4 border-t border-white/10 bg-[#151515] flex justify-center">
              <button 
-               onClick={() => { onComplete(item.id); onClose(); }}
+               onClick={() => { onComplete(item.id, item.ref); onClose(); }}
                disabled={loading || !!error}
                className="w-full md:w-auto px-8 py-4 bg-brand-neon hover:bg-brand-neon/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"
              >
@@ -248,7 +248,8 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
   const markMonthAsRead = (monthId: number) => {
     const month = ANNUAL_PLAN[monthId];
     const unreadItems = month.items.filter(item => !completedItems.includes(item.id));
-    unreadItems.forEach(item => toggleItemCompletion(item.id));
+    // Passa também a referência do texto para salvar no banco
+    unreadItems.forEach(item => toggleItemCompletion(item.id, item.ref));
   };
 
   const openReading = (item: {id: string, ref: string}) => {
@@ -483,8 +484,8 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
           <ReadingReader 
             item={readingItem} 
             onClose={() => setReadingItem(null)} 
-            onComplete={(id) => {
-               if(!isItemComplete(id)) toggleItemCompletion(id);
+            onComplete={(id, ref) => {
+               if(!isItemComplete(id)) toggleItemCompletion(id, ref);
             }} 
           />
         )}
@@ -502,7 +503,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
             
             <div className="flex flex-col justify-center h-full pt-1">
               <h1 className="font-display uppercase text-2xl tracking-tight text-white leading-[0.8]">
-                UIMADE<span className="text-brand-neon">MATS</span>
+                UMADE<span className="text-brand-neon">MATS</span>
               </h1>
               <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">
                 Leitura Bíblica 2026
@@ -514,15 +515,20 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
              {!loading && (
                <>
                  {user ? (
-                   <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-full border border-white/10 transition-all group">
-                      <div className="w-6 h-6 rounded-full overflow-hidden border border-white/20">
+                   <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-1.5 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 rounded-full border border-white/10 transition-all group max-w-[200px]">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0">
                          {user.user_metadata.avatar_url ? (
                            <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
                          ) : (
-                           <User size={14} className="text-white/70 m-auto mt-1" />
+                           <User size={16} className="text-white/70 m-auto mt-2" />
                          )}
                       </div>
-                      <span className="hidden md:block text-xs font-bold uppercase tracking-wider opacity-70 group-hover:opacity-100">Sair</span>
+                      <div className="flex flex-col items-start overflow-hidden">
+                          <span className="text-[10px] text-white/50 uppercase font-bold tracking-wider leading-none group-hover:text-red-400">Sair de</span>
+                          <span className="text-xs text-white font-bold truncate w-full group-hover:text-red-300">
+                             {user.user_metadata.full_name || user.email?.split('@')[0]}
+                          </span>
+                      </div>
                    </button>
                  ) : (
                    <button onClick={handleLogin} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full hover:bg-gray-100 transition-colors shadow-lg">

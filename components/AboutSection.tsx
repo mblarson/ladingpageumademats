@@ -186,7 +186,7 @@ export const AboutSection: React.FC = () => {
             
             {/* Card 1 */}
             <LeaderCard 
-                role="Pastores IEADMS"
+                role="Presidentes IEADMS"
                 name="Pr. Eliel e Jane"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/elieljane.jpg" 
                 color="bg-brand-neon text-black"
@@ -196,7 +196,7 @@ export const AboutSection: React.FC = () => {
 
             {/* Card 2 */}
             <LeaderCard 
-                role="Executivos"
+                role="Presidentes Executivos"
                 name="Pr. Felipe e Hyanna"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/felipehyanna.jpg" 
                 color="bg-brand-pink text-white"
@@ -206,7 +206,7 @@ export const AboutSection: React.FC = () => {
 
             {/* Card 3 - Full Width on Mobile with 16:9 Image */}
             <LeaderCard 
-                role="Líderes UIMADEMATS"
+                role="Líderes UMADEMATS"
                 name="Pr. Joelson e Mariana"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/IMG_0043.jpeg" 
                 color="bg-brand-purple text-white"

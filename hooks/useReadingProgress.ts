@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Session } from '@supabase/supabase-js';
 
-const STORAGE_KEY = 'uimademats_bible_progress_v2';
+const STORAGE_KEY = 'umademats_bible_progress_v2';
 
 export const useReadingProgress = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -69,7 +68,8 @@ export const useReadingProgress = () => {
   };
 
   // 3. Alternar item (Salvar no Banco ou Local)
-  const toggleItemCompletion = async (itemId: string) => {
+  // Agora aceita itemRef (ex: "Gênesis 1-3") para salvar de forma legível no banco
+  const toggleItemCompletion = async (itemId: string, itemRef?: string) => {
     // A. Atualização Otimista (Visual instantâneo)
     let newItemList: string[] = [];
     setCompletedItems(prev => {
@@ -78,7 +78,7 @@ export const useReadingProgress = () => {
       return newItemList;
     });
 
-    // B. Persistência
+    // B. Persistência Local
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newItemList));
 
     // C. Se logado, salvar no Supabase
@@ -86,9 +86,11 @@ export const useReadingProgress = () => {
       const isAdding = newItemList.includes(itemId);
       try {
         if (isAdding) {
+          // Salva o ID técnico E o texto legível
           await supabase.from('user_progress').insert({
             user_id: session.user.id,
-            reading_item_id: itemId
+            reading_item_id: itemId,
+            reading_ref: itemRef || null 
           });
         } else {
           await supabase.from('user_progress').delete()
@@ -97,8 +99,6 @@ export const useReadingProgress = () => {
         }
       } catch (error) {
         console.error("Erro ao sincronizar com banco:", error);
-        // Em caso de erro real, poderíamos reverter o estado, 
-        // mas para UX simples mantemos o local como fallback.
       }
     }
   };

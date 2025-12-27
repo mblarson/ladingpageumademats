@@ -38,8 +38,19 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
       </span>
     </div>
 
+    {/* Sticker de Destaque (Novo) */}
+    <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-40 animate-bounce cursor-pointer pointer-events-none">
+        <div className="bg-brand-neon border-2 border-black px-2 py-1 md:px-3 md:py-1.5 shadow-[3px_3px_0px_rgba(0,0,0,1)] -rotate-12 flex flex-col items-center justify-center hover:scale-110 transition-transform pointer-events-auto">
+            <div className="flex items-center gap-1">
+                <MousePointer2 size={12} className="fill-black text-black" />
+                <span className="font-fun text-[10px] md:text-xs text-black leading-none uppercase">CLIQUE AQUI</span>
+            </div>
+            <span className="font-sans text-[8px] font-bold text-black leading-none uppercase tracking-tighter">Para conhecer</span>
+        </div>
+    </div>
+
     {/* Name and Status Bottom Left */}
-    <div className="absolute bottom-0 left-0 p-5 md:p-8 w-full flex flex-col items-start">
+    <div className="absolute bottom-0 left-0 p-5 md:p-8 w-full flex flex-col items-start pointer-events-none">
       <h3 className="text-2xl md:text-5xl font-display uppercase text-white leading-none mb-1 md:mb-2 drop-shadow-lg">{name}</h3>
       <div className="flex items-center gap-2">
          <div className="w-2 h-2 rounded-full bg-brand-neon animate-ping" />
@@ -224,6 +235,12 @@ export const EventSection: React.FC = () => {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* COMIC STYLE TEXTURES */
+        .comic-halftone {
+            background-image: radial-gradient(circle, #4F46E5 2px, transparent 2.5px);
+            background-size: 30px 30px;
+        }
       `}</style>
 
       {/* Marquee Transition */}
@@ -244,8 +261,18 @@ export const EventSection: React.FC = () => {
 
       {/* TOP PART: GREEN SECTION */}
       <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-32 px-4 overflow-hidden z-20">
-         {/* Background Grid */}
-         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#4F46E5_1px,transparent_1px),linear-gradient(to_bottom,#4F46E5_1px,transparent_1px)] bg-[size:40px_40px]" />
+         
+         {/* Background Texture & Gradient */}
+         <div className="absolute inset-0 pointer-events-none">
+             {/* 1. Base Gradient: Subtle Vignette / Spotlight Effect */}
+             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.6)_0%,rgba(204,255,0,0)_60%,rgba(0,0,0,0.05)_100%)]" />
+             
+             {/* 2. Comic Ben-Day Dots (Halftone) - Subtle Indigo Dots */}
+             <div className="absolute inset-0 opacity-10 comic-halftone" />
+             
+             {/* 3. Subtle Texture Overlay (Diagonal Lines) for more comic feel */}
+             <div className="absolute inset-0 opacity-[0.05] bg-[repeating-linear-gradient(45deg,#000_0,#000_1px,transparent_0,transparent_50%)] bg-[size:10px_10px]" />
+         </div>
 
          {/* CONTENT WRAPPER */}
          {/* IMPORTANTE: Este container define a altura baseada no conteúdo de texto, evitando reflow. */}
@@ -302,7 +329,7 @@ export const EventSection: React.FC = () => {
                     onClick={addToCalendar}
                     className="relative group flex items-center gap-1.5 md:gap-3 text-xs sm:text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-2.5 py-2 md:px-6 md:py-3 rounded-xl border-2 border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer flex-shrink-0 shadow-[0_0_15px_rgba(79,70,229,0.3)] animate-pulse-scale"
                   >
-                    <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left pointer-events-none">
+                    <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
                              <MousePointer2 size={12} className="text-black fill-black rotate-[-15deg]" />
@@ -334,7 +361,8 @@ export const EventSection: React.FC = () => {
             </motion.div>
 
             {/* 2. OVERLAY LAYER FOR SHIRTS */}
-            <div className="absolute inset-0 flex items-center justify-center z-20">
+            {/* Added pointer-events-none to container so it doesn't block Text Layer swipe */}
+            <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                 <AnimatePresence mode="wait">
                     {/* SLIDE 1: CAMISETA TERRACOTA */}
                     {slideIndex === 1 && (
@@ -348,7 +376,7 @@ export const EventSection: React.FC = () => {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -50, opacity: 0 }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
-                            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                            className="absolute inset-0 cursor-grab active:cursor-grabbing pointer-events-auto"
                         >
                              <div className="relative w-full h-full flex flex-col items-center justify-center">
                                  {/* BACKGROUND DECORATIONS */}
@@ -403,7 +431,7 @@ export const EventSection: React.FC = () => {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -50, opacity: 0 }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
-                            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                            className="absolute inset-0 cursor-grab active:cursor-grabbing pointer-events-auto"
                         >
                             <div className="relative w-full h-full flex flex-col items-center justify-center">
                                  {/* BACKGROUND DECORATIONS */}

@@ -201,11 +201,12 @@ export const HeroSection: React.FC = () => {
       <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
         
         {/* Static Welcome Badge */}
+        {/* MODIFIED: Increased margin-bottom to move the badge up relative to the title below it */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mb-[-1rem] md:mb-[-3rem] z-20 relative"
+            className="mb-2 md:mb-6 z-20 relative"
         >
             <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg">
             <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
@@ -215,7 +216,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
 
         {/* Dynamic Title Carousel Container */}
-        <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-hidden">
+        <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-visible">
           <AnimatePresence mode="wait">
             
             {/* STATE 0: UMADEMATS */}
@@ -229,7 +230,13 @@ export const HeroSection: React.FC = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <h1 className="text-[28vw] md:text-[12vw] leading-[0.8] font-display uppercase text-white tracking-tighter text-center">
+                {/* 
+                    UPDATED: Increased Text Size and Scale for Width/Height 
+                    Mobile: text-[34vw] (was 28vw)
+                    Desktop: text-[15vw] (was 12vw)
+                    Scale: scale-y-110 (stretches height), scale-x-105 (stretches width)
+                */}
+                <h1 className="text-[34vw] md:text-[15vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl">
                   UMADE
                   <br />
                   <span className="text-brand-neon">MATS</span>

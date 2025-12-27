@@ -15,6 +15,7 @@ export const useReadingProgress = () => {
       try {
         return saved ? JSON.parse(saved) : [];
       } catch (e) {
+        console.error("🚨 [LocalStorage Parse Error]:", e);
         return [];
       }
     }
@@ -23,11 +24,19 @@ export const useReadingProgress = () => {
 
   // 1. Gerenciar Sessão do Usuário
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchSupabaseProgress(session.user.id);
-      else setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        if (session) {
+            fetchSupabaseProgress(session.user.id);
+        } else {
+            setLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error("🚨 [Auth Session Error]:", err);
+        setLoading(false);
+      });
 
     const {
       data: { subscription },
@@ -61,7 +70,7 @@ export const useReadingProgress = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }
     } catch (error) {
-      console.error('Erro ao buscar progresso:', error);
+      console.error('🚨 [Progress Fetch Error]:', error);
     } finally {
       setLoading(false);
     }
@@ -79,7 +88,11 @@ export const useReadingProgress = () => {
     });
 
     // B. Persistência Local
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newItemList));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newItemList));
+    } catch (e) {
+        console.error("🚨 [LocalStorage Save Error]:", e);
+    }
 
     // C. Se logado, salvar no Supabase
     if (session) {
@@ -87,18 +100,20 @@ export const useReadingProgress = () => {
       try {
         if (isAdding) {
           // Salva o ID técnico E o texto legível
-          await supabase.from('user_progress').insert({
+          const { error } = await supabase.from('user_progress').insert({
             user_id: session.user.id,
             reading_item_id: itemId,
             reading_ref: itemRef || null 
           });
+          if (error) throw error;
         } else {
-          await supabase.from('user_progress').delete()
+          const { error } = await supabase.from('user_progress').delete()
             .eq('user_id', session.user.id)
             .eq('reading_item_id', itemId);
+          if (error) throw error;
         }
       } catch (error) {
-        console.error("Erro ao sincronizar com banco:", error);
+        console.error("🚨 [Sync Error]:", error);
       }
     }
   };
@@ -108,7 +123,12 @@ export const useReadingProgress = () => {
     localStorage.removeItem(STORAGE_KEY);
     
     if (session) {
-      await supabase.from('user_progress').delete().eq('user_id', session.user.id);
+      try {
+        const { error } = await supabase.from('user_progress').delete().eq('user_id', session.user.id);
+        if (error) throw error;
+      } catch (e) {
+         console.error("🚨 [Reset Error]:", e);
+      }
     }
   };
 

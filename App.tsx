@@ -17,21 +17,25 @@ export default function App() {
   // Simple state-based router
   const [currentPage, setCurrentPage] = useState<'home' | 'bible' | 'admin'>(() => {
     if (typeof window !== 'undefined') {
-      // 1. Verifica rota Admin pela URL
-      if (window.location.pathname === '/admin') {
-        return 'admin';
-      }
+      try {
+        // 1. Verifica rota Admin pela URL
+        if (window.location.pathname === '/admin') {
+          return 'admin';
+        }
 
-      // 2. Verifica se salvamos a intenção de ir para a bíblia antes do login
-      const shouldReturnToBible = localStorage.getItem('return_to_bible');
-      if (shouldReturnToBible) {
-        localStorage.removeItem('return_to_bible'); 
-        return 'bible';
-      }
+        // 2. Verifica se salvamos a intenção de ir para a bíblia antes do login
+        const shouldReturnToBible = localStorage.getItem('return_to_bible');
+        if (shouldReturnToBible) {
+          localStorage.removeItem('return_to_bible'); 
+          return 'bible';
+        }
 
-      // 3. Fallback para verificação de URL (query params)
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('page') === 'bible') return 'bible';
+        // 3. Fallback para verificação de URL (query params)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('page') === 'bible') return 'bible';
+      } catch (e) {
+        console.warn("Error reading initial route:", e);
+      }
       
       return 'home';
     }
@@ -66,24 +70,39 @@ export default function App() {
   }, [currentPage]);
 
   const handleGoogleLogin = async () => {
-    localStorage.setItem('return_to_bible', 'true');
-    const redirectTo = window.location.origin;
+    try {
+      localStorage.setItem('return_to_bible', 'true');
+      const redirectTo = window.location.origin;
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo, 
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo, 
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         },
-      },
-    });
-    if (error) console.error("Login error:", error);
+      });
+      if (error) console.error("Login error:", error);
+    } catch (e) {
+      console.error("Auth error:", e);
+    }
+  };
+
+  // Helper para navegação segura em ambientes sandboxed (onde pushState pode falhar)
+  const safePushState = (path: string) => {
+    try {
+      window.history.pushState({}, '', path);
+    } catch (e) {
+      // Em ambientes blob/iframe/sandbox, pushState pode ser bloqueado por segurança.
+      // Apenas logamos e permitimos que o estado do React controle a navegação visual.
+      console.warn("Navigation URL update skipped due to environment restrictions:", e);
+    }
   };
 
   const navigateToAdmin = () => {
-    window.history.pushState({}, '', '/admin');
+    safePushState('/admin');
     setCurrentPage('admin');
   };
 
@@ -92,7 +111,7 @@ export default function App() {
   if (currentPage === 'admin') {
     return <AdminDashboard onBack={() => {
         // Reseta URL para root ao voltar
-        window.history.pushState({}, '', '/');
+        safePushState('/');
         setCurrentPage('home');
     }} />;
   }
@@ -101,7 +120,7 @@ export default function App() {
     return (
       <main className="w-full bg-brand-dark min-h-screen text-white">
           <BibleReadingPage onBack={() => {
-            window.history.pushState({}, '', '/');
+            safePushState('/');
             setCurrentPage('home');
           }} />
       </main>
@@ -211,10 +230,10 @@ export default function App() {
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2">Desenvolvido para o Reino.</p>
         
-        {/* Secret Admin Access */}
+        {/* Secret Admin Access - Visível */}
         <button 
            onClick={navigateToAdmin}
-           className="absolute bottom-4 right-4 opacity-5 hover:opacity-100 transition-opacity text-white p-2"
+           className="absolute bottom-4 right-4 opacity-50 hover:opacity-100 transition-opacity text-white p-2"
            title="Área Administrativa"
         >
            <Lock size={12} />

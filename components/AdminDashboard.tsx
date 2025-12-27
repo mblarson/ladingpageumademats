@@ -1,44 +1,81 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 
+// Mapping for dynamic colors to ensure Tailwind does not purge them
+const colorVariants: Record<string, { text: string, border: string, bg: string, via: string, groupHover: string }> = {
+  'brand-neon': { 
+    text: 'text-brand-neon', 
+    border: 'hover:border-brand-neon', 
+    bg: 'bg-brand-neon', 
+    via: 'via-brand-neon',
+    groupHover: 'group-hover:text-brand-neon' 
+  },
+  'brand-pink': { 
+    text: 'text-brand-pink', 
+    border: 'hover:border-brand-pink', 
+    bg: 'bg-brand-pink', 
+    via: 'via-brand-pink',
+    groupHover: 'group-hover:text-brand-pink'
+  },
+  'brand-purple': { 
+    text: 'text-brand-purple', 
+    border: 'hover:border-brand-purple', 
+    bg: 'bg-brand-purple', 
+    via: 'via-brand-purple',
+    groupHover: 'group-hover:text-brand-purple'
+  },
+  'white': { 
+    text: 'text-white', 
+    border: 'hover:border-white', 
+    bg: 'bg-white', 
+    via: 'via-white',
+    groupHover: 'group-hover:text-white'
+  },
+};
+
 interface StatCardProps {
   title: string;
   value: number | string;
-  icon: React.ReactNode;
+  icon: React.ReactNode; 
   color: string;
   loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className={`bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 relative overflow-hidden group hover:border-${color} transition-colors`}
-  >
-    <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-${color}`}>
-       {icon}
-    </div>
-    
-    <div className="relative z-10">
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 ${color} bg-opacity-20 text-${color}`}>
-        {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading }) => {
+  // Fallback if color is not found in map
+  const theme = colorVariants[color] || colorVariants['white'];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 relative overflow-hidden group ${theme.border} transition-colors`}
+    >
+      <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity ${theme.text}`}>
+         {icon}
       </div>
       
-      <h3 className="text-white/50 text-xs font-sans font-bold uppercase tracking-widest mb-1">{title}</h3>
+      <div className="relative z-10">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 ${theme.bg} bg-opacity-20 ${theme.text}`}>
+          {/* Safety check before cloning */}
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement, { size: 20 } as any) : icon}
+        </div>
+        
+        <h3 className="text-white/50 text-xs font-sans font-bold uppercase tracking-widest mb-1">{title}</h3>
+        
+        {loading ? (
+          <div className="h-10 w-24 bg-white/10 rounded animate-pulse" />
+        ) : (
+          <div className="text-4xl font-display text-white">{value}</div>
+        )}
+      </div>
       
-      {loading ? (
-        <div className="h-10 w-24 bg-white/10 rounded animate-pulse" />
-      ) : (
-        <div className="text-4xl font-display text-white">{value}</div>
-      )}
-    </div>
-    
-    <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${color} to-transparent opacity-50`} />
-  </motion.div>
-);
+      <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent ${theme.via} to-transparent opacity-50`} />
+    </motion.div>
+  );
+};
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -122,7 +159,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              title="Últimas 24 Horas"
              value={stats.last24h}
              icon={<Clock />}
-             color="brand-neon" // Classe tailwind precisa existir ou usar style inline, aqui assumindo classes extendidas
+             color="brand-neon"
              loading={stats.loading}
            />
            

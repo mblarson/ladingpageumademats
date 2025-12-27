@@ -68,22 +68,23 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [currentPage]);
 
-  // Check session only when entering the Bible page
+  // Gerenciamento do Modal de Login baseado na navegação
   useEffect(() => {
-    if (currentPage === 'bible') {
-      const checkSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          // Pequeno delay para garantir transição suave
-          setTimeout(() => setShowLoginModal(true), 500);
-        }
-      };
-      checkSession();
-    } else {
-        // Garante que o modal fecha se sair da bíblia
+    // Se sair da página da bíblia, garante que o modal feche
+    if (currentPage !== 'bible') {
         setShowLoginModal(false);
     }
+    // NOTA: Removemos a abertura automática aqui. 
+    // Agora quem chama o login é o callback 'onIntroComplete' passado para o componente BibleReadingPage
   }, [currentPage]);
+
+  // Função chamada pela BibleReadingPage APÓS a intro terminar
+  const handleBibleIntroComplete = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setShowLoginModal(true);
+      }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -208,10 +209,13 @@ export default function App() {
             {showLoginModal && <LoginModalContent />}
           </AnimatePresence>
 
-          <BibleReadingPage onBack={() => {
-            safePushState('/');
-            setCurrentPage('home');
-          }} />
+          <BibleReadingPage 
+             onBack={() => {
+                safePushState('/');
+                setCurrentPage('home');
+             }} 
+             onIntroComplete={handleBibleIntroComplete} 
+          />
       </main>
     );
   }

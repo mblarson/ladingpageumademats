@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2 } from 'lucide-react';
+import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star } from 'lucide-react';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { supabase } from '../lib/supabaseClient';
 
@@ -68,6 +68,7 @@ const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
 
 interface BibleReadingPageProps {
   onBack: () => void;
+  onIntroComplete?: () => void;
 }
 
 interface BibleTextResponse {
@@ -78,6 +79,129 @@ interface BibleTextResponse {
 }
 
 // --- COMPONENTS ---
+
+// 1. INTRO SCREEN (Loading Divertido)
+const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
+    const [progress, setProgress] = useState(0);
+    const [messageIndex, setMessageIndex] = useState(0);
+
+    const funMessages = [
+        "Abrindo o Mar Vermelho...",
+        "Afiando a Espada do Espírito...",
+        "Preparando o Maná do dia...",
+        "Chamando os Profetas...",
+        "Derrubando Muralhas...",
+        "Enchendo o azeite...",
+        "Sintonizando na Rádio Celestial..."
+    ];
+
+    useEffect(() => {
+        // Timer da Barra de Progresso (3 segundos = 3000ms)
+        const duration = 3000;
+        const intervalTime = 30; // Atualiza a cada 30ms para suavidade
+        const steps = duration / intervalTime;
+        let currentStep = 0;
+
+        const progressTimer = setInterval(() => {
+            currentStep++;
+            const newProgress = Math.min((currentStep / steps) * 100, 100);
+            setProgress(newProgress);
+
+            if (currentStep >= steps) {
+                clearInterval(progressTimer);
+                setTimeout(onFinish, 500); // Pequeno delay no final antes de desmontar
+            }
+        }, intervalTime);
+
+        // Timer das Mensagens (Troca a cada 800ms)
+        const messageTimer = setInterval(() => {
+            setMessageIndex(prev => (prev + 1) % funMessages.length);
+        }, 800);
+
+        return () => {
+            clearInterval(progressTimer);
+            clearInterval(messageTimer);
+        };
+    }, []);
+
+    return (
+        <motion.div 
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 overflow-hidden"
+            initial={{ opacity: 1 }}
+            exit={{ y: "-100%", transition: { duration: 0.8, ease: "easeInOut" } }}
+        >
+            {/* Fundo Estilizado */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1a1a1a_0%,#000000_100%)] opacity-80" />
+            <div className="absolute inset-0 opacity-10" style={{ 
+                backgroundImage: 'radial-gradient(#4F46E5 2px, transparent 2px)',
+                backgroundSize: '30px 30px'
+            }} />
+
+            {/* Mascote Flutuando */}
+            <div className="relative z-10 mb-12">
+                <motion.div
+                    animate={{ 
+                        y: [0, -20, 0],
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.05, 1]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="relative"
+                >
+                     {/* Glow atrás do mascote */}
+                     <div className="absolute inset-0 bg-brand-neon/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                     
+                     <img 
+                        src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
+                        alt="Mascote Bíblia"
+                        className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(204,255,0,0.3)]"
+                     />
+                     
+                     {/* Partículas flutuantes */}
+                     <div className="absolute -top-4 -right-4 text-brand-pink animate-bounce"><Star fill="currentColor" /></div>
+                     <div className="absolute bottom-4 -left-8 text-brand-purple animate-pulse"><Zap fill="currentColor" size={32} /></div>
+                </motion.div>
+            </div>
+
+            {/* Container da Barra e Texto */}
+            <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-4">
+                
+                {/* Texto Divertido */}
+                <div className="h-8 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.p
+                            key={messageIndex}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="text-white font-fun text-xl md:text-2xl uppercase tracking-wide text-center"
+                        >
+                            {funMessages[messageIndex]}
+                        </motion.p>
+                    </AnimatePresence>
+                </div>
+
+                {/* Barra de Progresso HQ */}
+                <div className="w-full h-6 md:h-8 bg-[#1a1a1a] border-4 border-white rounded-full overflow-hidden relative shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                    {/* Listras de fundo da barra */}
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(45deg, #ffffff 25%, transparent 25%, transparent 50%, #ffffff 50%, #ffffff 75%, transparent 75%, transparent)', backgroundSize: '20px 20px' }} />
+                    
+                    <motion.div 
+                        className="h-full bg-brand-neon relative"
+                        style={{ width: `${progress}%` }}
+                    >
+                        <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 shadow-[0_0_10px_white]" />
+                    </motion.div>
+                </div>
+
+                <p className="text-white/30 text-xs font-mono font-bold mt-2">
+                    CARREGANDO {Math.round(progress)}%
+                </p>
+            </div>
+        </motion.div>
+    );
+};
+
 
 // Leitor Modal
 const ReadingReader: React.FC<{ 
@@ -195,11 +319,14 @@ const ReadingReader: React.FC<{
 
 
 // --- MAIN PAGE ---
-export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) => {
+export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIntroComplete }) => {
   const [view, setView] = useState<'months' | 'details'>('months');
   const [selectedMonthId, setSelectedMonthId] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [readingItem, setReadingItem] = useState<{id: string, ref: string} | null>(null);
+  
+  // State para controlar a Intro Screen
+  const [showIntro, setShowIntro] = useState(true);
   
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
 
@@ -475,6 +602,18 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack }) =>
     );
   };
 
+  // Se a Intro ainda estiver ativa, mostra ela
+  if (showIntro) {
+      return <BibleIntro onFinish={() => {
+          setShowIntro(false);
+          // Adiciona um pequeno delay para garantir que o dashboard apareceu antes de chamar o modal
+          setTimeout(() => {
+              if (onIntroComplete) onIntroComplete();
+          }, 500);
+      }} />;
+  }
+
+  // Conteúdo Principal da Bíblia
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] text-gray-200 flex flex-col font-sans">
       

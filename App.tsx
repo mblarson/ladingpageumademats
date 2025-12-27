@@ -4,25 +4,36 @@ import { EventSection } from './components/EventSection';
 import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { BibleReadingPage } from './components/BibleReadingPage';
+import { AdminDashboard } from './components/AdminDashboard';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap } from 'lucide-react';
+import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
 export default function App() {
+  // Inicializa o tracking de visitas e GA
+  useSiteAnalytics();
+
   // Simple state-based router
-  // Inicializa verificando localStorage OU URL para manter a página após reload/login
-  const [currentPage, setCurrentPage] = useState<'home' | 'bible'>(() => {
+  const [currentPage, setCurrentPage] = useState<'home' | 'bible' | 'admin'>(() => {
     if (typeof window !== 'undefined') {
-      // 1. Verifica se salvamos a intenção de ir para a bíblia antes do login
+      // 1. Verifica rota Admin pela URL
+      if (window.location.pathname === '/admin') {
+        return 'admin';
+      }
+
+      // 2. Verifica se salvamos a intenção de ir para a bíblia antes do login
       const shouldReturnToBible = localStorage.getItem('return_to_bible');
       if (shouldReturnToBible) {
-        localStorage.removeItem('return_to_bible'); // Limpa para não ficar preso lá pra sempre
+        localStorage.removeItem('return_to_bible'); 
         return 'bible';
       }
 
-      // 2. Fallback para verificação de URL (caso usem links diretos)
+      // 3. Fallback para verificação de URL (query params)
       const params = new URLSearchParams(window.location.search);
-      return params.get('page') === 'bible' ? 'bible' : 'home';
+      if (params.get('page') === 'bible') return 'bible';
+      
+      return 'home';
     }
     return 'home';
   });
@@ -38,7 +49,7 @@ export default function App() {
     restDelta: 0.001
   });
 
-  // Rastreador Vertical (Lateral) - Mapeia 0 (topo) a 1 (fundo) para 0% a 92% da altura da barra
+  // Rastreador Vertical (Lateral)
   const yPath = useTransform(scrollYProgress, [0, 1], ["0%", "92%"]);
 
   // Check session only when entering the Bible page
@@ -47,7 +58,6 @@ export default function App() {
       const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          // Delay reduced for faster entrance
           setTimeout(() => setShowLoginModal(true), 500);
         }
       };
@@ -56,10 +66,6 @@ export default function App() {
   }, [currentPage]);
 
   const handleGoogleLogin = async () => {
-    /* 
-       Salva a intenção no LocalStorage. 
-       Isso sobrevive ao redirecionamento do Google melhor que parametros de URL.
-    */
     localStorage.setItem('return_to_bible', 'true');
     const redirectTo = window.location.origin;
 
@@ -76,6 +82,29 @@ export default function App() {
     if (error) console.error("Login error:", error);
   };
 
+  // --- RENDERIZAR PAGINAS ---
+
+  if (currentPage === 'admin') {
+    return <AdminDashboard onBack={() => {
+        // Reseta URL para root ao voltar
+        window.history.pushState({}, '', '/');
+        setCurrentPage('home');
+    }} />;
+  }
+
+  if (currentPage === 'bible') {
+    return (
+      <main className="w-full bg-brand-dark min-h-screen text-white">
+          <BibleReadingPage onBack={() => {
+            window.history.pushState({}, '', '/');
+            setCurrentPage('home');
+          }} />
+      </main>
+    );
+  }
+
+  // --- HOMEPAGE ---
+
   return (
     <main className="w-full relative bg-brand-dark min-h-screen text-white overflow-hidden">
       
@@ -83,7 +112,6 @@ export default function App() {
       <AnimatePresence>
         {showLoginModal && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
-            {/* Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -92,14 +120,12 @@ export default function App() {
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
             
-            {/* Modal Card */}
             <motion.div
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 20, opacity: 0 }}
               className="relative bg-[#1a1a1a] border-[3px] border-brand-neon p-6 md:p-10 rounded-3xl w-full max-w-md shadow-[0_0_60px_rgba(204,255,0,0.2)] overflow-hidden flex flex-col items-center text-center"
             >
-               {/* Decorative Gradient Line */}
                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
                
                <button 
@@ -126,7 +152,6 @@ export default function App() {
                    onClick={handleGoogleLogin}
                    className="relative group w-full py-4 bg-white text-black font-bold uppercase tracking-wide rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-3 shadow-xl"
                  >
-                    {/* Google Icon SVG */}
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -154,16 +179,12 @@ export default function App() {
       </AnimatePresence>
 
       {/* --- ANIMAÇÕES DE SCROLL --- */}
-
-      {/* 1. Barra Horizontal no Topo */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1.5 bg-brand-neon origin-left z-[100]"
         style={{ scaleX }}
       />
 
-      {/* 2. Rastreador Vertical na Direita (Desce junto com o usuário) */}
       <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[50vh] w-[2px] bg-white/10 rounded-full z-[90] hidden md:block pointer-events-none">
-          {/* Indicador que se move */}
           <motion.div
              style={{ top: yPath }}
              className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"
@@ -172,26 +193,19 @@ export default function App() {
           </motion.div>
       </div>
 
-      {/* 3. Textura de Fundo Fixa (Granulação) - Dá a sensação de que o fundo está "preso" na tela */}
       <div className="fixed inset-0 pointer-events-none z-[-1] opacity-[0.03]" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} 
       />
 
-      {currentPage === 'bible' ? (
-        <BibleReadingPage onBack={() => setCurrentPage('home')} />
-      ) : (
-        <>
-          <HeroSection />
-          <EventSection />
-          <ActionSection onNavigateToBible={() => setCurrentPage('bible')} />
-          <AboutSection />
+      <HeroSection />
+      <EventSection />
+      <ActionSection onNavigateToBible={() => setCurrentPage('bible')} />
+      <AboutSection />
 
-          <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
-            <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
-            <p className="mt-2">Desenvolvido para o Reino.</p>
-          </footer>
-        </>
-      )}
+      <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
+        <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
+        <p className="mt-2">Desenvolvido para o Reino.</p>
+      </footer>
     </main>
   );
 }

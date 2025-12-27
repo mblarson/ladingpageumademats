@@ -7,7 +7,7 @@ import { BibleReadingPage } from './components/BibleReadingPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
-import { X, LogIn, ShieldCheck, Zap } from 'lucide-react';
+import { X, LogIn, ShieldCheck, Zap, Lock } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
 export default function App() {
@@ -80,6 +80,11 @@ export default function App() {
       },
     });
     if (error) console.error("Login error:", error);
+  };
+
+  const navigateToAdmin = () => {
+    window.history.pushState({}, '', '/admin');
+    setCurrentPage('admin');
   };
 
   // --- RENDERIZAR PAGINAS ---
@@ -202,9 +207,18 @@ export default function App() {
       <ActionSection onNavigateToBible={() => setCurrentPage('bible')} />
       <AboutSection />
 
-      <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5">
+      <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2">Desenvolvido para o Reino.</p>
+        
+        {/* Secret Admin Access */}
+        <button 
+           onClick={navigateToAdmin}
+           className="absolute bottom-4 right-4 opacity-5 hover:opacity-100 transition-opacity text-white p-2"
+           title="Área Administrativa"
+        >
+           <Lock size={12} />
+        </button>
       </footer>
     </main>
   );

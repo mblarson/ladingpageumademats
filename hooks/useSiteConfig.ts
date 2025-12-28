@@ -40,7 +40,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   hero_bgColor: '#4F46E5',
   hero_accentColor: '#ccff00',
   hero_secondaryColor: '#ec4899',
-  hero_marqueeText: 'UMADEMATS 2026 • JUBILEU DE OURO •',
+  hero_marqueeText: 'UMADEMATS  •  ',
   hero_titleLine1: 'UMADE',
   hero_titleLine2: 'MATS',
   hero_button1: 'Congresso',

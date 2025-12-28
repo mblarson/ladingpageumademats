@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo, useInView } from 'framer-motion';
-import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star, Clock } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface GuestCardProps {
@@ -71,12 +71,37 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
   const [showMapModal, setShowMapModal] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0); // 0: Text, 1: Shirt 1, 2: Shirt 2
   
+  // COUNTDOWN LOGIC
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    // Data alvo: 03 de Abril de 2026, 18:00
+    const targetDate = new Date('2026-04-03T18:00:00');
+
+    const updateTimer = () => {
+        const now = new Date();
+        const difference = targetDate.getTime() - now.getTime();
+
+        if (difference > 0) {
+            setTimeLeft({
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((difference / 1000 / 60) % 60),
+                seconds: Math.floor((difference / 1000) % 60)
+            });
+        }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
   // Referência para saber se a seção está visível na tela
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { amount: 0.3, once: false });
 
   // Só inicia o timer SE a seção estiver visível.
-  // Isso garante que slideIndex permaneça em 0 enquanto o usuário está na HeroSection.
   useEffect(() => {
     if (!isInView) return; 
 
@@ -327,9 +352,52 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                   </div>
                 </div>
 
+                {/* --- COUNTDOWN TIMER --- */}
+                <div className="w-full flex justify-center mt-6 mb-2">
+                    <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 relative">
+                        {/* Label Badge */}
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-brand-neon px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border border-brand-neon shadow-lg whitespace-nowrap z-10">
+                            Contagem Regressiva
+                        </div>
+
+                        {/* Bloco DIAS */}
+                        <div className="flex flex-col items-center bg-[#1a1a1a] border-2 border-white rounded-xl p-3 md:p-4 min-w-[70px] md:min-w-[100px] shadow-[4px_4px_0px_rgba(0,0,0,0.2)]">
+                            <span className="font-display text-2xl md:text-5xl text-white leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                            <span className="text-[8px] md:text-xs font-bold uppercase text-brand-neon tracking-widest mt-1">Dias</span>
+                        </div>
+                        
+                        {/* Separator */}
+                        <div className="hidden md:block text-2xl font-bold text-black">:</div>
+
+                        {/* Bloco HORAS */}
+                        <div className="flex flex-col items-center bg-[#1a1a1a] border-2 border-white rounded-xl p-3 md:p-4 min-w-[70px] md:min-w-[100px] shadow-[4px_4px_0px_rgba(0,0,0,0.2)]">
+                            <span className="font-display text-2xl md:text-5xl text-white leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                            <span className="text-[8px] md:text-xs font-bold uppercase text-brand-neon tracking-widest mt-1">Horas</span>
+                        </div>
+
+                         {/* Separator */}
+                        <div className="hidden md:block text-2xl font-bold text-black">:</div>
+
+                        {/* Bloco MINUTOS */}
+                        <div className="flex flex-col items-center bg-[#1a1a1a] border-2 border-white rounded-xl p-3 md:p-4 min-w-[70px] md:min-w-[100px] shadow-[4px_4px_0px_rgba(0,0,0,0.2)]">
+                            <span className="font-display text-2xl md:text-5xl text-white leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                            <span className="text-[8px] md:text-xs font-bold uppercase text-brand-neon tracking-widest mt-1">Min</span>
+                        </div>
+
+                         {/* Separator */}
+                        <div className="hidden md:block text-2xl font-bold text-black">:</div>
+
+                        {/* Bloco SEGUNDOS */}
+                        <div className="flex flex-col items-center bg-brand-pink border-2 border-black rounded-xl p-3 md:p-4 min-w-[70px] md:min-w-[100px] shadow-[4px_4px_0px_rgba(0,0,0,1)] transform -rotate-2">
+                            <span className="font-display text-2xl md:text-5xl text-white leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                            <span className="text-[8px] md:text-xs font-bold uppercase text-black tracking-widest mt-1">Seg</span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Date and Location - BOTOES REVERTIDOS AO TAMANHO ORIGINAL */}
                 <div 
-                    className="flex flex-col items-center justify-center gap-6 mt-12 md:mt-16 w-full max-w-full overflow-visible"
+                    className="flex flex-col items-center justify-center gap-6 mt-8 md:mt-12 w-full max-w-full overflow-visible"
                 >
                   {/* BUTTON 1: CALENDAR */}
                   <div 

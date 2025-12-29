@@ -281,8 +281,8 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
                                      <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
                                  </div>
-                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
-                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png" alt="Camiseta Terracota" className="h-[60vh] md:h-[80vh] w-auto object-contain drop-shadow-2xl rotate-2 scale-110" />
+                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
+                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png" alt="Camiseta Terracota" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl rotate-2 scale-[1.65]" />
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
                                  <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-2xl text-brand-pink uppercase tracking-wide">Garanta a sua</span></div>
@@ -299,8 +299,8 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
                                      <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
                                  </div>
-                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[5%] md:translate-y-0">
-                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png" alt="Camiseta Verde" className="h-[60vh] md:h-[80vh] w-auto object-contain drop-shadow-2xl -rotate-2 scale-110" />
+                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
+                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png" alt="Camiseta Verde" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl -rotate-2 scale-[1.65]" />
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
                                  <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-2xl text-white uppercase tracking-wide">Edição Especial</span></div>

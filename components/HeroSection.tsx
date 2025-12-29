@@ -186,8 +186,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         </motion.div>
       )}
 
-      {/* Main Content */}
-      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
+      {/* Main Content - Added md:mt-32 to push below menu on Desktop */}
+      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto md:mt-32">
         
         {/* Badge */}
         <motion.div
@@ -203,8 +203,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
             </div>
         </motion.div>
 
-        {/* Dynamic Title Carousel */}
-        <div className="relative w-full min-h-[35vh] md:min-h-[50vh] flex items-center justify-center overflow-visible">
+        {/* Dynamic Title Carousel - Adjusted md:min-h to handle smaller Desktop fonts */}
+        <div className="relative w-full min-h-[35vh] md:min-h-[45vh] flex items-center justify-center overflow-visible">
           <AnimatePresence mode="wait">
             
             {currentIndex === 0 && (
@@ -217,7 +217,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <h1 className="text-[34vw] md:text-[15vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl">
+                {/* Adjusted md:text from 15vw to 11vw to prevent overlap */}
+                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl">
                   {activeConfig.hero_titleLine1}
                   <br />
                   <span style={{ color: activeConfig.hero_accentColor }}>{activeConfig.hero_titleLine2}</span>

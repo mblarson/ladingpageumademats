@@ -21,9 +21,6 @@ export const useKeepalive = () => {
   const [autoPingEnabled, setAutoPingEnabled] = useState(true);
   const [timeToNextPing, setTimeToNextPing] = useState<number>(PING_INTERVAL_MS);
   
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,6 +46,8 @@ export const useKeepalive = () => {
   }, []);
 
   const triggerKeepalive = useCallback(async (isAuto = false) => {
+    if (isPinging) return; // Evita pings duplicados simultâneos
+    
     setIsPinging(true);
     try {
       // 1. Insere um log para "acordar" o banco e registrar atividade
@@ -57,33 +56,40 @@ export const useKeepalive = () => {
         .insert({
           event_type: isAuto ? 'keepalive_auto' : 'keepalive_manual',
           status: 'success',
-          details: { source: 'admin_dashboard', user_agent: navigator.userAgent }
+          details: { 
+            source: 'admin_dashboard', 
+            user_agent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          }
         });
 
       if (error) throw error;
 
-      // 2. Atualiza a lista
+      // 2. Atualiza a lista local
       await fetchLogs();
       
-      // Se foi sucesso, reseta o timer
-      setTimeToNextPing(PING_INTERVAL_MS);
       return true;
     } catch (error: any) {
       console.error('🚨 [Keepalive Trigger Error]:', error);
       
-      await supabase.from('automation_logs').insert({
-          event_type: 'keepalive_error',
-          status: 'error',
-          details: { error: error.message }
-      });
+      // Tenta registrar o erro no banco se possível
+      try {
+          await supabase.from('automation_logs').insert({
+              event_type: 'keepalive_error',
+              status: 'error',
+              details: { error: error.message }
+          });
+      } catch(e) { }
       
       return false;
     } finally {
       setIsPinging(false);
+      // SEMPRE reseta o cronômetro no final para evitar loops infinitos se falhar
+      setTimeToNextPing(PING_INTERVAL_MS);
     }
-  }, [fetchLogs]);
+  }, [fetchLogs, isPinging]);
 
-  // Carrega logs ao iniciar
+  // Carrega logs ao iniciar e assina mudanças em tempo real
   useEffect(() => {
     fetchLogs();
     
@@ -98,7 +104,11 @@ export const useKeepalive = () => {
         },
         (payload) => {
           const newLog = payload.new as AutomationLog;
-          setLogs((prev) => [newLog, ...prev]);
+          setLogs((prev) => {
+              // Evita duplicatas se o fetchLogs e o realtime baterem juntos
+              if (prev.some(l => l.id === newLog.id)) return prev;
+              return [newLog, ...prev].slice(0, 50);
+          });
           setLastRun(newLog.created_at);
         }
       )
@@ -109,28 +119,26 @@ export const useKeepalive = () => {
     };
   }, [fetchLogs]);
 
-  // Lógica do Cronômetro e Auto Ping
+  // Lógica 1: O Cronômetro (Apenas decrementa o tempo)
   useEffect(() => {
-    if (!autoPingEnabled) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        return;
-    }
+    if (!autoPingEnabled) return;
 
-    // Decrementa o contador a cada segundo
-    timerRef.current = setInterval(() => {
-        setTimeToNextPing((prev) => {
-            if (prev <= 1000) {
-                triggerKeepalive(true);
-                return PING_INTERVAL_MS;
-            }
-            return prev - 1000;
-        });
+    const timer = setInterval(() => {
+      setTimeToNextPing((prev) => {
+        if (prev <= 0) return 0;
+        return prev - 1000;
+      });
     }, 1000);
 
-    return () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [autoPingEnabled, triggerKeepalive]);
+    return () => clearInterval(timer);
+  }, [autoPingEnabled]);
+
+  // Lógica 2: O Gatilho (Executa quando o tempo chega a zero)
+  useEffect(() => {
+    if (autoPingEnabled && timeToNextPing <= 0 && !isPinging) {
+      triggerKeepalive(true);
+    }
+  }, [timeToNextPing, autoPingEnabled, triggerKeepalive, isPinging]);
 
   return {
     logs,

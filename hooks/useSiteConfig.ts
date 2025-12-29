@@ -41,8 +41,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   hero_accentColor: '#ccff00',
   hero_secondaryColor: '#ec4899',
   hero_marqueeText: 'UMADEMATS  •  ',
-  hero_titleLine1: 'UMADE',
-  hero_titleLine2: 'MATS',
+  hero_titleLine1: 'UI',
+  hero_titleLine2: 'MADEMATS',
   hero_button1: 'Congresso',
   hero_button2: 'GAMES',
   hero_button3: 'Quem Somos',
@@ -65,7 +65,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
 
   // ABOUT
   about_title: 'QUEM SOMOS',
-  about_text: 'Igreja com visão para o século XXI, dedicada a apresentar Deus ao mundo, cumprir o evangelho de Cristo, incentivar a fé e fortalecer uma comunidade vitoriosa sustentada pela promessa de que as portas do inferno não prevalecerão. Estamos em Campo Grande - MS no endereço Av. Dr. João Rosa Píres, 482 - Amambai.',
+  about_text: 'Igreja com visão para o século XXI, dedicada a apresentar Deus ao mundo, cumprir o evangelho de Cristo, incentivar a faith e fortalecer uma comunidade vitoriosa sustentada pela promessa de que as portas do inferno não prevalecerão. Estamos em Campo Grande - MS no endereço Av. Dr. João Rosa Píres, 482 - Amambai.',
   about_bannerUrl: 'https://raw.githubusercontent.com/mblarson/imagens/main/ieadms.png',
 };
 

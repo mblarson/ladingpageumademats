@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Palette, Layout, Type, Image as ImageIcon, Save, RotateCcw, ChevronDown, ChevronRight, Activity, Server, RefreshCw, CheckCircle2, AlertCircle, Play, Pause, Zap, Github, Copy, ListOrdered, KeyRound } from 'lucide-react';
-import { useAnalyticsDashboard, useSiteAnalytics } from '../hooks/useSiteAnalytics';
+import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
-import { useKeepalive, AutomationLog } from '../hooks/useKeepalive';
+import { useKeepalive } from '../hooks/useKeepalive';
 import { HeroSection } from './HeroSection';
 import { EventSection } from './EventSection';
 import { ActionSection } from './ActionSection';
 import { AboutSection } from './AboutSection';
-
-// --- COMPONENTS ---
 
 const ColorPicker: React.FC<{ label: string; value: string; onChange: (val: string) => void }> = ({ label, value, onChange }) => (
     <div className="flex flex-col gap-2">
@@ -71,23 +69,20 @@ const SectionAccordion: React.FC<{ title: string; children: React.ReactNode; def
     );
 }
 
-
 const StatCard: React.FC<{ title: string; value: number | string; icon: React.ReactNode; color: string; loading?: boolean }> = ({ title, value, icon, color, loading }) => (
-    <div className={`bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 relative overflow-hidden group hover:border-${color} transition-colors`}>
-      <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-${color}`}>
+    <div className={`bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 relative overflow-hidden group transition-colors border-white/5`}>
+      <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity`} style={{ color }}>
          {icon}
       </div>
       <div className="relative z-10">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 bg-${color} bg-opacity-20 text-${color}`}>
-          <div className="text-current">{icon}</div>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4 bg-white/5" style={{ color }}>
+          {icon}
         </div>
         <h3 className="text-white/50 text-xs font-sans font-bold uppercase tracking-widest mb-1">{title}</h3>
         {loading ? <div className="h-10 w-24 bg-white/10 rounded animate-pulse" /> : <div className="text-4xl font-display text-white">{value}</div>}
       </div>
     </div>
 );
-
-// --- MAIN DASHBOARD COMPONENT ---
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -99,14 +94,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const { logs, lastRun, isPinging, triggerKeepalive, refreshLogs, autoPingEnabled, setAutoPingEnabled, timeToNextPing } = useKeepalive();
   
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
-  
-  React.useEffect(() => {
-      if (config) setDraftConfig({ ...DEFAULT_SITE_CONFIG, ...config });
-  }, [config]);
-
   const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive'>('analytics');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+
+  React.useEffect(() => {
+    if (config) setDraftConfig({ ...DEFAULT_SITE_CONFIG, ...config });
+  }, [config]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,27 +112,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   };
 
   const handleConfigChange = (key: keyof SiteConfig, value: any) => {
-      setDraftConfig(prev => ({ ...prev, [key]: value }));
+    setDraftConfig(prev => ({ ...prev, [key]: value }));
   };
 
   const formatTime = (isoString: string | null) => {
-      if (!isoString) return 'Nunca executado';
-      return new Date(isoString).toLocaleString('pt-BR', { 
-          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' 
-      });
+    if (!isoString) return 'Nunca executado';
+    return new Date(isoString).toLocaleString('pt-BR', { 
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    });
   };
-  
+
   const formatCountdown = (ms: number) => {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const yamlCode = `name: Supabase Keepalive
 on:
   schedule:
-    - cron: '0 */4 * * *' # Executa a cada 4 horas
+    - cron: '0 */4 * * *'
   workflow_dispatch:
 
 jobs:
@@ -153,11 +147,6 @@ jobs:
           -H "Content-Type: application/json" \\
           -d '{"event_type": "keepalive_github", "status": "success", "details": {"source": "github_action"}}'`;
 
-  const copyToClipboard = () => {
-      navigator.clipboard.writeText(yamlCode);
-      alert("YAML copiado! Cole no arquivo .github/workflows/keepalive.yml do seu repositório.");
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
@@ -165,7 +154,7 @@ jobs:
             <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-black" size={32} /></div>
             <h2 className="text-2xl font-display text-white mb-2">Área Restrita</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
-               <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-colors" />
+               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-colors" />
                <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors"> Acessar </button>
             </form>
             <button onClick={onBack} className="mt-6 text-white/30 text-xs hover:text-white uppercase font-bold tracking-widest">Voltar ao Site</button>
@@ -193,249 +182,161 @@ jobs:
                     <Activity size={16} /> <span>Monitor</span>
                 </button>
                 <button onClick={() => setActiveTab('builder')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'builder' ? 'bg-brand-neon text-black shadow-lg' : 'text-white/50 hover:text-white hover:bg-white/5'}`}>
-                    <Layout size={16} /> <span className="hidden sm:inline">Visual Builder</span> <span className="sm:hidden">Editor</span>
+                    <Layout size={16} /> <span>Config</span>
                 </button>
             </div>
          </div>
       </div>
 
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+        {activeTab === 'builder' && (
+          <aside className="w-full md:w-80 border-r border-white/10 bg-[#0f0f0f] overflow-y-auto custom-scrollbar flex flex-col shrink-0">
+            <div className="flex-1">
+                <SectionAccordion title="Hero Section" defaultOpen>
+                    <ColorPicker label="Cor de Fundo" value={draftConfig.hero_bgColor} onChange={(val) => handleConfigChange('hero_bgColor', val)} />
+                    <ColorPicker label="Cor Accent (Neon)" value={draftConfig.hero_accentColor} onChange={(val) => handleConfigChange('hero_accentColor', val)} />
+                    <TextInput label="Título Linha 1" value={draftConfig.hero_titleLine1} onChange={(val) => handleConfigChange('hero_titleLine1', val)} />
+                    <TextInput label="Título Linha 2" value={draftConfig.hero_titleLine2} onChange={(val) => handleConfigChange('hero_titleLine2', val)} />
+                </SectionAccordion>
+                <SectionAccordion title="Event Section">
+                    <TextInput label="Título do Evento" value={draftConfig.event_title} onChange={(val) => handleConfigChange('event_title', val)} />
+                    <TextInput label="Badge/Subtítulo" value={draftConfig.event_badge} onChange={(val) => handleConfigChange('event_badge', val)} />
+                    <TextInput label="Localização" value={draftConfig.event_location} onChange={(val) => handleConfigChange('event_location', val)} />
+                </SectionAccordion>
+            </div>
+            <div className="p-4 border-t border-white/10 bg-[#151515] sticky bottom-0 flex flex-col gap-2">
+                <button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg"><Save size={18} /> Salvar Alterações</button>
+                <button onClick={resetConfig} className="w-full bg-white/5 text-white/50 font-bold uppercase py-2 rounded-xl text-[10px] flex items-center justify-center gap-2 hover:bg-white/10 hover:text-white"><RotateCcw size={14} /> Resetar Padrão</button>
+            </div>
+          </aside>
+        )}
+
+        <main className="flex-1 overflow-y-auto bg-black p-4 md:p-8 custom-scrollbar">
           {activeTab === 'analytics' && (
-             <div className="h-full overflow-y-auto p-4 md:p-8">
-                 <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
-                        <StatCard title="24 Horas" value={stats.last24h} icon={<Clock size={20}/>} color="brand-neon" loading={stats.loading} />
-                        <StatCard title="7 Dias" value={stats.last7d} icon={<Calendar size={20}/>} color="brand-pink" loading={stats.loading} />
-                        <StatCard title="30 Dias" value={stats.last30d} icon={<Calendar size={20}/>} color="brand-purple" loading={stats.loading} />
-                        <StatCard title="Total" value={stats.total} icon={<Users size={20}/>} color="white" loading={stats.loading} />
-                    </div>
-                 </div>
-             </div>
+            <div className="max-w-6xl mx-auto space-y-8">
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  <StatCard title="Total de Visitas" value={stats.total} icon={<Users />} color="#ccff00" loading={stats.loading} />
+                  <StatCard title="Últimos 30 dias" value={stats.last30d} icon={<Calendar />} color="#ec4899" loading={stats.loading} />
+                  <StatCard title="Últimos 7 dias" value={stats.last7d} icon={<Clock />} color="#a855f7" loading={stats.loading} />
+                  <StatCard title="Últimas 24 horas" value={stats.last24h} icon={<BarChart3 />} color="#3b82f6" loading={stats.loading} />
+               </div>
+            </div>
           )}
 
-           {activeTab === 'keepalive' && (
-             <div className="h-full overflow-y-auto p-4 md:p-8 bg-gray-900/50">
-                 <div className="max-w-4xl mx-auto">
-                    
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 mb-8 flex flex-col gap-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Server className="text-blue-500" size={24} />
-                                    <h2 className="text-xl md:text-2xl font-display text-white uppercase">Status do Banco</h2>
-                                </div>
-                                <p className="text-white/50 text-sm max-w-md">Monitoramento de pings locais (via navegador enquanto o painel está aberto).</p>
-                            </div>
-                             <div className="flex flex-wrap gap-2">
-                                 <div className={`px-3 py-2 rounded-lg border flex items-center gap-2 ${autoPingEnabled ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                                     {autoPingEnabled ? <Zap size={14} className="fill-current" /> : <Pause size={14} className="fill-current" />}
-                                     <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">{autoPingEnabled ? 'Painel On' : 'Painel Off'}</span>
-                                 </div>
-                                 <div className="bg-black/50 px-3 py-2 rounded-lg border border-white/5 flex items-center gap-2">
-                                     <span className="text-[10px] md:text-xs font-bold text-white/40 uppercase tracking-widest">Próx:</span>
-                                     <span className="text-brand-neon font-mono text-xs md:text-sm">{formatCountdown(timeToNextPing)}</span>
-                                 </div>
-                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 w-full">
-                             <button onClick={() => setAutoPingEnabled(!autoPingEnabled)} className={`p-3 rounded-xl border border-white/10 transition-all ${autoPingEnabled ? 'bg-white/5 text-white/50 hover:text-white' : 'bg-green-600 text-white hover:bg-green-500'}`} title={autoPingEnabled ? "Pausar Automação Local" : "Iniciar Automação Local"}>
-                                 {autoPingEnabled ? <Pause size={18} /> : <Play size={18} />}
-                             </button>
-                             <button onClick={() => triggerKeepalive(false)} disabled={isPinging} className={`flex-1 flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-bold uppercase tracking-wide transition-all shadow-lg text-sm ${isPinging ? 'bg-white/10 text-white/50 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-105'}`}>
-                                <RefreshCw size={18} className={isPinging ? 'animate-spin' : ''} /> {isPinging ? '...' : 'Ping Manual'}
-                             </button>
-                        </div>
+          {activeTab === 'keepalive' && (
+             <div className="max-w-4xl mx-auto space-y-8">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                       <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">
+                           <Activity size={32} />
+                       </div>
+                       <div>
+                          <h2 className="text-xl font-display uppercase text-white">Keepalive Automático</h2>
+                          <p className="text-white/40 text-sm">Previne o Supabase de entrar em modo repouso por inatividade.</p>
+                       </div>
                     </div>
-
-                    {/* SEÇÃO GITHUB ACTION (MELHORADA COM GUIA) */}
-                    <div className="bg-[#1a1a1a] border border-blue-500/30 rounded-3xl overflow-hidden mb-8">
-                        <div className="p-6 md:p-8 bg-blue-500/5 border-b border-white/10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Github className="text-white" size={28} />
-                                <h2 className="text-xl md:text-2xl font-display text-white uppercase">Automação GitHub (24h/7d)</h2>
-                            </div>
-                            <p className="text-white/60 text-sm leading-relaxed max-w-2xl">
-                                Esta é a forma profissional de manter seu banco acordado. O GitHub executará um comando automático a cada 4 horas para você, garantindo que o Supabase nunca entre em hibernação.
-                            </p>
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] uppercase font-bold text-white/30">Próximo ping em:</span>
+                            <span className="text-2xl font-mono text-blue-400">{formatCountdown(timeToNextPing)}</span>
                         </div>
-
-                        <div className="p-6 md:p-8 space-y-10">
-                            {/* PASSO 1 */}
-                            <div className="flex gap-4">
-                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">1</div>
-                                <div className="space-y-4 flex-1">
-                                    <h4 className="font-bold text-white flex items-center gap-2"><ListOrdered size={18} className="text-blue-400" /> Criar Arquivo de Automação</h4>
-                                    <p className="text-white/40 text-xs">No seu repositório do GitHub, crie um novo arquivo no caminho:</p>
-                                    <div className="bg-black border border-white/10 rounded-lg p-3 font-mono text-xs text-brand-neon">
-                                        .github/workflows/keepalive.yml
-                                    </div>
-                                    <p className="text-white/40 text-xs">E cole o código abaixo:</p>
-                                    <div className="relative group">
-                                        <pre className="bg-black rounded-xl p-5 text-[10px] md:text-xs font-mono text-blue-300 overflow-x-auto custom-scrollbar border border-white/10">
-                                            {yamlCode}
-                                        </pre>
-                                        <button onClick={copyToClipboard} className="absolute top-4 right-4 bg-white/10 hover:bg-white text-white hover:text-black p-2 rounded-lg transition-all"> <Copy size={16} /> </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* PASSO 2 */}
-                            <div className="flex gap-4">
-                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">2</div>
-                                <div className="space-y-4 flex-1">
-                                    <h4 className="font-bold text-white flex items-center gap-2"><KeyRound size={18} className="text-blue-400" /> Configurar Segredos (Secrets)</h4>
-                                    <p className="text-white/40 text-xs">Para que o GitHub possa acessar seu banco com segurança:</p>
-                                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 space-y-3">
-                                        <p className="text-blue-200 text-xs">Vá em <span className="font-bold italic">Settings > Secrets and variables > Actions</span> e clique em <span className="text-white font-bold">"New repository secret"</span>:</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div className="bg-black/40 p-3 rounded-lg border border-white/5">
-                                                <p className="text-white/30 text-[9px] uppercase font-black mb-1">Nome do Secret</p>
-                                                <p className="text-brand-neon font-mono text-xs">SUPABASE_URL</p>
-                                            </div>
-                                            <div className="bg-black/40 p-3 rounded-lg border border-white/5">
-                                                <p className="text-white/30 text-[9px] uppercase font-black mb-1">Nome do Secret</p>
-                                                <p className="text-brand-neon font-mono text-xs">SUPABASE_ANON_KEY</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/40 text-[10px] italic">Use as mesmas chaves que estão no seu arquivo supabaseClient.ts.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* PASSO 3 */}
-                            <div className="flex gap-4">
-                                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">3</div>
-                                <div className="space-y-2 flex-1">
-                                    <h4 className="font-bold text-white flex items-center gap-2"><CheckCircle2 size={18} className="text-green-400" /> Testar Automação</h4>
-                                    <p className="text-white/40 text-xs">Vá na aba <span className="text-white font-bold">Actions</span> do GitHub, selecione "Supabase Keepalive" e clique em <span className="text-white font-bold">Run workflow</span>. Se ficar verde, está configurado!</p>
-                                </div>
-                            </div>
-                        </div>
+                        <button 
+                          onClick={() => setAutoPingEnabled(!autoPingEnabled)}
+                          className={`w-14 h-8 rounded-full relative transition-colors p-1 ${autoPingEnabled ? 'bg-blue-600' : 'bg-white/10'}`}
+                        >
+                           <motion.div animate={{ x: autoPingEnabled ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-lg" />
+                        </button>
                     </div>
+                </div>
 
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden mb-12">
-                        <div className="p-4 md:p-6 border-b border-white/10 flex items-center justify-between">
-                            <h3 className="text-sm md:text-lg font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                <Activity size={18} className="text-brand-neon" /> Histórico de Pings
-                            </h3>
-                            <button onClick={refreshLogs} className="text-white/30 hover:text-white p-2"><RefreshCw size={14} /></button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left min-w-[600px]">
-                                <thead className="bg-black/40 text-xs font-bold uppercase text-white/40 tracking-wider">
-                                    <tr>
-                                        <th className="px-6 py-4">Status</th>
-                                        <th className="px-6 py-4">Fonte / Evento</th>
-                                        <th className="px-6 py-4">Data / Hora</th>
-                                        <th className="px-6 py-4">Detalhes</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {logs.length === 0 ? (
-                                        <tr><td colSpan={4} className="px-6 py-12 text-center text-white/20 text-sm uppercase tracking-widest">Nenhum log encontrado...</td></tr>
-                                    ) : (
-                                        logs.map((log) => (
-                                            <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    {log.status === 'success' ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase border border-green-500/20"> <CheckCircle2 size={12} /> Sucesso </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-bold uppercase border border-red-500/20"> <AlertCircle size={12} /> Erro </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-white font-medium text-sm">
-                                                    {log.event_type === 'keepalive_auto' ? ( <span className="inline-flex items-center gap-2 text-brand-neon"><Zap size={14} /> Auto Painel 🤖</span> ) : log.event_type === 'keepalive_github' ? ( <span className="inline-flex items-center gap-2 text-white"><Github size={14} /> GitHub Action ☁️</span> ) : ( <span className="inline-flex items-center gap-2 text-blue-400"><Activity size={14} /> Manual Ping 👤</span> )}
-                                                </td>
-                                                <td className="px-6 py-4 text-white/60 font-mono text-xs">{formatTime(log.created_at)}</td>
-                                                <td className="px-6 py-4 text-white/40 text-xs font-mono max-w-xs truncate">{JSON.stringify(log.details)}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                 </div>
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden">
+                   <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                       <h3 className="font-bold uppercase tracking-wider text-white/50 text-sm">Histórico de Atividade</h3>
+                       <button onClick={refreshLogs} className="p-2 hover:bg-white/5 rounded-full transition-colors"><RefreshCw size={16} /></button>
+                   </div>
+                   <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                      {logs.length === 0 ? (
+                        <div className="p-12 text-center text-white/20 uppercase text-xs tracking-widest">Nenhum registro encontrado</div>
+                      ) : (
+                        <table className="w-full text-left text-sm">
+                           <thead className="sticky top-0 bg-[#1a1a1a] text-white/30 text-[10px] uppercase tracking-widest border-b border-white/5">
+                              <tr>
+                                <th className="px-6 py-3 font-bold">Data/Hora</th>
+                                <th className="px-6 py-3 font-bold">Evento</th>
+                                <th className="px-6 py-3 font-bold">Status</th>
+                              </tr>
+                           </thead>
+                           <tbody className="divide-y divide-white/5">
+                              {logs.map((log) => (
+                                <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                                   <td className="px-6 py-4 text-white/60 font-mono text-xs">{formatTime(log.created_at)}</td>
+                                   <td className="px-6 py-4">
+                                      <span className="text-white font-bold">{log.event_type}</span>
+                                      <span className="block text-[10px] text-white/30 uppercase mt-1">{log.details?.source || 'unknown'}</span>
+                                   </td>
+                                   <td className="px-6 py-4">
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${log.status === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                         {log.status}
+                                      </span>
+                                   </td>
+                                </tr>
+                              ))}
+                           </tbody>
+                        </table>
+                      )}
+                   </div>
+                </div>
+
+                <div className="bg-blue-900/10 border border-blue-500/20 rounded-3xl p-8 space-y-6">
+                   <div className="flex items-center gap-3 text-blue-400">
+                      <Github size={24} />
+                      <h3 className="text-xl font-display uppercase">Automação Via GitHub</h3>
+                   </div>
+                   <p className="text-white/60 text-sm leading-relaxed">
+                      Para garantir que o banco nunca hiberne mesmo sem usuários no admin, configure uma **GitHub Action** com o código abaixo. Ela fará um ping automático no seu banco a cada 4 horas.
+                   </p>
+                   
+                   <div className="space-y-3">
+                      <p className="text-white/40 text-xs">Para que o GitHub possa acessar seu banco com segurança:</p>
+                      <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 space-y-3">
+                          <p className="text-blue-200 text-xs">Vá em <span className="font-bold italic">Settings &gt; Secrets and variables &gt; Actions</span> e clique em <span className="text-white font-bold">"New repository secret"</span>:</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                                 <span className="text-[10px] text-white/30 uppercase block mb-1">Nome</span>
+                                 <code className="text-brand-neon font-bold">SUPABASE_URL</code>
+                              </div>
+                              <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                                 <span className="text-[10px] text-white/30 uppercase block mb-1">Nome</span>
+                                 <code className="text-brand-neon font-bold">SUPABASE_ANON_KEY</code>
+                              </div>
+                          </div>
+                      </div>
+                   </div>
+                </div>
              </div>
-           )}
+          )}
 
           {activeTab === 'builder' && (
-              <div className="flex flex-col md:flex-row h-full">
-                  <div className="w-full md:w-[380px] bg-[#1a1a1a] border-r border-white/10 h-[40vh] md:h-full flex flex-col shrink-0 order-2 md:order-1">
-                      <div className="p-4 md:p-5 border-b border-white/10 flex items-center justify-between">
-                          <div>
-                            <h2 className="text-white font-display uppercase text-lg md:text-xl">Editor Visual</h2>
-                            <p className="text-white/40 text-xs mt-1">Personalize o site.</p>
-                          </div>
-                      </div>
-                      <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <SectionAccordion title="1. Hero (Topo)" defaultOpen={true}>
-                              <div className="space-y-4">
-                                  <ColorPicker label="Fundo" value={draftConfig.hero_bgColor} onChange={(v) => handleConfigChange('hero_bgColor', v)} />
-                                  <ColorPicker label="Destaque (Neon)" value={draftConfig.hero_accentColor} onChange={(v) => handleConfigChange('hero_accentColor', v)} />
-                                  <ColorPicker label="Secundário (Pink)" value={draftConfig.hero_secondaryColor} onChange={(v) => handleConfigChange('hero_secondaryColor', v)} />
-                                  <TextInput label="Marquee (Faixa)" value={draftConfig.hero_marqueeText} onChange={(v) => handleConfigChange('hero_marqueeText', v)} />
-                                  <TextInput label="Título 1" value={draftConfig.hero_titleLine1} onChange={(v) => handleConfigChange('hero_titleLine1', v)} />
-                                  <TextInput label="Título 2 (Colorido)" value={draftConfig.hero_titleLine2} onChange={(v) => handleConfigChange('hero_titleLine2', v)} />
-                                  <TextInput label="Botão 1" value={draftConfig.hero_button1} onChange={(v) => handleConfigChange('hero_button1', v)} />
-                                  <TextInput label="Botão 2" value={draftConfig.hero_button2} onChange={(v) => handleConfigChange('hero_button2', v)} />
-                                  <TextInput label="Botão 3" value={draftConfig.hero_button3} onChange={(v) => handleConfigChange('hero_button3', v)} />
-                                  <TextInput label="URL Imagem Mascote" value={draftConfig.hero_mascotUrl} onChange={(v) => handleConfigChange('hero_mascotUrl', v)} />
-                                  <div className="flex items-center gap-3">
-                                      <input type="checkbox" checked={draftConfig.hero_showMascot} onChange={(e) => handleConfigChange('hero_showMascot', e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-black checked:bg-brand-neon" />
-                                      <span className="text-white text-sm">Mostrar Mascote</span>
-                                  </div>
-                              </div>
-                          </SectionAccordion>
-                          <SectionAccordion title="2. Evento (Info)">
-                              <div className="space-y-4">
-                                  <TextInput label="Título Principal" value={draftConfig.event_title} onChange={(v) => handleConfigChange('event_title', v)} />
-                                  <TextInput label="Badge (Subtítulo)" value={draftConfig.event_badge} onChange={(v) => handleConfigChange('event_badge', v)} />
-                                  <TextInput label="Data" value={draftConfig.event_date} onChange={(v) => handleConfigChange('event_date', v)} />
-                                  <TextInput label="Localização" value={draftConfig.event_location} onChange={(v) => handleConfigChange('event_location', v)} />
-                                  <TextInput label="Faixa Marquee" value={draftConfig.event_marqueeText} onChange={(v) => handleConfigChange('event_marqueeText', v)} />
-                                  <TextInput label="Título Convidados" value={draftConfig.event_guestTitle} onChange={(v) => handleConfigChange('event_guestTitle', v)} />
-                              </div>
-                          </SectionAccordion>
-                          <SectionAccordion title="3. Ação (Cards)">
-                              <div className="space-y-4">
-                                  <TextInput label="Título Linha 1" value={draftConfig.action_title1} onChange={(v) => handleConfigChange('action_title1', v)} />
-                                  <TextInput label="Título Linha 2" value={draftConfig.action_title2} onChange={(v) => handleConfigChange('action_title2', v)} />
-                                  <TextInput label="Link Games" value={draftConfig.action_gameLink} onChange={(v) => handleConfigChange('action_gameLink', v)} />
-                                  <TextInput label="Link Camisetas" value={draftConfig.action_shirtLink} onChange={(v) => handleConfigChange('action_shirtLink', v)} />
-                              </div>
-                          </SectionAccordion>
-                          <SectionAccordion title="4. Sobre">
-                              <div className="space-y-4">
-                                  <TextInput label="Título Seção" value={draftConfig.about_title} onChange={(v) => handleConfigChange('about_title', v)} />
-                                  <TextInput label="Descrição" value={draftConfig.about_text} onChange={(v) => handleConfigChange('about_text', v)} multiline />
-                                  <TextInput label="URL Banner" value={draftConfig.about_bannerUrl} onChange={(v) => handleConfigChange('about_bannerUrl', v)} />
-                              </div>
-                          </SectionAccordion>
-                      </div>
-                      <div className="p-4 md:p-5 border-t border-white/10 bg-[#0f0f0f] flex gap-3">
-                          <button onClick={() => saveConfig(draftConfig)} className="flex-1 bg-brand-neon hover:bg-brand-neon/80 text-black py-3 rounded-xl font-bold uppercase tracking-wide flex items-center justify-center gap-2 shadow-lg transition-all text-sm">
-                              <Save size={18} /> Salvar
-                          </button>
-                           <button onClick={resetConfig} title="Resetar Padrão" className="bg-white/10 hover:bg-red-500 hover:text-white text-white/50 p-3 rounded-xl transition-all"> <RotateCcw size={18} /> </button>
-                      </div>
-                  </div>
-                  <div className="flex-1 bg-gray-900 relative overflow-hidden flex flex-col order-1 md:order-2 h-[60vh] md:h-full border-b md:border-b-0 border-white/10">
-                      <div className="absolute top-4 left-4 z-[100] bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 pointer-events-none">
-                          <span className="text-[10px] text-white uppercase font-bold tracking-wider flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"/> Preview </span>
-                      </div>
-                      <div className="w-full h-full overflow-y-auto bg-black custom-scrollbar">
-                          <div className="w-full origin-top transform transition-all duration-300">
-                             <HeroSection previewConfig={draftConfig} />
-                             <EventSection previewConfig={draftConfig} />
-                             <ActionSection previewConfig={draftConfig} />
-                             <AboutSection previewConfig={draftConfig} />
-                          </div>
-                      </div>
-                  </div>
-              </div>
+             <div className="w-full h-full rounded-2xl border-4 border-white/5 overflow-hidden shadow-2xl relative">
+                <div className="absolute top-0 left-0 right-0 bg-white/10 backdrop-blur-md p-2 flex items-center justify-between z-40 border-b border-white/10">
+                    <span className="text-[10px] font-bold text-white/50 uppercase px-3">Live Preview</span>
+                    <div className="flex gap-2 pr-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                        <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                    </div>
+                </div>
+                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white">
+                    <div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar">
+                        <HeroSection previewConfig={draftConfig} />
+                        <EventSection previewConfig={draftConfig} />
+                        <ActionSection previewConfig={draftConfig} />
+                        <AboutSection previewConfig={draftConfig} />
+                    </div>
+                </div>
+             </div>
           )}
+        </main>
       </div>
     </div>
   );

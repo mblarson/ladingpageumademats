@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Palette, Layout, Type, Image as ImageIcon, Save, RotateCcw, ChevronDown, ChevronRight, Activity, Server, RefreshCw, CheckCircle2, AlertCircle, Play, Pause, Zap, Github, Copy, ListOrdered, KeyRound } from 'lucide-react';
@@ -154,7 +155,8 @@ jobs:
             <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-black" size={32} /></div>
             <h2 className="text-2xl font-display text-white mb-2">Área Restrita</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
-               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-colors" />
+               {/* Alterado type para "text" para remover a máscara */}
+               <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-colors" />
                <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors"> Acessar </button>
             </form>
             <button onClick={onBack} className="mt-6 text-white/30 text-xs hover:text-white uppercase font-bold tracking-widest">Voltar ao Site</button>

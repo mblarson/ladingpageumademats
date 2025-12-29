@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo, useInView } from 'framer-motion';
 import { Calendar, MapPin, Sparkles, Zap, MousePointer2, Navigation, X, Star, Clock } from 'lucide-react';
@@ -116,19 +117,44 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
   const addToCalendar = () => {
     const event = {
       title: `${activeConfig.event_title} - ${activeConfig.event_badge}`,
-      description: `Congresso UMADEMATS. Participe deste momento histórico!`,
+      description: `Congresso UMADEMATS. Participe deste momento histórico no Jubileu de Ouro!`,
       location: activeConfig.event_location,
       start: "20260403T180000",
       end: "20260404T220000"
     };
-    const icsContent = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//UMADEMATS//Portal//PT","BEGIN:VEVENT",`SUMMARY:${event.title}`,`DESCRIPTION:${event.description}`,`LOCATION:${event.location}`,`DTSTART:${event.start}`,`DTEND:${event.end}`,"END:VEVENT","END:VCALENDAR"].join("\r\n");
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.setAttribute('download', 'umademats-2026.ics');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    // Detecção de Dispositivo
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isAndroid) {
+      // Formato para Google Calendar (Melhor para Android)
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start}/${event.end}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.location)}`;
+      window.open(googleCalendarUrl, '_blank');
+    } else {
+      // Formato iCalendar (.ics) - Melhor para iOS/Outlook
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//UMADEMATS//Portal//PT",
+        "BEGIN:VEVENT",
+        `SUMMARY:${event.title}`,
+        `DESCRIPTION:${event.description}`,
+        `LOCATION:${event.location}`,
+        `DTSTART:${event.start}`,
+        `DTEND:${event.end}`,
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].join("\r\n");
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'umademats-2026.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const address = activeConfig.event_location;
@@ -190,7 +216,6 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                   </div>
                 </div>
 
-                {/* --- COUNTDOWN TIMER REFINADO COM FUNDO AZUL MARINHO --- */}
                 <div className="w-full flex flex-col items-center mt-4 mb-4">
                     <div className="bg-black text-brand-neon px-4 py-1.5 rounded-t-lg text-[10px] md:text-xs font-display uppercase tracking-[0.3em] border-x-2 border-t-2 border-black flex items-center gap-2 shadow-lg translate-y-1">
                         <Zap size={14} className="fill-brand-neon animate-pulse" />
@@ -319,7 +344,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
         {showMapModal && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMapModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-4 border-brand-neon p-6 md:p-8 rounded-3xl w-full max-w-sm shadow-[0_0_50px_rgba(204,255,0,0.3)] overflow-hidden">
+             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-4 border-brand-neon p-6 md:p-8 rounded-3xl w-full max-sm shadow-[0_0_50px_rgba(204,255,0,0.3)] overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
                 <button onClick={() => setShowMapModal(false)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-all"><X size={24} /></button>
                 <div className="flex flex-col items-center mb-6">

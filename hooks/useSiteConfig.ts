@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -67,7 +68,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   action_title1: 'Selecione o que',
   action_title2: 'deseja fazer:',
   action_gameLink: 'https://umadegames.com.br',
-  action_shirtLink: '/pedidoscamiseta',
+  action_shirtLink: '/pedidoscamisetas',
 
   // ABOUT
   about_title: 'QUEM SOMOS',

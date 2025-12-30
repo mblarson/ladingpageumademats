@@ -22,8 +22,8 @@ export default function App() {
         // Normaliza o path removendo barras no final e query strings para verificação
         const path = window.location.pathname.replace(/\/$/, '');
 
-        // 0. Redirecionamento Externo (Fallback para dev/client-side)
-        if (path === '/pedidoscamiseta') {
+        // 0. Redirecionamento Externo (Fallback para dev/client-side) - ATUALIZADO PARA PLURAL
+        if (path === '/pedidoscamisetas') {
             window.location.href = 'https://projeto-camiseta.vercel.app/';
             return 'home'; // Retorna home enquanto redireciona para evitar flash de conteúdo errado
         }
@@ -120,7 +120,7 @@ export default function App() {
     try {
       window.history.pushState({}, '', path);
     } catch (e) {
-      // Em ambientes blob/iframe/sandbox, pushState pode ser bloqueado por segurança.
+      // Em ambientes xxxx/iframe/sandbox, pushState pode ser bloqueado por segurança.
       // Apenas logamos e permitimos que o estado do React controle a navegação visual.
       console.warn("Navigation URL update skipped due to environment restrictions:", e);
     }

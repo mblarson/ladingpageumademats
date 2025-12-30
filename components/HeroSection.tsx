@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar, Users, Book } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface HeroSectionProps {
@@ -17,6 +18,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   const dragFreeProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -200, left: -200, right: 200, bottom: 200 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,6 +29,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   }, []);
 
   const scrollToSection = (id: string) => {
+    setIsMenuOpen(false); // Fecha o menu ao clicar
     const element = document.getElementById(id);
     if (element) {
       // 'block: center' garante que o elemento fique no meio da tela
@@ -43,6 +46,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
     center: { x: 0, opacity: 1 },
     exit: { x: "-100%", opacity: 0 }
   };
+
+  // Itens do Menu para o Overlay
+  const menuItems = [
+    { label: activeConfig.hero_button1, icon: Calendar, action: () => scrollToSection('event-section') },
+    { label: activeConfig.hero_button2, icon: Gamepad2, action: () => scrollToSection('action-section') },
+    { label: "LEIA A BÍBLIA", icon: Book, action: () => scrollToSection('bible-card') },
+    { label: activeConfig.hero_button3, icon: Users, action: () => scrollToSection('about-section') },
+  ];
 
   return (
     <section 
@@ -69,57 +80,80 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
          </motion.div>
       </div>
 
-      {/* CUSTOM NAV MENU - Cores Dinâmicas */}
+      {/* --- NOVA NAVBAR (Estilo Pílula Amarela) --- */}
       <motion.nav 
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})}
-        className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[98%] md:w-full max-w-5xl z-[95]"
+        className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[95]"
       >
-        <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden bg-white/5 backdrop-blur-sm">
-          
-          <li className="flex-1">
-            <button
-              onClick={() => scrollToSection('event-section')}
-              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#69AF23] hover:bg-[#7bc92b] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
-            >
-              <Calendar className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button1}</span>
-            </button>
-          </li>
+        <div 
+            className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden"
+            style={{ backgroundColor: activeConfig.hero_accentColor }} // Usa a cor neon/amarela configurada
+        >
+             {/* Logo Texto Esquerda */}
+             <div className="flex items-center gap-2 z-10">
+                 <span className="font-display text-xl md:text-3xl text-black tracking-tight uppercase translate-y-[1px] md:translate-y-[2px]">
+                    UMADEMATS
+                 </span>
+             </div>
 
-           <li className="flex-1 border-l border-black/40">
-            <button
-              onClick={() => scrollToSection('action-section')}
-              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
-              style={{ backgroundColor: activeConfig.hero_secondaryColor }}
-            >
-              <Gamepad2 className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button2}</span>
-            </button>
-          </li>
-
-          {/* NOVO BOTÃO: LEIA A BÍBLIA */}
-          <li className="flex-1 border-l border-black/40">
-            <button
-              onClick={() => scrollToSection('bible-card')}
-              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-brand-purple hover:bg-[#4c1d95] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
-            >
-              <Book className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider truncate">LEIA A BÍBLIA</span>
-            </button>
-          </li>
-
-          <li className="flex-1 border-l border-black/40">
-            <button
-              onClick={() => scrollToSection('about-section')}
-              className="w-full h-full py-3 md:py-4 px-1 text-[10px] md:text-xl font-bold font-sans text-white/90 hover:text-white bg-[#FFC300] hover:bg-[#ffcf33] transition-colors flex items-center justify-center gap-1 md:gap-2 group cursor-pointer relative z-10"
-            >
-              <Users className="w-3 h-3 md:w-6 md:h-6 text-white/70 group-hover:text-white transition-colors" />
-              <span className="uppercase tracking-wider truncate">{activeConfig.hero_button3}</span>
-            </button>
-          </li>
-
-        </ul>
+             {/* Botão Menu Direita */}
+             <button 
+                onClick={() => setIsMenuOpen(true)}
+                className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+             >
+                <Menu className="text-black w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
+             </button>
+             
+             {/* Brilho decorativo */}
+             <div className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none" />
+        </div>
       </motion.nav>
+
+      {/* --- MENU OVERLAY (Quando clica no Hamburguer) --- */}
+      <AnimatePresence>
+        {isMenuOpen && (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
+            >
+                <button 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"
+                >
+                    <X size={32} />
+                </button>
+
+                <div className="flex flex-col gap-6 w-full max-w-md">
+                    {menuItems.map((item, idx) => (
+                        <motion.button
+                            key={idx}
+                            initial={{ x: -50, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: idx * 0.1 }}
+                            onClick={item.action}
+                            className="group flex items-center justify-between p-4 rounded-2xl bg-[#1a1a1a] border border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-all"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black transition-colors">
+                                    <item.icon size={20} />
+                                </div>
+                                <span className="font-display text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon transition-colors">
+                                    {item.label}
+                                </span>
+                            </div>
+                            <ArrowRight className="text-white/30 group-hover:text-brand-neon group-hover:translate-x-1 transition-all" />
+                        </motion.button>
+                    ))}
+                </div>
+
+                <div className="mt-12 text-center">
+                    <p className="text-white/30 text-xs uppercase tracking-widest font-bold">UMADEMATS 2026</p>
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -194,15 +228,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         </motion.div>
       )}
 
-      {/* Main Content - Added md:mt-32 to push below menu on Desktop */}
-      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto md:mt-32">
+      {/* Main Content - Increased md:mt to 56 to push below menu on Desktop */}
+      <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto md:mt-56">
         
-        {/* Badge */}
+        {/* Badge - Added md:mt-8 for extra spacing on desktop */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mb-2 md:mb-6 z-20 relative"
+            className="mb-2 md:mb-6 md:mt-8 z-20 relative"
             {...dragProps}
         >
             <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg cursor-grab active:cursor-grabbing">

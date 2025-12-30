@@ -48,11 +48,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   };
 
   // Itens do Menu para o Overlay
+  // Atualizado para apontar para IDs específicos conforme solicitado
   const menuItems = [
-    { label: activeConfig.hero_button1, icon: Calendar, action: () => scrollToSection('event-section') },
+    { label: activeConfig.hero_button1, icon: Calendar, action: () => scrollToSection('congress-timer-anchor') },
     { label: activeConfig.hero_button2, icon: Gamepad2, action: () => scrollToSection('action-section') },
     { label: "LEIA A BÍBLIA", icon: Book, action: () => scrollToSection('bible-card') },
-    { label: activeConfig.hero_button3, icon: Users, action: () => scrollToSection('about-section') },
+    { label: activeConfig.hero_button3, icon: Users, action: () => scrollToSection('leaders-grid') },
   ];
 
   return (
@@ -116,7 +117,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
+                // REMOVIDO: backdrop-blur-md para melhorar performance no mobile (evita travamento)
+                className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-6"
             >
                 <button 
                     onClick={() => setIsMenuOpen(false)}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, User, MousePointer2, X, Instagram, ExternalLink } from 'lucide-react';
@@ -192,8 +193,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
             </motion.p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 px-2 md:px-0">
+        {/* Cards Grid - Adicionado ID para navegação */}
+        <div id="leaders-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 px-2 md:px-0">
             
             {/* Card 1 */}
             <LeaderCard 

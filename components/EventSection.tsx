@@ -207,7 +207,8 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="flex flex-col items-center justify-center w-full"
             >
-                <div className="flex flex-col items-center text-center mb-8 relative">
+                {/* Adicionado ID para navegação específica do menu */}
+                <div id="congress-timer-anchor" className="flex flex-col items-center text-center mb-8 relative">
                   <motion.div className="relative z-10" initial={{ scale: 0.9 }} whileInView={{ scale: 1 }} viewport={{ once: true }} {...dragProps}>
                      <div className="animate-wiggle-slow origin-center">
                         <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">

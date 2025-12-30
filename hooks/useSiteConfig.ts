@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export interface SiteConfig {
+  // UI INTERACTION
+  ui_allowDrag: boolean;
+
   // HERO SECTION
   hero_bgColor: string;
   hero_accentColor: string;
@@ -36,11 +39,14 @@ export interface SiteConfig {
 }
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
+  // UI
+  ui_allowDrag: true,
+
   // HERO
   hero_bgColor: '#4F46E5',
   hero_accentColor: '#ccff00',
   hero_secondaryColor: '#ec4899',
-  hero_marqueeText: 'UMADEMATS  •  ',
+  hero_marqueeText: 'UMADEMATS • ',
   hero_titleLine1: 'UMADE',
   hero_titleLine2: 'MATS',
   hero_button1: 'Congresso',

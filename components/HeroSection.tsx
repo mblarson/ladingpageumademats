@@ -13,6 +13,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   
   // Decide qual config usar: A prop (se editando) ou a do banco (se visitando)
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+  const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -50, left: -50, right: 50, bottom: 50 }, dragElastic: 0.1 } : {};
+  const dragFreeProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -200, left: -200, right: 200, bottom: 200 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -67,7 +69,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
       </div>
 
       {/* CUSTOM NAV MENU - Cores Dinâmicas */}
-      <nav className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[98%] md:w-full max-w-5xl z-[95]">
+      <motion.nav 
+        {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})}
+        className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[98%] md:w-full max-w-5xl z-[95]"
+      >
         <ul className="flex w-full border-2 border-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] rounded-full overflow-hidden bg-white/5 backdrop-blur-sm">
           
           <li className="flex-1">
@@ -113,7 +118,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
           </li>
 
         </ul>
-      </nav>
+      </motion.nav>
 
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -154,7 +159,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
-          className="absolute top-[58%] md:top-[60%] z-20 w-24 md:w-32 object-contain"
+          className="absolute top-[58%] md:top-[60%] z-20 w-24 md:w-32 object-contain pointer-events-auto"
           style={{ willChange: 'transform' }}
           initial={{ x: -200, opacity: 1 }}
           animate={{
@@ -165,12 +170,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
             x: { duration: 8, repeat: Infinity, repeatDelay: 1, ease: "linear" },
             y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }
           }}
+          {...dragFreeProps}
         />
       </div>
 
       {/* Swinging Spider Mascot - Dynamic */}
       {activeConfig.hero_showMascot && (
         <motion.div
+            {...dragFreeProps}
             className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[68%] z-[90] origin-top flex flex-col items-center"
             initial={{ rotate: 5 }}
             animate={{ rotate: [-5, 5] }}
@@ -195,8 +202,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="mb-2 md:mb-6 z-20 relative"
+            {...dragProps}
         >
-            <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg">
+            <div className="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-lg cursor-grab active:cursor-grabbing">
             <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
                 BEM VINDO AO PORTAL
             </span>
@@ -216,9 +224,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex items-center justify-center"
+                {...dragProps}
               >
                 {/* Adjusted md:text from 15vw to 11vw to prevent overlap */}
-                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl">
+                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
                   {activeConfig.hero_titleLine1}
                   <br />
                   <span style={{ color: activeConfig.hero_accentColor }}>{activeConfig.hero_titleLine2}</span>
@@ -235,8 +244,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
+                {...dragProps}
               >
-                <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
+                <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
                   JOGUE AGORA
                 </h2>
                 <div 
@@ -259,8 +269,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 exit="exit"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
+                {...dragProps}
               >
-                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg">
+                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
                   LEIA A BÍBLIA
                 </h2>
                 <div 
@@ -291,6 +302,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 1 }}
            className="mt-8"
+           {...dragProps}
         >
           <button 
             onClick={handleInstagramClick}

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Palette, Layout, Type, Image as ImageIcon, Save, RotateCcw, ChevronDown, ChevronRight, Activity, Server, RefreshCw, CheckCircle2, AlertCircle, Play, Pause, Zap, Github, Copy, ListOrdered, KeyRound } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Palette, Layout, Type, Image as ImageIcon, Save, RotateCcw, ChevronDown, ChevronRight, Activity, Server, RefreshCw, CheckCircle2, AlertCircle, Play, Pause, Zap, Github, Copy, ListOrdered, KeyRound, Move } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -47,6 +47,21 @@ const TextInput: React.FC<{ label: string; value: string; onChange: (val: string
                 className="w-full bg-black border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:border-brand-neon focus:outline-none"
             />
         )}
+    </div>
+);
+
+const ToggleInput: React.FC<{ label: string; checked: boolean; onChange: (val: boolean) => void }> = ({ label, checked, onChange }) => (
+    <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/10">
+        <label className="text-white text-xs font-bold uppercase tracking-wider">{label}</label>
+        <button 
+            onClick={() => onChange(!checked)}
+            className={`w-12 h-6 rounded-full relative transition-colors ${checked ? 'bg-brand-neon' : 'bg-white/20'}`}
+        >
+            <motion.div 
+                animate={{ x: checked ? 24 : 2 }} 
+                className="w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5"
+            />
+        </button>
     </div>
 );
 
@@ -130,24 +145,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const yamlCode = `name: Supabase Keepalive
-on:
-  schedule:
-    - cron: '0 */4 * * *'
-  workflow_dispatch:
-
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Acordar Banco
-        run: |
-          curl -X POST "\${{ secrets.SUPABASE_URL }}/rest/v1/automation_logs" \\
-          -H "apikey: \${{ secrets.SUPABASE_ANON_KEY }}" \\
-          -H "Authorization: Bearer \${{ secrets.SUPABASE_ANON_KEY }}" \\
-          -H "Content-Type: application/json" \\
-          -d '{"event_type": "keepalive_github", "status": "success", "details": {"source": "github_action"}}'`;
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
@@ -155,7 +152,6 @@ jobs:
             <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-black" size={32} /></div>
             <h2 className="text-2xl font-display text-white mb-2">Área Restrita</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
-               {/* Alterado type para "text" para remover a máscara */}
                <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-colors" />
                <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors"> Acessar </button>
             </form>
@@ -204,6 +200,16 @@ jobs:
                     <TextInput label="Título do Evento" value={draftConfig.event_title} onChange={(val) => handleConfigChange('event_title', val)} />
                     <TextInput label="Badge/Subtítulo" value={draftConfig.event_badge} onChange={(val) => handleConfigChange('event_badge', val)} />
                     <TextInput label="Localização" value={draftConfig.event_location} onChange={(val) => handleConfigChange('event_location', val)} />
+                </SectionAccordion>
+                <SectionAccordion title="Interatividade UI">
+                    <ToggleInput 
+                        label="Habilitar Arrastar (Drag & Drop)" 
+                        checked={draftConfig.ui_allowDrag} 
+                        onChange={(val) => handleConfigChange('ui_allowDrag', val)} 
+                    />
+                    <div className="text-[10px] text-white/40 leading-tight mt-2 px-1">
+                        Permite que usuários arrastem os cards, mascotes e botões pela tela para diversão.
+                    </div>
                 </SectionAccordion>
             </div>
             <div className="p-4 border-t border-white/10 bg-[#151515] sticky bottom-0 flex flex-col gap-2">
@@ -286,33 +292,6 @@ jobs:
                            </tbody>
                         </table>
                       )}
-                   </div>
-                </div>
-
-                <div className="bg-blue-900/10 border border-blue-500/20 rounded-3xl p-8 space-y-6">
-                   <div className="flex items-center gap-3 text-blue-400">
-                      <Github size={24} />
-                      <h3 className="text-xl font-display uppercase">Automação Via GitHub</h3>
-                   </div>
-                   <p className="text-white/60 text-sm leading-relaxed">
-                      Para garantir que o banco nunca hiberne mesmo sem usuários no admin, configure uma **GitHub Action** com o código abaixo. Ela fará um ping automático no seu banco a cada 4 horas.
-                   </p>
-                   
-                   <div className="space-y-3">
-                      <p className="text-white/40 text-xs">Para que o GitHub possa acessar seu banco com segurança:</p>
-                      <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 space-y-3">
-                          <p className="text-blue-200 text-xs">Vá em <span className="font-bold italic">Settings &gt; Secrets and variables &gt; Actions</span> e clique em <span className="text-white font-bold">"New repository secret"</span>:</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="bg-black/40 p-3 rounded-lg border border-white/5">
-                                 <span className="text-[10px] text-white/30 uppercase block mb-1">Nome</span>
-                                 <code className="text-brand-neon font-bold">SUPABASE_URL</code>
-                              </div>
-                              <div className="bg-black/40 p-3 rounded-lg border border-white/5">
-                                 <span className="text-[10px] text-white/30 uppercase block mb-1">Nome</span>
-                                 <code className="text-brand-neon font-bold">SUPABASE_ANON_KEY</code>
-                              </div>
-                          </div>
-                      </div>
                    </div>
                 </div>
              </div>

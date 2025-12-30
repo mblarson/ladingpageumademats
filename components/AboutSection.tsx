@@ -14,6 +14,7 @@ interface LeaderCardProps {
   objectPosition?: string; // Posição da imagem (object-top, object-center, etc)
   onClick?: () => void; // Função de clique opcional
   showHighlight?: boolean; // Se deve mostrar o sticker de destaque
+  enableDrag?: boolean; // Nova prop para drag
 }
 
 const LeaderCard: React.FC<LeaderCardProps> = ({ 
@@ -26,13 +27,16 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
   imageAspect = "aspect-[4/5]",
   objectPosition = "object-center",
   onClick,
-  showHighlight = false
+  showHighlight = false,
+  enableDrag = false
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-50px" }}
     whileHover={{ scale: 1.03, rotate: 0 }}
+    whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+    {...(enableDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 } } : {})}
     onClick={onClick}
     className={`
         relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
@@ -199,6 +203,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 color="bg-brand-neon text-black"
                 rotate="rotate-[-2deg]"
                 imageAspect="aspect-[4/5]"
+                enableDrag={activeConfig.ui_allowDrag}
             />
 
             {/* Card 2 */}
@@ -209,6 +214,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 color="bg-brand-pink text-white"
                 rotate="rotate-[2deg]"
                 imageAspect="aspect-[4/5]"
+                enableDrag={activeConfig.ui_allowDrag}
             />
 
             {/* Card 3 - Full Width on Mobile with 16:9 Image */}
@@ -221,6 +227,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 className="col-span-2 md:col-span-1"
                 imageAspect="aspect-[16/9] md:aspect-[4/5]"
                 objectPosition="object-[center_30%]"
+                enableDrag={activeConfig.ui_allowDrag}
                 
                 // --- NOVAS PROPS PARA INTERATIVIDADE ---
                 onClick={() => setShowLeadersModal(true)}

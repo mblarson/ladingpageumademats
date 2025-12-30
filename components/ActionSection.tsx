@@ -11,6 +11,7 @@ interface ActionSectionProps {
 export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible, previewConfig }) => {
   const { config: storedConfig, loading } = useSiteConfig();
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+  const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.05, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
@@ -132,6 +133,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }} // Simplificado (removido translateY)
+            {...dragProps}
             className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
@@ -184,6 +186,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => handleCardClick(activeConfig.action_shirtLink)}
             whileHover={{ scale: 0.98 }}
+            {...dragProps}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
             style={{ willChange: 'transform' }}
           >
@@ -233,6 +236,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
             onMouseLeave={() => setHoveredCard(null)}
             onClick={onNavigateToBible}
             whileHover={{ scale: 0.99 }}
+            {...dragProps}
             className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
             style={{ willChange: 'transform' }}
           >

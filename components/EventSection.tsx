@@ -11,14 +11,17 @@ interface GuestCardProps {
   color: string;
   delay: number;
   link: string;
+  enableDrag: boolean;
 }
 
-const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, link }) => (
+const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, link, enableDrag }) => (
   <motion.div 
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-50px" }}
     whileHover={{ scale: 1.02 }}
+    whileDrag={{ scale: 1.05, zIndex: 50, cursor: 'grabbing' }}
+    {...(enableDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 } } : {})}
     transition={{ delay, duration: 0.5 }}
     onClick={() => window.open(link, '_blank')}
     className={`group relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 hover:border-brand-neon/50 transition-colors cursor-pointer ${color}`}
@@ -65,6 +68,7 @@ interface EventSectionProps {
 export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => {
   const { config: storedConfig, loading } = useSiteConfig();
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+  const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 50 } } : {};
 
   const [showMapModal, setShowMapModal] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0); 
@@ -204,16 +208,19 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                 className="flex flex-col items-center justify-center w-full"
             >
                 <div className="flex flex-col items-center text-center mb-8 relative">
-                  <motion.div className="relative z-10" initial={{ scale: 0.9 }} whileInView={{ scale: 1 }} viewport={{ once: true }}>
+                  <motion.div className="relative z-10" initial={{ scale: 0.9 }} whileInView={{ scale: 1 }} viewport={{ once: true }} {...dragProps}>
                      <div className="animate-wiggle-slow origin-center">
                         <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
                           {activeConfig.event_title}
                         </h2>
                      </div>
                   </motion.div>
-                  <div className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110">
+                  <motion.div 
+                    {...dragProps}
+                    className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
+                  >
                     <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none"> {activeConfig.event_badge} </h3>
-                  </div>
+                  </motion.div>
                 </div>
 
                 <div className="w-full flex flex-col items-center mt-4 mb-4">
@@ -221,7 +228,10 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                         <Zap size={14} className="fill-brand-neon animate-pulse" />
                         T-MINUS
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 px-2 py-4 bg-[#0a0a2a] border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                    <motion.div 
+                        {...dragProps}
+                        className="flex flex-wrap items-center justify-center gap-2 md:gap-4 px-2 py-4 bg-[#0a0a2a] border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+                    >
                         {[
                           { val: timeLeft.days, label: "Dias" },
                           { val: timeLeft.hours, label: "Horas" },
@@ -240,11 +250,11 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                              {i < 3 && <div className="text-xl md:text-5xl font-fun text-white/20 pb-4 hidden sm:block">:</div>}
                            </React.Fragment>
                         ))}
-                    </div>
+                    </motion.div>
                 </div>
 
                 <div className="flex flex-col items-center justify-center gap-6 mt-6 md:mt-10 w-full">
-                  <div onClick={addToCalendar} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-4 py-2.5 md:px-8 md:py-4 rounded-xl border-4 border-black hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <motion.div {...dragProps} onClick={addToCalendar} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-4 py-2.5 md:px-8 md:py-4 rounded-xl border-4 border-black hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
@@ -253,9 +263,9 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                     </div>
                     <Calendar className="w-4 h-4 md:w-8 md:h-8" />
                     <span>{activeConfig.event_date}</span>
-                  </div>
+                  </motion.div>
                   
-                  <div onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-2xl font-bold font-sans whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
+                  <motion.div {...dragProps} onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-2xl font-bold font-sans whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
                      <div className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <Navigation size={12} className="text-brand-pink fill-brand-pink" />
@@ -264,7 +274,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                     </div>
                     <MapPin className="text-[#4F46E5] group-hover:text-white w-4 h-4 md:w-6 md:h-6" />
                     <span className="max-w-[180px] md:max-w-none truncate">{activeConfig.event_location}</span>
-                  </div>
+                  </motion.div>
                 </div>
             </motion.div>
 
@@ -329,7 +339,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
               <p className="text-white/60 font-sans text-xs md:text-sm font-bold tracking-[0.2em] uppercase">EM BREVE MAIS CONFIRMADOS</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
-            {guests.map((guest, index) => ( <GuestCard key={index} {...guest} delay={index * 0.2} /> ))}
+            {guests.map((guest, index) => ( <GuestCard key={index} {...guest} delay={index * 0.2} enableDrag={activeConfig.ui_allowDrag} /> ))}
           </div>
         </div>
 

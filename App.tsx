@@ -22,6 +22,12 @@ export default function App() {
         // Normaliza o path removendo barras no final e query strings para verificação
         const path = window.location.pathname.replace(/\/$/, '');
 
+        // 0. Redirecionamento Externo (Fallback para dev/client-side)
+        if (path === '/pedidoscamiseta') {
+            window.location.href = 'https://projeto-camiseta.vercel.app/';
+            return 'home'; // Retorna home enquanto redireciona para evitar flash de conteúdo errado
+        }
+
         // 1. Verifica rota Admin pela URL
         if (path === '/admin') {
           return 'admin';

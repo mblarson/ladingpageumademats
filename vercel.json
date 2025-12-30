@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/pedidoscamiseta",
+      "destination": "https://projeto-camiseta.vercel.app/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

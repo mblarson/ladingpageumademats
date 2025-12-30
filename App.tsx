@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HeroSection } from './components/HeroSection';
 import { EventSection } from './components/EventSection';
@@ -18,7 +19,8 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'bible' | 'admin'>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const path = window.location.pathname;
+        // Normaliza o path removendo barras no final e query strings para verificação
+        const path = window.location.pathname.replace(/\/$/, '');
 
         // 1. Verifica rota Admin pela URL
         if (path === '/admin') {

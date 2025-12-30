@@ -48,7 +48,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   };
 
   // Itens do Menu para o Overlay
-  // Atualizado para apontar para IDs específicos conforme solicitado
   const menuItems = [
     { label: activeConfig.hero_button1, icon: Calendar, action: () => scrollToSection('congress-timer-anchor') },
     { label: activeConfig.hero_button2, icon: Gamepad2, action: () => scrollToSection('action-section') },
@@ -75,25 +74,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
-                {activeConfig.hero_marqueeText}
+                {activeConfig.hero_marqueeText.replace('UMADEMATS', 'UIMADEMATS')}
               </span>
             ))}
          </motion.div>
       </div>
 
-      {/* --- NOVA NAVBAR (Estilo Pílula Amarela) --- */}
+      {/* --- NOVA NAVBAR --- */}
       <motion.nav 
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})}
         className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[95]"
       >
         <div 
             className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden"
-            style={{ backgroundColor: activeConfig.hero_accentColor }} // Usa a cor neon/amarela configurada
+            style={{ backgroundColor: activeConfig.hero_accentColor }} 
         >
-             {/* Logo Texto Esquerda */}
+             {/* Logo Texto Esquerda - Alterado para UIMADEMATS */}
              <div className="flex items-center gap-2 z-10">
                  <span className="font-display text-xl md:text-3xl text-black tracking-tight uppercase translate-y-[1px] md:translate-y-[2px]">
-                    UMADEMATS
+                    UIMADEMATS
                  </span>
              </div>
 
@@ -110,14 +109,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         </div>
       </motion.nav>
 
-      {/* --- MENU OVERLAY (Quando clica no Hamburguer) --- */}
+      {/* --- MENU OVERLAY --- */}
       <AnimatePresence>
         {isMenuOpen && (
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                // REMOVIDO: backdrop-blur-md para melhorar performance no mobile (evita travamento)
                 className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-6"
             >
                 <button 
@@ -151,7 +149,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <p className="text-white/30 text-xs uppercase tracking-widest font-bold">UMADEMATS 2026</p>
+                    <p className="text-white/30 text-xs uppercase tracking-widest font-bold">UIMADEMATS 2026</p>
                 </div>
             </motion.div>
         )}
@@ -170,7 +168,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         <div 
              className="absolute bottom-[10%] left-[-10%] w-48 h-48 md:w-72 md:h-72 rounded-full z-0 animate-[spin_25s_linear_infinite]"
              style={{ 
-               background: `radial-gradient(circle, ${activeConfig.hero_accentColor}33 0%, transparent 70%)` // Hex + 33 = 20% opacity
+               background: `radial-gradient(circle, ${activeConfig.hero_accentColor}33 0%, transparent 70%)` 
              }}
         />
         
@@ -192,7 +190,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
             <Church size={60} strokeWidth={1} fill="currentColor" />
         </motion.div>
         
-        {/* Flying Mascot */}
         <motion.img
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png"
           alt="Flying Mascot"
@@ -211,7 +208,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         />
       </div>
 
-      {/* Swinging Spider Mascot - Dynamic */}
+      {/* Swinging Spider Mascot */}
       {activeConfig.hero_showMascot && (
         <motion.div
             {...dragFreeProps}
@@ -230,10 +227,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         </motion.div>
       )}
 
-      {/* Main Content - Increased md:mt to 56 to push below menu on Desktop */}
+      {/* Main Content */}
       <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto md:mt-56">
         
-        {/* Badge - Added md:mt-8 for extra spacing on desktop */}
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -248,7 +244,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
             </div>
         </motion.div>
 
-        {/* Dynamic Title Carousel - Adjusted md:min-h to handle smaller Desktop fonts */}
         <div className="relative w-full min-h-[35vh] md:min-h-[45vh] flex items-center justify-center overflow-visible">
           <AnimatePresence mode="wait">
             
@@ -263,11 +258,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 className="absolute inset-0 flex items-center justify-center"
                 {...dragProps}
               >
-                {/* Adjusted md:text from 15vw to 11vw to prevent overlap */}
                 <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
-                  {activeConfig.hero_titleLine1}
+                  UI<span style={{ color: activeConfig.hero_accentColor }}>MADE</span>
                   <br />
-                  <span style={{ color: activeConfig.hero_accentColor }}>{activeConfig.hero_titleLine2}</span>
+                  <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
                 </h1>
               </motion.div>
             )}
@@ -316,7 +310,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                     style={{ backgroundColor: activeConfig.hero_secondaryColor }}
                 >
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">
-                    JUNTO COM A UMADEMATS
+                    JUNTO COM A UIMADEMATS
                   </h3>
                 </div>
               </motion.div>

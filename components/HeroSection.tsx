@@ -74,39 +74,37 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
           >
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">
-                {activeConfig.hero_marqueeText.replace('UMADEMATS', 'UIMADEMATS')}
+                {activeConfig.hero_marqueeText}
               </span>
             ))}
          </motion.div>
       </div>
 
-      {/* --- NOVA NAVBAR --- */}
+      {/* --- NAVBAR TOTALMENTE CLICÁVEL --- */}
       <motion.nav 
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})}
         className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[95]"
       >
-        <div 
-            className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden"
+        <button 
+            onClick={() => setIsMenuOpen(true)}
+            className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95"
             style={{ backgroundColor: activeConfig.hero_accentColor }} 
         >
-             {/* Logo Texto Esquerda - Alterado para UIMADEMATS */}
+             {/* Logo Texto Esquerda */}
              <div className="flex items-center gap-2 z-10">
                  <span className="font-display text-xl md:text-3xl text-black tracking-tight uppercase translate-y-[1px] md:translate-y-[2px]">
-                    UIMADEMATS
+                    UMADEMATS
                  </span>
              </div>
 
-             {/* Botão Menu Direita */}
-             <button 
-                onClick={() => setIsMenuOpen(true)}
-                className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
-             >
+             {/* Ícone Menu Direita */}
+             <div className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10">
                 <Menu className="text-black w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
-             </button>
+             </div>
              
-             {/* Brilho decorativo */}
-             <div className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none" />
-        </div>
+             {/* Brilho decorativo que desliza no hover */}
+             <div className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none group-hover:translate-x-full transition-transform duration-700" />
+        </button>
       </motion.nav>
 
       {/* --- MENU OVERLAY --- */}
@@ -149,7 +147,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <p className="text-white/30 text-xs uppercase tracking-widest font-bold">UIMADEMATS 2026</p>
+                    <p className="text-white/30 text-xs uppercase tracking-widest font-bold">UMADEMATS 2026</p>
                 </div>
             </motion.div>
         )}
@@ -259,7 +257,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 {...dragProps}
               >
                 <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
-                  UI<span style={{ color: activeConfig.hero_accentColor }}>MADE</span>
+                  UMADE<span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
                   <br />
                   <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
                 </h1>
@@ -310,7 +308,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                     style={{ backgroundColor: activeConfig.hero_secondaryColor }}
                 >
                   <h3 className="text-[6vw] md:text-[3.5vw] leading-none font-fun text-white uppercase text-center">
-                    JUNTO COM A UIMADEMATS
+                    JUNTO COM A UMADEMATS
                   </h3>
                 </div>
               </motion.div>

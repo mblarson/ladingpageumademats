@@ -9,7 +9,7 @@ export const useReadingProgress = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // CORREÇÃO: Inicia vazio para evitar flash de dados do usuário anterior
+  // Inicia vazio para evitar flash de dados do usuário anterior
   const [completedItems, setCompletedItems] = useState<string[]>([]);
 
   // 1. Gerenciar Sessão do Usuário e Estado Inicial
@@ -33,7 +33,7 @@ export const useReadingProgress = () => {
       if (event === 'SIGNED_IN' && session) {
         fetchSupabaseProgress(session.user.id);
       } else if (event === 'SIGNED_OUT') {
-        // CORREÇÃO CRÍTICA: Ao sair, limpa o estado e o cache local para não vazar dados para o próximo login
+        // Ao sair, limpa o estado e o cache local
         setCompletedItems([]);
         localStorage.removeItem(STORAGE_KEY);
         setLoading(false);
@@ -71,14 +71,7 @@ export const useReadingProgress = () => {
 
       if (data) {
         const dbItems = data.map(d => d.reading_item_id);
-        
-        // CORREÇÃO CRÍTICA:
-        // Anteriormente, o código mesclava (merge) os dados do banco com o localStorage.
-        // Isso causava o bug onde o progresso de um usuário aparecia para outro no mesmo PC.
-        // AGORA: O Banco de Dados é a autoridade absoluta. Sobrescrevemos o estado local.
         setCompletedItems(dbItems);
-        
-        // Atualizamos o cache local para refletir apenas este usuário
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dbItems));
       }
     } catch (error) {
@@ -90,7 +83,6 @@ export const useReadingProgress = () => {
 
   // 3. Alternar item (Salvar no Banco ou Local)
   const toggleItemCompletion = async (itemId: string, itemRef?: string) => {
-    // A. Atualização Otimista (Visual instantâneo)
     let newItemList: string[] = [];
     
     setCompletedItems(prev => {
@@ -99,20 +91,23 @@ export const useReadingProgress = () => {
       return newItemList;
     });
 
-    // B. Persistência Local (Cache)
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newItemList));
     } catch (e) {
         console.error("🚨 [LocalStorage Save Error]:", e);
     }
 
-    // C. Se logado, salvar no Supabase
     if (session) {
       const isAdding = newItemList.includes(itemId);
       try {
         if (isAdding) {
+          // EXTRAÇÃO DO NOME DO GOOGLE:
+          // O Google envia o nome completo dentro de 'full_name' nos metadados.
+          const userName = session.user.user_metadata?.full_name || session.user.email || 'Usuário Desconhecido';
+          
           const { error } = await supabase.from('user_progress').insert({
             user_id: session.user.id,
+            user_name: userName, // É NECESSÁRIO CRIAR ESTA COLUNA NO SUPABASE (tipo text)
             reading_item_id: itemId,
             reading_ref: itemRef || null 
           });
@@ -125,7 +120,6 @@ export const useReadingProgress = () => {
         }
       } catch (error) {
         console.error("🚨 [Sync Error]:", error);
-        // Opcional: Reverter estado em caso de erro, mas para UX mantemos otimista
       }
     }
   };

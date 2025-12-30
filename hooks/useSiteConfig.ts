@@ -67,7 +67,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   action_title1: 'Selecione o que',
   action_title2: 'deseja fazer:',
   action_gameLink: 'https://umadegames.com.br',
-  action_shirtLink: 'https://projeto-camiseta.vercel.app/?mode=view',
+  action_shirtLink: '/pedidoscamiseta',
 
   // ABOUT
   about_title: 'QUEM SOMOS',

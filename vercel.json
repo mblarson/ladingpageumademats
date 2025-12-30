@@ -4,6 +4,11 @@
       "source": "/pedidoscamiseta",
       "destination": "https://projeto-camiseta.vercel.app/",
       "permanent": false
+    },
+    {
+      "source": "/pedidoscamiseta/:path*",
+      "destination": "https://projeto-camiseta.vercel.app/:path*",
+      "permanent": false
     }
   ],
   "rewrites": [

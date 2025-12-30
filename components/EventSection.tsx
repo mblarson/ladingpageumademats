@@ -265,15 +265,15 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                     <span>{activeConfig.event_date}</span>
                   </motion.div>
                   
-                  <motion.div {...dragProps} onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-2xl font-bold font-sans whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
+                  <motion.div {...dragProps} onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-2xl font-bold font-sans md:whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
                      <div className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <Navigation size={12} className="text-brand-pink fill-brand-pink" />
                              <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">ABRIR NO GPS</span>
                         </div>
                     </div>
-                    <MapPin className="text-[#4F46E5] group-hover:text-white w-4 h-4 md:w-6 md:h-6" />
-                    <span className="max-w-[180px] md:max-w-none truncate">{activeConfig.event_location}</span>
+                    <MapPin className="text-[#4F46E5] group-hover:text-white w-4 h-4 md:w-6 md:h-6 shrink-0" />
+                    <span className="text-left leading-tight">{activeConfig.event_location}</span>
                   </motion.div>
                 </div>
             </motion.div>

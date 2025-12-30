@@ -29,7 +29,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      // 'block: center' garante que o elemento fique no meio da tela
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 

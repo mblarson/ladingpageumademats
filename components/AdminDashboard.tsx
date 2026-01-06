@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -75,15 +75,25 @@ const PresenceControl: React.FC = () => {
         fetchRecords();
     }, []);
 
-    // Added useMemo to React imports
     const groupedData = useMemo(() => {
         return records.reduce((acc: any, record) => {
-            const m = record.month;
+            // REGRA: O Mês é uma ENTIDADE ÚNICA. Sanitizamos a string para garantir agrupamento.
+            if (!record.month) return acc;
+            const m = record.month.trim().toUpperCase(); 
+
             if (!acc[m]) acc[m] = { total: 0, sectors: {}, responsibles: [] };
-            acc[m].total += record.total_general;
+            
+            // REGRA: Soma aritmética dos totais
+            acc[m].total += (Number(record.total_general) || 0);
+            
+            // REGRA: Manter vínculo com responsável (Log individual)
             acc[m].responsibles.push(record);
+            
+            // REGRA: Soma agregada por setores
             SECTORS_LIST.forEach(s => {
-                acc[m].sectors[s] = (acc[m].sectors[s] || 0) + (record.sectors?.[s] || 0);
+                const currentVal = acc[m].sectors[s] || 0;
+                const recordVal = Number(record.sectors?.[s]) || 0;
+                acc[m].sectors[s] = currentVal + recordVal;
             });
             return acc;
         }, {});
@@ -186,6 +196,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence'>('menu');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   React.useEffect(() => {
     if (config) setDraftConfig({ ...DEFAULT_SITE_CONFIG, ...config });
@@ -241,7 +252,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           </button>
           <button 
             onClick={() => setAdminView('presence')}
-            className="w-full bg-brand-neon text-black p-6 rounded-lg text-lg font-bold uppercase transition-all text-center"
+            className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center"
           >
             Contador de Presença
           </button>
@@ -254,6 +265,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   }
 
   if (adminView === 'presence') { return <PresenceCounter onBack={() => setAdminView('menu')} />; }
+
+  const TABS = [
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'bg-white', textColor: 'text-black' },
+    { id: 'presence', label: 'Presença', icon: List, color: 'bg-brand-pink', textColor: 'text-white' },
+    { id: 'keepalive', label: 'Monitor', icon: Activity, color: 'bg-blue-500', textColor: 'text-white' },
+    { id: 'builder', label: 'Config', icon: Layout, color: 'bg-brand-neon', textColor: 'text-black' }
+  ];
+
+  const currentTab = TABS.find(t => t.id === activeTab) || TABS[0];
 
   return (
     <div className="min-h-screen bg-black flex flex-col h-screen overflow-hidden text-white font-sans">
@@ -268,23 +288,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-        {/* MENU LATERAL ESTILO LISTA */}
-        <aside className="w-full md:w-64 border-r border-white/10 bg-[#0f0f0f] overflow-y-auto flex flex-col shrink-0 p-4 gap-2">
-            <button onClick={() => setActiveTab('analytics')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${activeTab === 'analytics' ? 'bg-white text-black' : 'text-white/40 hover:bg-white/5'}`}>
-                <BarChart3 size={18} /> Analytics
-            </button>
-            <button onClick={() => setActiveTab('presence')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${activeTab === 'presence' ? 'bg-brand-pink text-white' : 'text-white/40 hover:bg-white/5'}`}>
-                <List size={18} /> Presença
-            </button>
-            <button onClick={() => setActiveTab('keepalive')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${activeTab === 'keepalive' ? 'bg-blue-600 text-white' : 'text-white/40 hover:bg-white/5'}`}>
-                <Activity size={18} /> Monitor
-            </button>
-            <button onClick={() => setActiveTab('builder')} className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${activeTab === 'builder' ? 'bg-brand-neon text-black' : 'text-white/40 hover:bg-white/5'}`}>
-                <Layout size={18} /> Config
-            </button>
+        {/* MENU LATERAL ESTILO DROPDOWN (Pill Shape) */}
+        <aside className="w-full md:w-80 border-r border-white/10 bg-[#0f0f0f] overflow-visible flex flex-col shrink-0 p-6 gap-2 relative z-40">
+            <h3 className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mb-4 ml-2">Navegação</h3>
+            
+            <div className="relative z-50">
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className={`w-full rounded-full px-6 py-4 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95 ${currentTab.color}`}
+                >
+                   <div className="flex items-center gap-3">
+                       <currentTab.icon size={20} className={currentTab.textColor} />
+                       <span className={`font-display italic text-2xl uppercase tracking-wide ${currentTab.textColor}`}>{currentTab.label}</span>
+                   </div>
+                   <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center">
+                      {isMenuOpen ? <X className={currentTab.textColor} size={18} /> : <Menu className={currentTab.textColor} size={18} />}
+                   </div>
+                </button>
 
+                <AnimatePresence>
+                   {isMenuOpen && (
+                     <motion.div
+                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                       animate={{ opacity: 1, y: 0, scale: 1 }}
+                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                       className="absolute top-[calc(100%+10px)] left-0 right-0 bg-[#1a1a1a] border-2 border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col p-2 gap-1"
+                     >
+                        {TABS.map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => { setActiveTab(tab.id as any); setIsMenuOpen(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                          >
+                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tab.color}`}>
+                                <tab.icon size={14} className={tab.textColor} />
+                             </div>
+                             <span className="font-bold uppercase text-sm tracking-widest text-white">{tab.label}</span>
+                             {activeTab === tab.id && <div className="ml-auto w-2 h-2 bg-brand-neon rounded-full" />}
+                          </button>
+                        ))}
+                     </motion.div>
+                   )}
+                </AnimatePresence>
+            </div>
+
+            {/* Config Inputs if Builder Active */}
             {activeTab === 'builder' && (
-                <div className="mt-8 pt-6 border-t border-white/5">
+                <div className="mt-8 pt-6 border-t border-white/5 animate-in slide-in-from-left-4 fade-in duration-300">
                     <SectionAccordion title="Cores e Textos" defaultOpen>
                         <TextInput label="Título 1" value={draftConfig.hero_titleLine1} onChange={(val) => handleConfigChange('hero_titleLine1', val)} />
                         <ColorPicker label="Cor Neon" value={draftConfig.hero_accentColor} onChange={(val) => handleConfigChange('hero_accentColor', val)} />

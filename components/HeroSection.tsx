@@ -256,7 +256,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 className="absolute inset-0 flex items-center justify-center"
                 {...dragProps}
               >
-                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display italic uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
+                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
                   UMADE
                   <br />
                   <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>

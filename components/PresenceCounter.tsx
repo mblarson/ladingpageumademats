@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, ArrowLeft, CheckCircle2, Lock, FileDown, LogOut, ChevronRight, User } from 'lucide-react';
+import { Minus, Plus, ArrowLeft, CheckCircle2, Lock, FileDown, LogOut, ChevronRight, User, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 const SECTORS = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "M", "N", "VISITANTE"];
@@ -10,10 +10,17 @@ const DEBOUNCE_TIME = 2000;
 
 export const PresenceCounter: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [screen, setScreen] = useState<'month' | 'responsible' | 'counter' | 'summary'>('month');
-  const [month, setMonth] = useState('');
+  
+  // Sugerir Mês Atual
+  const [month, setMonth] = useState(() => {
+     const d = new Date();
+     return MONTHS[d.getMonth()];
+  });
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const [responsible, setResponsible] = useState('');
   const [counts, setCounts] = useState<Record<string, number>>(
-    SECTORS.reduce((acc, s) => ({ ...acc, [s]: 0 }), {})
+    SECTORS.reduce((acc, s) => ({ ...acc, [s]: 0 }), {} as Record<string, number>)
   );
   const [lastClickTimes, setLastClickTimes] = useState<Record<string, number>>({});
   const [isFinishing, setIsFinishing] = useState(false);
@@ -21,7 +28,7 @@ export const PresenceCounter: React.FC<{ onBack: () => void }> = ({ onBack }) =>
   const [isSaving, setIsSaving] = useState(false);
 
   const totalGeneral = useMemo(() => {
-    return Object.values(counts).reduce((sum, val) => sum + val, 0);
+    return (Object.values(counts) as number[]).reduce((sum, val) => sum + val, 0);
   }, [counts]);
 
   const handleAdjust = (sector: string, delta: number) => {
@@ -81,21 +88,50 @@ export const PresenceCounter: React.FC<{ onBack: () => void }> = ({ onBack }) =>
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center gap-8 mt-10 w-full max-w-2xl"
+            className="flex flex-col items-center gap-8 mt-20 w-full max-w-md relative"
           >
             <h2 className="text-3xl font-display uppercase tracking-widest text-center">Selecione o mês do culto</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
-               {MONTHS.map(m => (
-                 <button
-                    key={m}
-                    onClick={() => { setMonth(m); setScreen('responsible'); }}
-                    className="p-4 bg-[#1a1a1a] border-2 border-white/10 rounded-xl font-bold hover:border-brand-neon hover:text-brand-neon transition-all uppercase text-sm"
-                 >
-                   {m}
-                 </button>
-               ))}
+            
+            <div className="w-full relative">
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full bg-[#1a1a1a] border-2 border-white/10 p-5 rounded-2xl text-xl flex items-center justify-between hover:border-brand-neon transition-colors"
+                >
+                    <span className="font-bold uppercase tracking-wider">{month}</span>
+                    <ChevronDown className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                    {isDropdownOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border-2 border-white/10 rounded-2xl overflow-hidden z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                        >
+                            {MONTHS.map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => { setMonth(m); setIsDropdownOpen(false); }}
+                                    className={`w-full p-4 text-left font-bold uppercase text-sm hover:bg-brand-neon hover:text-black transition-colors border-b border-white/5 last:border-none ${m === month ? 'text-brand-neon' : 'text-white'}`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
-            <button onClick={onBack} className="text-white/30 uppercase text-xs font-bold tracking-widest flex items-center gap-2 mt-4"><ArrowLeft size={14} /> Voltar</button>
+
+            <div className="flex gap-4 w-full">
+                <button onClick={onBack} className="flex-1 py-4 border-2 border-white/10 rounded-xl font-bold uppercase text-xs">Voltar</button>
+                <button 
+                  onClick={() => setScreen('responsible')}
+                  className="flex-[2] bg-brand-neon text-black font-bold uppercase py-4 rounded-xl text-lg hover:bg-brand-neon/80 transition-all"
+                >
+                  Prosseguir
+                </button>
+            </div>
           </motion.div>
         )}
 

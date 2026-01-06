@@ -138,11 +138,11 @@ const PresenceControl: React.FC = () => {
                                 <h4 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4">Total Geral do Mês</h4>
                                 <span className="text-7xl font-display">{groupedData[selectedMonth].total}</span>
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                 {SECTORS_LIST.map(s => groupedData[selectedMonth].sectors[s] > 0 && (
-                                    <div key={s} className="bg-black/20 p-2 rounded-lg border border-white/5">
-                                        <span className="block text-[8px] text-white/30 font-bold uppercase">{s}</span>
-                                        <span className="text-sm font-mono text-brand-neon">{groupedData[selectedMonth].sectors[s]}</span>
+                                    <div key={s} className="bg-black/20 px-2 py-1 rounded border border-white/5 flex items-center justify-between">
+                                        <span className="text-[10px] text-white/40 font-bold uppercase">{s}</span>
+                                        <span className="text-xs font-mono font-bold text-brand-neon">{groupedData[selectedMonth].sectors[s]}</span>
                                     </div>
                                 ))}
                             </div>

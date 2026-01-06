@@ -92,7 +92,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
         >
              {/* Logo Texto Esquerda */}
              <div className="flex items-center gap-2 z-10">
-                 <span className="font-display text-xl md:text-3xl text-black tracking-tight uppercase translate-y-[1px] md:translate-y-[2px]">
+                 <span className="font-display italic text-xl md:text-3xl text-black tracking-tight uppercase translate-y-[1px] md:translate-y-[2px]">
                     UMADEMATS
                  </span>
              </div>
@@ -137,7 +137,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black transition-colors">
                                     <item.icon size={20} />
                                 </div>
-                                <span className="font-display text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon transition-colors">
+                                <span className="font-display italic text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon transition-colors">
                                     {item.label}
                                 </span>
                             </div>
@@ -256,7 +256,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 className="absolute inset-0 flex items-center justify-center"
                 {...dragProps}
               >
-                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
+                <h1 className="text-[34vw] md:text-[11vw] leading-[0.75] font-display italic uppercase text-white tracking-tighter text-center scale-y-110 scale-x-105 transform origin-center drop-shadow-2xl cursor-grab active:cursor-grabbing">
                   UMADE
                   <br />
                   <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
@@ -275,7 +275,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
                 {...dragProps}
               >
-                <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
+                <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display italic uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
                   JOGUE AGORA
                 </h2>
                 <div 
@@ -300,7 +300,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig }) => {
                 className="absolute inset-0 flex flex-col items-center justify-center px-4"
                 {...dragProps}
               >
-                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
+                 <h2 className="text-[12vw] md:text-[6vw] leading-[0.9] font-display italic uppercase text-white text-center drop-shadow-lg cursor-grab active:cursor-grabbing">
                   LEIA A BÍBLIA
                 </h2>
                 <div 

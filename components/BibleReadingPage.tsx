@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star } from 'lucide-react';
@@ -641,7 +642,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
             </button>
             
             <div className="flex flex-col justify-center h-full pt-1">
-              <h1 className="font-display uppercase text-2xl tracking-tight text-white leading-[0.8]">
+              <h1 className="font-display italic uppercase text-2xl tracking-tight text-white leading-[0.8]">
                 UMADE<span className="text-brand-neon">MATS</span>
               </h1>
               <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -58,6 +58,192 @@ const StatCard: React.FC<{ title: string; value: number | string; icon: React.Re
       </div>
     </div>
 );
+
+// --- COMPONENTE DE ANALYTICS DA LEITURA BÍBLICA (NOVO) ---
+const BibleAnalytics: React.FC = () => {
+    const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState<{id: string, name: string}[]>([]);
+    const [topUser, setTopUser] = useState<{name: string, count: number} | null>(null);
+    const [streakUsers, setStreakUsers] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Busca EXCLUSIVAMENTE da tabela user_progress
+                const { data, error } = await supabase
+                    .from('user_progress')
+                    .select('user_id, user_name, created_at');
+                
+                if (error) throw error;
+                if (!data) return;
+
+                // 1. Processar Usuários Únicos
+                const uniqueUsersMap = new Map();
+                data.forEach(row => {
+                    if (row.user_id && row.user_name) {
+                        uniqueUsersMap.set(row.user_id, row.user_name);
+                    }
+                });
+                const userList = Array.from(uniqueUsersMap.entries()).map(([id, name]) => ({ id, name }));
+                setUsers(userList);
+
+                // 2. Processar Usuário Mais Avançado (Maior qtd de registros)
+                const progressCount: Record<string, number> = {};
+                const lastActivity: Record<string, string> = {}; // Para desempate
+
+                data.forEach(row => {
+                    progressCount[row.user_id] = (progressCount[row.user_id] || 0) + 1;
+                    
+                    // Guarda a data mais recente
+                    if (!lastActivity[row.user_id] || new Date(row.created_at) > new Date(lastActivity[row.user_id])) {
+                        lastActivity[row.user_id] = row.created_at;
+                    }
+                });
+                
+                let maxCount = 0;
+                let topUserId = null;
+                
+                Object.entries(progressCount).forEach(([uid, count]) => {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        topUserId = uid;
+                    } else if (count === maxCount) {
+                        // Desempate pela atividade mais recente
+                        if (topUserId && lastActivity[uid] > lastActivity[topUserId]) {
+                            topUserId = uid;
+                        }
+                    }
+                });
+
+                if (topUserId) {
+                    setTopUser({
+                        name: uniqueUsersMap.get(topUserId) || 'Desconhecido',
+                        count: maxCount
+                    });
+                }
+
+                // 3. Processar Streak de 3 Dias (Hoje, Ontem, Anteontem)
+                // Usamos ISO string (UTC) para consistência com o banco
+                const today = new Date();
+                const d1 = new Date(); d1.setDate(d1.getDate() - 1);
+                const d2 = new Date(); d2.setDate(d2.getDate() - 2);
+
+                const targetDates = [
+                    today.toISOString().split('T')[0],
+                    d1.toISOString().split('T')[0],
+                    d2.toISOString().split('T')[0]
+                ];
+
+                const userDates: Record<string, Set<string>> = {};
+                
+                data.forEach(row => {
+                    if (!row.created_at) return;
+                    const dateStr = row.created_at.split('T')[0]; // Pega YYYY-MM-DD
+                    if (!userDates[row.user_id]) userDates[row.user_id] = new Set();
+                    userDates[row.user_id].add(dateStr);
+                });
+
+                const streaks: string[] = [];
+                Object.entries(userDates).forEach(([uid, datesSet]) => {
+                    // Verifica se o usuário tem atividade em TODOS os 3 dias alvo
+                    const hasStreak = targetDates.every(date => datesSet.has(date));
+                    if (hasStreak) {
+                        streaks.push(uniqueUsersMap.get(uid) || 'Desconhecido');
+                    }
+                });
+                setStreakUsers(streaks);
+
+            } catch (err) {
+                console.error("Erro ao carregar dados bíblicos:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (loading) return <div className="p-10 text-center uppercase tracking-widest opacity-20">Carregando Dados Bíblicos...</div>;
+
+    return (
+        <div className="space-y-8 max-w-5xl mx-auto">
+             <div className="flex items-center gap-3 mb-4">
+                <BookOpen className="text-brand-purple" />
+                <h2 className="text-2xl font-display uppercase tracking-wider">Analytics da Leitura</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* CARD: Usuários Cadastrados */}
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-white"><Users size={20} /></div>
+                            <h3 className="font-bold uppercase text-sm tracking-wide text-white/70">Usuários Ativos</h3>
+                         </div>
+                         <span className="text-3xl font-display text-white">{users.length}</span>
+                    </div>
+                    
+                    <div className="mt-2 pr-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+                        <table className="w-full text-left">
+                            <tbody className="divide-y divide-white/5">
+                                {users.map(u => (
+                                    <tr key={u.id}>
+                                        <td className="py-2 text-xs font-bold uppercase text-white/50">{u.name}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                 {/* CARD: Mais Avançado */}
+                 <div className="bg-[#1a1a1a] border-2 border-brand-neon rounded-3xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Trophy size={80} />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-brand-neon font-bold uppercase text-xs tracking-widest mb-4">Maior Progresso</h3>
+                        {topUser ? (
+                            <div className="flex flex-col gap-1">
+                                <span className="text-3xl font-display text-white uppercase">{topUser.name}</span>
+                                <span className="text-sm font-mono text-white/50">{topUser.count} capítulos concluídos</span>
+                            </div>
+                        ) : (
+                            <span className="text-white/30 text-sm uppercase">Nenhum dado</span>
+                        )}
+                    </div>
+                </div>
+
+            </div>
+
+             {/* LISTA: Ofensiva 3 Dias */}
+             <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500"><Flame size={20} /></div>
+                    <div>
+                        <h3 className="font-bold uppercase text-sm tracking-wide text-white">Em Chamas (Últimos 3 dias)</h3>
+                        <p className="text-[10px] uppercase text-white/30 font-bold">Leitura consecutiva: Hoje, Ontem e Anteontem</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {streakUsers.length > 0 ? streakUsers.map((name, idx) => (
+                        <div key={idx} className="bg-black/40 border border-white/5 p-3 rounded-xl flex items-center gap-3">
+                             <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                             <span className="text-xs font-bold uppercase text-white/80">{name}</span>
+                        </div>
+                    )) : (
+                        <div className="col-span-3 text-center py-8 opacity-30 uppercase text-xs font-bold tracking-widest">
+                            Ninguém completou a sequência ainda.
+                        </div>
+                    )}
+                </div>
+             </div>
+        </div>
+    );
+};
 
 // --- COMPONENTE DE AUDITORIA DE PRESENÇA ---
 const PresenceControl: React.FC = () => {
@@ -192,7 +378,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const { logs, refreshLogs, autoPingEnabled, setAutoPingEnabled, timeToNextPing } = useKeepalive();
   
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible'>('analytics');
   const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence'>('menu');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -268,6 +454,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
 
   const TABS = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'bg-white', textColor: 'text-black' },
+    { id: 'bible', label: 'Leitura Bíblica', icon: BookOpen, color: 'bg-brand-purple', textColor: 'text-white' },
     { id: 'presence', label: 'Presença', icon: List, color: 'bg-brand-pink', textColor: 'text-white' },
     { id: 'keepalive', label: 'Monitor', icon: Activity, color: 'bg-blue-500', textColor: 'text-white' },
     { id: 'builder', label: 'Config', icon: Layout, color: 'bg-brand-neon', textColor: 'text-black' }
@@ -360,6 +547,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </div>
             </div>
           )}
+
+          {activeTab === 'bible' && <BibleAnalytics />}
 
           {activeTab === 'keepalive' && (
              <div className="max-w-4xl mx-auto space-y-8">

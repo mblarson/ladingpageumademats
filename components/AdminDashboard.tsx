@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -58,6 +58,40 @@ const StatCard: React.FC<{ title: string; value: number | string; icon: React.Re
       </div>
     </div>
 );
+
+// Componente para exibir dados em colunas de 7 itens
+const ColumnLayout: React.FC<{ items: { label: string; value: string | number; onClick?: () => void }[]; accentColor: string }> = ({ items, accentColor }) => {
+    const chunkedItems = useMemo(() => {
+        const chunks = [];
+        for (let i = 0; i < items.length; i += 7) {
+            chunks.push(items.slice(i, i + 7));
+        }
+        return chunks;
+    }, [items]);
+
+    return (
+        <div className="flex flex-wrap gap-x-12 gap-y-6">
+            {chunkedItems.map((chunk, chunkIdx) => (
+                <div key={chunkIdx} className="flex flex-col gap-2 min-w-[200px]">
+                    {chunk.map((item, itemIdx) => (
+                        <div 
+                            key={itemIdx} 
+                            onClick={item.onClick}
+                            className={`flex items-center justify-between gap-4 py-1.5 border-b border-white/5 group ${item.onClick ? 'cursor-pointer hover:bg-white/5' : ''}`}
+                        >
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-white/50 group-hover:text-white transition-colors">{item.label}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-white/30">=</span>
+                                <span className={`text-lg font-mono font-bold ${accentColor}`}>{item.value}</span>
+                                {item.onClick && <ChevronRight size={12} className="text-white/20 group-hover:translate-x-1 transition-transform" />}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+};
 
 const BibleAnalytics: React.FC = () => {
     const [loading, setLoading] = useState(true);
@@ -322,6 +356,8 @@ const PresenceControl: React.FC = () => {
             if (!acc[m]) acc[m] = { total: 0, sectors: {}, responsibles: [] };
             acc[m].total += (Number(record.total_general) || 0);
             acc[m].responsibles.push(record);
+            
+            // Soma os setores para o total do mês
             SECTORS_LIST.forEach(s => {
                 const currentVal = acc[m].sectors[s] || 0;
                 const recordVal = Number(record.sectors?.[s]) || 0;
@@ -336,39 +372,99 @@ const PresenceControl: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-4"><PieChart className="text-brand-neon" /><h2 className="text-2xl font-display uppercase tracking-wider">Controle de Presença</h2></div>
+            <div className="flex items-center gap-3 mb-4">
+                <PieChart className="text-brand-neon" />
+                <h2 className="text-2xl font-display uppercase tracking-wider">Controle de Presença</h2>
+            </div>
+
             {selectedResp ? (
                 <div className="bg-[#1a1a1a] border-2 border-brand-pink p-8 rounded-3xl">
-                    <button onClick={() => setSelectedResp(null)} className="flex items-center gap-2 text-brand-pink font-bold uppercase text-xs mb-6"><ArrowLeft size={14} /> Voltar ao Mês</button>
+                    <button onClick={() => setSelectedResp(null)} className="flex items-center gap-2 text-brand-pink font-bold uppercase text-xs mb-6 hover:opacity-70 transition-opacity">
+                        <ArrowLeft size={14} /> Voltar ao Mês
+                    </button>
                     <h3 className="text-3xl font-display uppercase mb-2">{selectedResp.responsible}</h3>
-                    <p className="text-white/40 text-xs uppercase font-bold tracking-widest mb-8">{selectedResp.month} • {new Date(selectedResp.created_at).toLocaleString()}</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {SECTORS_LIST.map(s => selectedResp.sectors?.[s] > 0 && (
-                            <div key={s} className="bg-black/40 p-4 rounded-xl border border-white/10">
-                                <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Setor {s}</span>
-                                <span className="text-2xl font-mono text-brand-pink">{selectedResp.sectors[s]}</span>
-                            </div>
-                        ))}
+                    <p className="text-white/40 text-xs uppercase font-bold tracking-widest mb-8">
+                        {selectedResp.month} • {new Date(selectedResp.created_at).toLocaleString()}
+                    </p>
+                    
+                    <div className="bg-black/40 p-8 rounded-2xl border border-white/5">
+                        <ColumnLayout 
+                            accentColor="text-brand-pink"
+                            items={SECTORS_LIST
+                                .filter(s => Number(selectedResp.sectors?.[s]) > 0)
+                                .map(s => ({
+                                    label: `Setor ${s}`,
+                                    value: selectedResp.sectors[s]
+                                }))
+                            }
+                        />
                     </div>
                 </div>
             ) : selectedMonth ? (
-                <div className="space-y-6">
-                    <div className="bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-3xl">
-                        <button onClick={() => setSelectedMonth(null)} className="flex items-center gap-2 text-brand-neon font-bold uppercase text-xs mb-6"><ArrowLeft size={14} /> Voltar aos Meses</button>
-                        <h3 className="text-5xl font-display uppercase text-brand-neon mb-8">{selectedMonth}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div><h4 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4">Total Geral do Mês</h4><span className="text-7xl font-display">{groupedData[selectedMonth].total}</span></div>
+                <div className="space-y-10">
+                    <div className="bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-3xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 text-brand-neon"><PieChart size={120} /></div>
+                        <button onClick={() => setSelectedMonth(null)} className="flex items-center gap-2 text-brand-neon font-bold uppercase text-xs mb-6 hover:opacity-70 transition-opacity relative z-10">
+                            <ArrowLeft size={14} /> Voltar aos Meses
+                        </button>
+                        <h3 className="text-5xl font-display uppercase text-brand-neon mb-4 relative z-10">{selectedMonth}</h3>
+                        <div className="relative z-10"><h4 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-2">Total Acumulado</h4><span className="text-7xl font-display text-white">{groupedData[selectedMonth].total}</span></div>
+                    </div>
+
+                    {/* QUANTIDADE POR SETORES (ACUMULADO DO MÊS) */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 px-2">
+                            <MapPin size={18} className="text-brand-neon" />
+                            <h4 className="text-lg font-display uppercase tracking-wide text-white">Totais por Setor</h4>
+                        </div>
+                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10">
+                            <ColumnLayout 
+                                accentColor="text-brand-neon"
+                                items={SECTORS_LIST
+                                    .filter(s => (groupedData[selectedMonth].sectors[s] || 0) > 0)
+                                    .map(s => ({
+                                        label: `Setor ${s}`,
+                                        value: groupedData[selectedMonth].sectors[s]
+                                    }))
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    {/* QUANTIDADE POR RESPONSÁVEL (HISTÓRICO) */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 px-2">
+                            <ClipboardList size={18} className="text-brand-pink" />
+                            <h4 className="text-lg font-display uppercase tracking-wide text-white">Relatórios por Responsável</h4>
+                        </div>
+                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10">
+                            <ColumnLayout 
+                                accentColor="text-brand-pink"
+                                items={groupedData[selectedMonth].responsibles.map((resp: any) => ({
+                                    label: resp.responsible,
+                                    value: resp.total_general,
+                                    onClick: () => setSelectedResp(resp)
+                                }))}
+                            />
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-2">
-                    {months.map(m => (
+                <div className="grid grid-cols-1 gap-3">
+                    {months.length > 0 ? months.map(m => (
                         <button key={m} onClick={() => setSelectedMonth(m)} className="w-full flex items-center justify-between p-6 bg-[#1a1a1a] hover:bg-brand-neon hover:text-black border border-white/10 rounded-2xl transition-all group">
-                            <div className="flex items-center gap-3"><span className="text-2xl font-display uppercase tracking-widest">{m}</span></div>
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-black/20"><Calendar size={20} className="text-white group-hover:text-black" /></div>
+                                <div className="text-left">
+                                    <span className="block text-2xl font-display uppercase tracking-widest">{m}</span>
+                                    <span className="text-[10px] font-bold uppercase opacity-40 group-hover:opacity-60">{groupedData[m].total} Presenças Registradas</span>
+                                </div>
+                            </div>
                             <ChevronRight size={20} className="opacity-20 group-hover:opacity-100" />
                         </button>
-                    ))}
+                    )) : (
+                        <div className="p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">Nenhum registro de presença encontrado.</div>
+                    )}
                 </div>
             )}
         </div>
@@ -451,7 +547,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <div className="flex items-center gap-4">
                  <button onClick={() => setAdminView('menu')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
                  <div className="h-6 w-px bg-white/10 hidden md:block" />
-                 {/* CORREÇÃO AQUI: PAINEL UMADEMATS */}
                  <h1 className="text-lg font-display uppercase text-white tracking-wide">
                     Painel <span className="text-brand-neon">UMADEMATS</span>
                  </h1>

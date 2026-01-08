@@ -1,22 +1,22 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
+import { PageType } from '../App';
 
 interface ActionSectionProps {
-  onNavigateToBible?: () => void;
+  onNavigate: (page: PageType) => void;
   previewConfig?: SiteConfig;
 }
 
-export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible, previewConfig }) => {
+export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previewConfig }) => {
   const { config: storedConfig, loading } = useSiteConfig();
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.05, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  // OTIMIZAÇÃO: Reduzido de 15 para 6 partículas. 
-  // Em mobile, 6 já preenchem a tela. Menos elementos = Mais FPS.
   const bgElements = [...Array(6)].map((_, i) => ({
     id: i,
     size: Math.random() * 20 + 10,
@@ -27,22 +27,24 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
   }));
 
   const handleCardClick = (url: string) => {
-    window.open(url, '_blank');
+    if (url.startsWith('http')) {
+      window.open(url, '_blank');
+    } else if (url === '/pedidoscamisetas') {
+      // Vercel handles redirect, but in preview we can just warn or handle differently
+      window.location.href = 'https://projeto-camiseta.vercel.app/';
+    }
   };
 
   return (
     <section id="action-section" className="relative w-full py-24 md:py-32 bg-[#4F46E5] overflow-hidden z-20">
       
-      {/* TOP DIVIDER (Transition from Black to Indigo) */}
       <div className="absolute top-0 left-0 right-0 leading-none z-10">
         <svg className="w-full h-16 md:h-24 fill-black" viewBox="0 0 1440 100" preserveAspectRatio="none">
            <path d="M0,0 C240,90 480,90 720,50 C960,10 1200,10 1440,50 L1440,0 L0,0 Z" />
         </svg>
       </div>
 
-      {/* --- BACKGROUND ANIMATIONS --- */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Animated Moving Grid - Reduced Opacity slightly for performance */}
         <motion.div 
           initial={{ y: 0 }}
           animate={{ y: [0, -40] }}
@@ -51,7 +53,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
           style={{ willChange: 'transform' }}
         />
 
-        {/* Floating Particles */}
         {bgElements.map((el) => (
           <motion.div
             key={el.id}
@@ -74,15 +75,10 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
           </motion.div>
         ))}
 
-        {/* 
-           OTIMIZAÇÃO CRÍTICA: 
-           Substituído 'blur-[120px]' (Pesado) por 'radial-gradient' (Leve).
-           O visual é 99% idêntico, mas o custo de renderização cai drasticamente.
-        */}
         <motion.div 
           animate={{ 
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.4, 0.3], // Opacidade ajustada para o gradiente
+            opacity: [0.3, 0.4, 0.3],
             x: [0, 50, 0],
             y: [0, 30, 0]
           }}
@@ -111,7 +107,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         
-        {/* Title */}
         <div className="flex flex-col items-center justify-center mb-12 md:mb-20 text-center">
              <h2 className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
              {activeConfig.action_title1}
@@ -120,19 +115,17 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
            </h2>
         </div>
 
-        {/* Cards Grid */}
         <div className="grid grid-cols-2 gap-3 md:gap-8 w-full">
           
-          {/* Games Card */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }} // Reduzido movimento inicial
+            initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-50px" }} // Margin ajuda a carregar antes
+            viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.1 }}
             onMouseEnter={() => setHoveredCard('games')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
-            whileHover={{ scale: 0.98 }} // Simplificado (removido translateY)
+            whileHover={{ scale: 0.98 }}
             {...dragProps}
             className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
@@ -141,7 +134,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
                  <img 
                    src="https://raw.githubusercontent.com/mblarson/imagens/main/aventuraspenteca.png" 
                    alt="Aventuras Penteca Background"
-                   className="w-full h-full object-cover opacity-60 transition-transform duration-700 ease-out group-hover:scale-105" // Scale reduzido de 110 p/ 105
+                   className="w-full h-full object-cover opacity-60 transition-transform duration-700 ease-out group-hover:scale-105"
                    loading="lazy"
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
@@ -176,7 +169,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
               </div>
           </motion.div>
 
-          {/* T-Shirt Card */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -190,7 +182,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
             style={{ willChange: 'transform' }}
           >
-              {/* Background Image Added - Occupy full card */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                  <img 
                    src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetapedido.png" 
@@ -225,7 +216,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
               </div>
           </motion.div>
 
-          {/* Devocional Card */}
           <motion.div
             id="bible-card"
             initial={{ opacity: 0, y: 20 }}
@@ -234,20 +224,18 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
             transition={{ delay: 0.3 }}
             onMouseEnter={() => setHoveredCard('devocional')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={onNavigateToBible}
+            onClick={() => onNavigate('bible')}
             whileHover={{ scale: 0.99 }}
             {...dragProps}
             className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-                  {/* OTIMIZAÇÃO: SVG estático com animação CSS é mais leve que Framer Motion aqui */}
                   <div className="absolute -right-20 -bottom-20 animate-[spin_20s_linear_infinite]">
                       <Zap size={300} className="text-black" fill="currentColor" />
                   </div>
               </div>
               
-              {/* Mascot Image */}
               <div className="absolute right-[-2rem] bottom-[-2rem] md:right-0 md:bottom-0 h-[120%] md:h-[110%] w-auto z-0 pointer-events-none opacity-40 group-hover:opacity-60 transition-opacity">
                   <img 
                       src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
@@ -288,7 +276,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
         </div>
       </div>
 
-      {/* Animated Transition Section Divider */}
       <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none">
         <motion.div 
           className="bg-brand-pink py-2 md:py-4 border-y-2 border-black -rotate-1 scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
@@ -297,9 +284,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigateToBible,
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          {/* OTIMIZAÇÃO: Reduzido array de 10 para 6. 
-              Usa willChange para garantir scroll suave.
-          */}
           <motion.div 
             className="flex whitespace-nowrap items-center font-display uppercase text-lg md:text-3xl text-black italic tracking-tighter"
             animate={{ x: ["0%", "-50%"] }}

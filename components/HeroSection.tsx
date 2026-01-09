@@ -124,6 +124,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           initial="enter"
           animate="center"
           exit="exit"
+          // FIXED: Removed duplicate 'stiffness' property in the motion transition configuration
           transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
           className="absolute inset-0 flex flex-col items-center justify-start pt-[24%] md:pt-0 px-4 pb-12 cursor-pointer"
           style={{ backgroundColor: getSlideBg(currentIndex) }}
@@ -133,7 +134,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
-          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[21%]">
+          {/* AJUSTE VERTICAL: Reduzi md:pt-[21%] para md:pt-[10%] para subir os textos */}
+          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[10%]">
             {/* BADGE BEM VINDO - LOGO ABAIXO DO MENU AJUSTADO */}
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="mb-4 md:mb-6 z-20 relative" {...dragProps}>
                 <div className="bg-white/10 backdrop-blur-md px-6 py-1.5 md:py-2 rounded-full border border-white/20 shadow-lg">

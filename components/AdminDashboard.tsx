@@ -51,11 +51,13 @@ const BibleAdmin: React.FC = () => {
     }, [progressData]);
 
     const emChamasData = useMemo(() => {
+        // Formato para comparação YYYY-MM-DD
         const fmt = (d: Date) => d.toLocaleDateString('en-CA'); 
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Dias alvo (T-1, T-2, T-3)
         const d1 = new Date(today); d1.setDate(today.getDate() - 1);
         const d2 = new Date(today); d2.setDate(today.getDate() - 2);
         const d3 = new Date(today); d3.setDate(today.getDate() - 3);
@@ -74,6 +76,7 @@ const BibleAdmin: React.FC = () => {
             }
         });
 
+        // Só qualifica se tiver leitura em CADA um dos 3 dias (size == 3)
         return Array.from(userDaysMap.entries())
             .filter(([_, daysSet]) => daysSet.size === 3)
             .map(([userName]) => userName);
@@ -120,7 +123,7 @@ const BibleAdmin: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden">
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-lg">
                 <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
                     <h3 className="text-sm font-bold uppercase tracking-widest">Top 3 Leitores</h3>
                     <Trophy size={18} className="text-brand-neon" />
@@ -143,12 +146,12 @@ const BibleAdmin: React.FC = () => {
                             </div>
                         </div>
                     )) : (
-                        <div className="p-10 text-center text-white/20 text-xs uppercase font-bold tracking-widest">Nenhum progresso registrado ainda.</div>
+                        <div className="p-10 text-center text-white/20 text-xs uppercase font-bold tracking-widest">Nenhum registro encontrado.</div>
                     )}
                 </div>
             </div>
 
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden">
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-lg">
                 <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
                     <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
                         <Flame size={18} className="text-orange-500" /> Em Chamas (3 dias seguidos, sem hoje)
@@ -172,7 +175,7 @@ const BibleAdmin: React.FC = () => {
                         </div>
                     ) : (
                         <div className="py-8 text-center">
-                            <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Nenhum leitor com sequência de 3 dias consecutivos (excluindo hoje).</p>
+                            <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Aguardando leitores atingirem a sequência de 3 dias.</p>
                         </div>
                     )}
                 </div>
@@ -195,7 +198,7 @@ const BibleAdmin: React.FC = () => {
                             className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
                         >
                             <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                                <h3 className="font-display uppercase text-xl text-white">Lista de Leitores</h3>
+                                <h3 className="font-display uppercase text-xl text-white">Ranking de Leitores</h3>
                                 <button onClick={() => setShowReadersModal(false)} className="text-white/30 hover:text-white transition-colors">
                                     <X size={24} />
                                 </button>
@@ -209,7 +212,7 @@ const BibleAdmin: React.FC = () => {
                                             </div>
                                             <span className="text-sm font-bold uppercase tracking-wide text-white">{name}</span>
                                         </div>
-                                        <span className="text-[10px] font-bold text-white/30 uppercase">{data.count} Capítulos</span>
+                                        <span className="text-[10px] font-bold text-white/30 uppercase">{data.count} capítulos</span>
                                     </div>
                                 ))}
                             </div>
@@ -233,7 +236,7 @@ const KeepaliveAdmin: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#1a1a1a] border border-white/10 p-8 rounded-3xl relative overflow-hidden">
+                <div className="bg-[#1a1a1a] border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-lg">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold uppercase text-white/30 tracking-widest mb-1">Próximo Pulso em</span>
@@ -260,7 +263,7 @@ const KeepaliveAdmin: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden flex flex-col h-[400px]">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden flex flex-col h-[400px] shadow-lg">
                     <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
                         <span className="text-[10px] font-bold uppercase tracking-widest">Logs de Atividade</span>
                         <div className="flex items-center gap-2">
@@ -432,7 +435,7 @@ const LideraAdmin: React.FC = () => {
     if (loading) return (
       <div className="flex flex-col items-center justify-center p-20 opacity-20">
         <RefreshCw className="animate-spin mb-4" />
-        <span className="uppercase font-bold tracking-widest text-xs">Sincronizando...</span>
+        <span className="uppercase font-bold tracking-widest text-xs">Sincronizando Lidera...</span>
       </div>
     );
 
@@ -470,7 +473,7 @@ const LideraAdmin: React.FC = () => {
                                 <AlertCircle className="text-red-500 shrink-0" size={32} />
                                 <div>
                                     <h4 className="text-red-500 font-bold uppercase text-sm mb-1">Erro de Segurança do Supabase (RLS)</h4>
-                                    <p className="text-white/70 text-xs leading-relaxed">O Supabase bloqueou o upload por falta de permissão. Para corrigir rapidamente, vá ao <b>SQL Editor</b> do Supabase e execute o código abaixo:</p>
+                                    <p className="text-white/70 text-xs leading-relaxed">O Supabase bloqueou o upload por falta de permissão. Corrija no editor SQL do Supabase.</p>
                                 </div>
                             </div>
                             <div className="bg-black p-4 rounded-xl border border-white/10 font-mono text-[10px] text-brand-neon relative group">
@@ -503,13 +506,13 @@ create policy "Acesso Total" on storage.objects for all using ( bucket_id = 'lid
                                 ) : (
                                     <div className="text-center">
                                         <ImageIcon className="text-white/10 mx-auto mb-2" size={48} />
-                                        <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Clique para subir imagem</span>
+                                        <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Subir imagem</span>
                                     </div>
                                 )}
                                 {isUploading && (
                                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
                                      <RefreshCw className="animate-spin text-brand-neon mb-2" size={32} />
-                                     <span className="text-[10px] uppercase font-bold text-brand-neon tracking-widest">Subindo...</span>
+                                     <span className="text-[10px] uppercase font-bold text-brand-neon tracking-widest">Fazendo upload...</span>
                                   </div>
                                 )}
                             </div>
@@ -518,40 +521,40 @@ create policy "Acesso Total" on storage.objects for all using ( bucket_id = 'lid
 
                         <div className="flex flex-col gap-6">
                             <div className="flex flex-col gap-2">
-                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Título Principal</label>
+                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Título da Orientação</label>
                                 <input type="text" value={editingOrientation.title} onChange={(e) => setEditingOrientation({...editingOrientation, title: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" />
                             </div>
                             <div className="flex flex-col gap-2">
-                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Subtítulo ou Categoria</label>
+                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Subtítulo / Categoria</label>
                                 <input type="text" value={editingOrientation.subtitle} onChange={(e) => setEditingOrientation({...editingOrientation, subtitle: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" />
                             </div>
                         </div>
                         
                         <div className="md:col-span-2 flex flex-col gap-2">
-                            <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Texto de Orientação</label>
+                            <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Texto da Orientação</label>
                             <textarea value={editingOrientation.comment} onChange={(e) => setEditingOrientation({...editingOrientation, comment: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none h-40 resize-none custom-scrollbar" />
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <h4 className="text-white font-display uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2">Materiais para Download</h4>
+                        <h4 className="text-white font-display uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2 text-sm">Links de Apoio</h4>
                         {editingOrientation.materials.map((mat: any, idx: number) => (
                             <div key={idx} className="flex flex-col md:flex-row gap-3 bg-black/40 p-4 rounded-xl border border-white/5 group">
                                 <input type="text" value={mat.name} onChange={(e) => {
                                     const newMats = [...editingOrientation.materials];
                                     newMats[idx].name = e.target.value;
                                     setEditingOrientation({...editingOrientation, materials: newMats});
-                                }} placeholder="Nome do arquivo" className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-xs text-white" />
+                                }} placeholder="Nome" className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-xs text-white" />
                                 <input type="text" value={mat.link} onChange={(e) => {
                                     const newMats = [...editingOrientation.materials];
                                     newMats[idx].link = e.target.value;
                                     setEditingOrientation({...editingOrientation, materials: newMats});
-                                }} placeholder="Link do arquivo" className="flex-[2] bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-xs text-white" />
+                                }} placeholder="Link (URL)" className="flex-[2] bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-xs text-white" />
                                 <button onClick={() => setEditingOrientation({...editingOrientation, materials: editingOrientation.materials.filter((_:any, i:number) => i !== idx)})} className="p-3 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={18} /></button>
                             </div>
                         ))}
-                        <button onClick={() => setEditingOrientation({...editingOrientation, materials: [...editingOrientation.materials, {name: '', link: ''}]})} className="w-full py-4 border-2 border-dashed border-white/10 rounded-xl text-white/30 hover:text-white hover:border-white/30 transition-all uppercase text-[10px] font-bold tracking-widest flex items-center justify-center gap-2">
-                            <Plus size={16} /> Adicionar novo link
+                        <button onClick={() => setEditingOrientation({...editingOrientation, materials: [...editingOrientation.materials, {name: '', link: ''}]})} className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-white/30 hover:text-white hover:border-white/30 transition-all uppercase text-[9px] font-bold tracking-widest flex items-center justify-center gap-2">
+                            <Plus size={14} /> Novo Material
                         </button>
                     </div>
 
@@ -559,13 +562,13 @@ create policy "Acesso Total" on storage.objects for all using ( bucket_id = 'lid
                          <button onClick={() => setEditingOrientation({...editingOrientation, is_published: !editingOrientation.is_published})} className={`w-12 h-6 rounded-full relative p-1 transition-colors ${editingOrientation.is_published ? 'bg-brand-neon' : 'bg-white/20'}`}>
                             <motion.div animate={{ x: editingOrientation.is_published ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-lg" />
                          </button>
-                         <span className="text-xs font-bold uppercase tracking-widest">{editingOrientation.is_published ? 'Público no Portal' : 'Salvar como Rascunho'}</span>
+                         <span className="text-xs font-bold uppercase tracking-widest">{editingOrientation.is_published ? 'Visível no Portal' : 'Salvar Rascunho'}</span>
                     </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-3">
                     {orientations.length > 0 ? orientations.map((ori) => (
-                        <button key={ori.id} onClick={() => handleEdit(ori)} className="w-full bg-[#151515] border border-white/5 hover:border-brand-neon p-6 rounded-2xl transition-all group flex items-center justify-between text-left">
+                        <button key={ori.id} onClick={() => handleEdit(ori)} className="w-full bg-[#151515] border border-white/5 hover:border-brand-neon p-6 rounded-2xl transition-all group flex items-center justify-between text-left shadow-sm">
                             <div className="flex flex-col">
                                 <h3 className="text-xl font-display uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors leading-none mb-1">{ori.title}</h3>
                                 <div className="flex items-center gap-2">
@@ -578,7 +581,7 @@ create policy "Acesso Total" on storage.objects for all using ( bucket_id = 'lid
                             <ChevronRight size={20} className="text-white/10 group-hover:text-brand-neon transition-colors" />
                         </button>
                     )) : (
-                      <div className="col-span-2 py-20 text-center opacity-20 uppercase font-bold text-xs tracking-[0.3em] border-2 border-dashed border-white/5 rounded-3xl">Nenhuma orientação cadastrada ainda.</div>
+                      <div className="py-20 text-center opacity-20 uppercase font-bold text-xs tracking-widest border-2 border-dashed border-white/5 rounded-3xl">Nenhuma orientação.</div>
                     )}
                 </div>
             )}
@@ -667,7 +670,7 @@ const PresenceControl: React.FC = () => {
                 <h2 className="text-2xl font-display uppercase tracking-wider">Controle de Presença</h2>
             </div>
             {selectedResp ? (
-                <div className="bg-[#1a1a1a] border-2 border-brand-pink p-8 rounded-3xl">
+                <div className="bg-[#1a1a1a] border-2 border-brand-pink p-8 rounded-3xl shadow-xl">
                     <button onClick={() => setSelectedResp(null)} className="flex items-center gap-2 text-brand-pink font-bold uppercase text-xs mb-6 hover:opacity-70 transition-opacity"><ArrowLeft size={14} /> Voltar ao Mês</button>
                     <h3 className="text-3xl font-display uppercase mb-2">{selectedResp.responsible}</h3>
                     <p className="text-white/40 text-xs uppercase font-bold tracking-widest mb-8">{selectedResp.month} • {new Date(selectedResp.created_at).toLocaleString()}</p>
@@ -677,7 +680,7 @@ const PresenceControl: React.FC = () => {
                 </div>
             ) : selectedMonth ? (
                 <div className="space-y-10">
-                    <div className="bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-3xl relative overflow-hidden">
+                    <div className="bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-3xl relative overflow-hidden shadow-xl">
                         <div className="absolute top-0 right-0 p-8 opacity-5 text-brand-neon"><PieChart size={120} /></div>
                         <button onClick={() => setSelectedMonth(null)} className="flex items-center gap-2 text-brand-neon font-bold uppercase text-xs mb-6 hover:opacity-70 transition-opacity relative z-10"><ArrowLeft size={14} /> Voltar aos Meses</button>
                         <h3 className="text-5xl font-display uppercase text-brand-neon mb-4 relative z-10">{selectedMonth}</h3>
@@ -685,7 +688,7 @@ const PresenceControl: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-2"><MapPin size={18} className="text-brand-neon" /><h4 className="text-lg font-display uppercase tracking-wide text-white">Totais por Setor</h4></div>
-                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10">
+                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10 shadow-lg">
                             <ColumnLayout accentColor="text-brand-neon" items={SECTORS_LIST.filter(s => (groupedData[selectedMonth].sectors[s] || 0) > 0).map(s => ({ label: `Setor ${s}`, value: groupedData[selectedMonth].sectors[s] }))} />
                         </div>
                     </div>
@@ -693,14 +696,14 @@ const PresenceControl: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-3">
                     {months.length > 0 ? months.map(m => (
-                        <button key={m} onClick={() => setSelectedMonth(m)} className="w-full flex items-center justify-between p-6 bg-[#1a1a1a] hover:bg-brand-neon hover:text-black border border-white/10 rounded-2xl transition-all group">
+                        <button key={m} onClick={() => setSelectedMonth(m)} className="w-full flex items-center justify-between p-6 bg-[#1a1a1a] hover:bg-brand-neon hover:text-black border border-white/10 rounded-2xl transition-all group shadow-sm">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-black/20"><Calendar size={20} className="text-white group-hover:text-black" /></div>
                                 <div className="text-left"><span className="block text-2xl font-display uppercase tracking-widest">{m}</span><span className="text-[10px] font-bold uppercase opacity-40 group-hover:opacity-60">{groupedData[m].total} Presenças Registradas</span></div>
                             </div>
                             <ChevronRight size={20} className="opacity-20 group-hover:opacity-100" />
                         </button>
-                    )) : (<div className="p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">Nenhum registro de presença encontrado.</div>)}
+                    )) : (<div className="p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">Nenhum registro.</div>)}
                 </div>
             )}
         </div>
@@ -735,12 +738,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 text-center">
+         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 text-center shadow-2xl">
             <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-black" size={32} /></div>
-            <h2 className="text-2xl font-display text-white mb-2">Área Restrita</h2>
+            <h2 className="text-2xl font-display text-white mb-2">Painel Restrito</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon" />
-               <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors">Acessar</button>
+               <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors shadow-lg">Acessar</button>
             </form>
             <button onClick={onBack} className="mt-6 text-white/30 text-xs hover:text-white uppercase font-bold tracking-widest">Voltar ao Site</button>
          </motion.div>
@@ -751,12 +754,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   if (adminView === 'menu') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 gap-8">
-        <h2 className="text-3xl font-display uppercase text-white tracking-widest">Painel Administrativo</h2>
+        <h2 className="text-3xl font-display uppercase text-white tracking-widest">Controle Administrativo</h2>
         <div className="flex flex-col gap-3 w-full max-w-sm">
-          <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Área Admin</button>
-          <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Presença</button>
+          <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Painel de Gestão</button>
+          <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
-        <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Voltar ao Site</button>
+        <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>
       </div>
     );
   }
@@ -781,14 +784,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <div className="flex items-center gap-4">
                  <button onClick={() => setAdminView('menu')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
                  <div className="h-6 w-px bg-white/10 hidden md:block" />
-                 <h1 className="text-lg font-display uppercase text-white tracking-wide">Painel <span className="text-brand-neon">UMADEMATS</span></h1>
+                 <h1 className="text-lg font-display uppercase text-white tracking-wide">Gestão <span className="text-brand-neon">UMADEMATS</span></h1>
              </div>
          </div>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
         <aside className="w-full md:w-80 border-r border-white/10 bg-[#0f0f0f] overflow-visible flex flex-col shrink-0 p-6 gap-2 relative z-40">
-            <h3 className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mb-4 ml-2">Navegação</h3>
+            <h3 className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mb-4 ml-2">Ferramentas</h3>
             <div className="relative z-50">
                 <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`w-full rounded-full px-6 py-4 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95 ${currentTab.color}`}>
                    <div className="flex items-center gap-3">
@@ -810,7 +813,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                    )}
                 </AnimatePresence>
             </div>
-            {activeTab === 'builder' && (<div className="mt-8 pt-6 border-t border-white/5"><button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2"><Save size={18} /> Salvar Site</button></div>)}
+            {activeTab === 'builder' && (<div className="mt-8 pt-6 border-t border-white/5"><button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2"><Save size={18} /> Publicar Alterações</button></div>)}
         </aside>
 
         <main className="flex-1 overflow-y-auto bg-black p-4 md:p-8 custom-scrollbar">
@@ -830,7 +833,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           )}
           {activeTab === 'builder' && (
              <div className="w-full h-full rounded-2xl border-4 border-white/5 overflow-hidden shadow-2xl relative">
-                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><EventSection previewConfig={draftConfig} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
+                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white shadow-inner"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><EventSection previewConfig={draftConfig} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
              </div>
           )}
         </main>

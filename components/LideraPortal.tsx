@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Lock, ArrowRight, FileText, ChevronRight, X, GraduationCap, Download, Zap, Star } from 'lucide-react';
+import { ArrowLeft, Lock, ArrowRight, FileText, ChevronRight, X, GraduationCap, Download, Zap, Star, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 interface Orientation {
@@ -9,6 +9,7 @@ interface Orientation {
   title: string;
   subtitle: string;
   comment: string;
+  cover_url?: string;
   materials: { name: string; link: string }[];
 }
 
@@ -134,21 +135,32 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-20"><Zap className="animate-spin mb-4" /> <span className="uppercase font-bold tracking-widest">Carregando Materiais...</span></div>
         ) : orientations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {orientations.map((ori) => (
               <motion.button 
                 key={ori.id} 
                 whileHover={{ scale: 1.02 }}
                 onClick={() => setSelectedOrientation(ori)}
-                className="bg-[#1a1a1a] border-2 border-white/5 p-8 rounded-3xl text-left flex flex-col justify-between aspect-square group hover:border-brand-neon transition-all relative overflow-hidden"
+                className="bg-[#1a1a1a] border-2 border-white/5 rounded-3xl overflow-hidden group hover:border-brand-neon transition-all relative flex flex-col text-left h-full"
               >
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity"><FileText size={80} /></div>
-                <div>
-                   <h3 className="text-3xl font-display uppercase leading-none text-white mb-2">{ori.title}</h3>
-                   <p className="text-white/40 text-sm font-sans font-bold uppercase tracking-wider">{ori.subtitle}</p>
+                {/* Imagem de Capa 16:9 */}
+                <div className="w-full aspect-video bg-black relative">
+                   {ori.cover_url ? (
+                     <img src={ori.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={ori.title} />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center text-white/5 opacity-40">
+                       <ImageIcon size={64} />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                   <div className="absolute bottom-4 left-6 right-6">
+                      <h3 className="text-2xl md:text-3xl font-display uppercase leading-none text-white mb-1 drop-shadow-lg">{ori.title}</h3>
+                      <p className="text-brand-neon text-[10px] font-sans font-bold uppercase tracking-widest opacity-80">{ori.subtitle}</p>
+                   </div>
                 </div>
-                <div className="flex items-center justify-between text-brand-neon text-[10px] font-bold uppercase tracking-widest pt-6 border-t border-white/5">
-                   Ver Orientações <ChevronRight size={16} />
+                <div className="p-4 flex items-center justify-between border-t border-white/5 bg-white/5 group-hover:bg-brand-neon/5 transition-colors">
+                   <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Acessar conteúdo</span>
+                   <ChevronRight size={16} className="text-brand-neon opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
               </motion.button>
             ))}

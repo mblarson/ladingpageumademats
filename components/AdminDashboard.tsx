@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -20,6 +20,8 @@ const LideraAdmin: React.FC = () => {
     const [editingOrientation, setEditingOrientation] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchOrientations();
@@ -38,13 +40,44 @@ const LideraAdmin: React.FC = () => {
             subtitle: '',
             comment: '',
             is_published: false,
-            materials: []
+            materials: [],
+            cover_url: ''
         });
     };
 
     const handleEdit = async (ori: any) => {
         const { data: materials } = await supabase.from('lidera_materials').select('*').eq('orientation_id', ori.id);
         setEditingOrientation({ ...ori, materials: materials || [] });
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `orientations/${fileName}`;
+
+            // Upload para o bucket 'lider_covers'
+            const { error: uploadError } = await supabase.storage
+                .from('lider_covers')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Pega a URL pública
+            const { data: { publicUrl } } = supabase.storage
+                .from('lider_covers')
+                .getPublicUrl(filePath);
+
+            setEditingOrientation({ ...editingOrientation, cover_url: publicUrl });
+        } catch (error: any) {
+            alert("Erro no upload: " + error.message);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -97,9 +130,11 @@ const LideraAdmin: React.FC = () => {
                     <GraduationCap className="text-brand-neon" />
                     <h2 className="text-2xl font-display uppercase tracking-wider">Lidera UMADEMATS</h2>
                 </div>
-                <button onClick={handleNew} className="bg-brand-neon text-black px-6 py-2 rounded-xl font-bold uppercase text-xs flex items-center gap-2 hover:scale-105 transition-all">
-                    <Plus size={16} /> Nova Orientação
-                </button>
+                {!editingOrientation && (
+                  <button onClick={handleNew} className="bg-brand-neon text-black px-6 py-2 rounded-xl font-bold uppercase text-xs flex items-center gap-2 hover:scale-105 transition-all">
+                      <Plus size={16} /> Nova Orientação
+                  </button>
+                )}
             </div>
 
             {editingOrientation ? (
@@ -110,21 +145,56 @@ const LideraAdmin: React.FC = () => {
                             {editingOrientation.id && (
                                 <button onClick={() => handleDelete(editingOrientation.id)} className="text-red-500 hover:text-red-400 p-2"><Trash2 size={20} /></button>
                             )}
-                            <button onClick={handleSave} disabled={isSaving} className="bg-brand-neon text-black px-8 py-3 rounded-xl font-bold uppercase text-sm flex items-center gap-2">
-                                {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />} {editingOrientation.is_published ? 'Salvar Alterações' : 'Publicar'}
+                            <button onClick={handleSave} disabled={isSaving || isUploading} className="bg-brand-neon text-black px-8 py-3 rounded-xl font-bold uppercase text-sm flex items-center gap-2">
+                                {(isSaving || isUploading) ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />} {editingOrientation.is_published ? 'Salvar Alterações' : 'Publicar'}
                             </button>
                          </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Título da Orientação</label>
-                            <input type="text" value={editingOrientation.title} onChange={(e) => setEditingOrientation({...editingOrientation, title: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" placeholder="Ex: Manual do Líder 2026" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Area de Upload da Capa 16:9 */}
+                        <div className="flex flex-col gap-3">
+                            <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Imagem de Capa (16:9)</label>
+                            <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="relative aspect-video bg-black rounded-2xl border-2 border-dashed border-white/10 overflow-hidden group cursor-pointer hover:border-brand-neon transition-all flex items-center justify-center"
+                            >
+                                {editingOrientation.cover_url ? (
+                                    <>
+                                        <img src={editingOrientation.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Upload className="text-white" size={32} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center">
+                                        {isUploading ? <RefreshCw className="animate-spin text-brand-neon mb-2 mx-auto" size={32} /> : <ImageIcon className="text-white/10 mx-auto mb-2" size={48} />}
+                                        <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">
+                                            {isUploading ? 'Subindo...' : 'Clique para subir'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileUpload} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Subtítulo Curto</label>
-                            <input type="text" value={editingOrientation.subtitle} onChange={(e) => setEditingOrientation({...editingOrientation, subtitle: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" placeholder="Ex: Orientações para o Jubileu" />
+
+                        <div className="flex flex-col gap-6">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Título da Orientação</label>
+                                <input type="text" value={editingOrientation.title} onChange={(e) => setEditingOrientation({...editingOrientation, title: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" placeholder="Ex: Manual do Líder 2026" />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Subtítulo Curto</label>
+                                <input type="text" value={editingOrientation.subtitle} onChange={(e) => setEditingOrientation({...editingOrientation, subtitle: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none" placeholder="Ex: Orientações para o Jubileu" />
+                            </div>
                         </div>
+                        
                         <div className="md:col-span-2 flex flex-col gap-2">
                             <label className="text-white/50 text-[10px] uppercase font-bold tracking-widest ml-2">Texto de Orientação (Comentário)</label>
                             <textarea value={editingOrientation.comment} onChange={(e) => setEditingOrientation({...editingOrientation, comment: e.target.value})} className="bg-black border border-white/10 rounded-xl p-4 text-white focus:border-brand-neon outline-none h-40 resize-none" placeholder="Escreva as instruções para os líderes..." />
@@ -166,17 +236,21 @@ const LideraAdmin: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {orientations.length > 0 ? orientations.map((ori) => (
-                        <button key={ori.id} onClick={() => handleEdit(ori)} className="bg-[#1a1a1a] border-2 border-white/5 p-6 rounded-3xl flex items-center justify-between group hover:border-brand-neon transition-all">
-                            <div className="flex items-center gap-4 text-left">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ori.is_published ? 'bg-brand-neon text-black' : 'bg-white/10 text-white/30'}`}>
-                                    {ori.is_published ? <Globe size={20} /> : <Eye size={20} />}
-                                </div>
-                                <div>
-                                    <h3 className="font-display uppercase text-xl leading-none text-white">{ori.title}</h3>
+                        <button key={ori.id} onClick={() => handleEdit(ori)} className="bg-[#1a1a1a] border-2 border-white/5 rounded-3xl overflow-hidden group hover:border-brand-neon transition-all flex flex-col">
+                            <div className="w-full aspect-video bg-black relative">
+                                {ori.cover_url ? (
+                                    <img src={ori.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/5">
+                                        <ImageIcon size={48} />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                                <div className="absolute bottom-4 left-6">
+                                    <h3 className="font-display uppercase text-2xl leading-none text-white">{ori.title}</h3>
                                     <p className="text-[10px] uppercase font-bold text-white/30 tracking-widest">{ori.subtitle}</p>
                                 </div>
                             </div>
-                            <ChevronRight size={20} className="text-white/20 group-hover:text-brand-neon" />
                         </button>
                     )) : (
                         <div className="col-span-2 p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">Nenhuma orientação cadastrada.</div>
@@ -431,7 +505,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           )}
           {activeTab === 'builder' && (
              <div className="w-full h-full rounded-2xl border-4 border-white/5 overflow-hidden shadow-2xl relative">
-                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} /><EventSection previewConfig={draftConfig} /><ActionSection previewConfig={draftConfig} /><AboutSection previewConfig={draftConfig} /></div></div>
+                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><EventSection previewConfig={draftConfig} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
              </div>
           )}
         </main>

@@ -25,7 +25,6 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     fetchOrientations();
   }, []);
 
-  // Garantir scroll no topo após autenticação bem-sucedida
   useEffect(() => {
     if (isAuthenticated) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -73,30 +72,58 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   if (!isAuthenticated && !showLogin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0a1f] via-black to-black flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-        {/* Elementos de cor no fundo para tirar o excesso de preto */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-purple/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-neon/10 blur-[120px] rounded-full" />
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 via-slate-950 to-black flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+        {/* Glows de fundo ajustados para Azul */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-400/10 blur-[120px] rounded-full" />
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle,white_1px,transparent_1px)] bg-[size:30px_30px]" />
         
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative z-10 flex flex-col items-center">
-          <div className="w-24 h-24 bg-brand-neon rounded-3xl flex items-center justify-center mb-8 rotate-6 shadow-[0_0_30px_rgba(204,255,0,0.3)]">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-10 flex flex-col items-center"
+        >
+          <motion.div 
+            initial={{ scale: 0.8, rotate: 0 }}
+            animate={{ scale: 1, rotate: 6 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="w-24 h-24 bg-brand-neon rounded-3xl flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(204,255,0,0.3)]"
+          >
             <GraduationCap size={48} className="text-black" />
-          </div>
-          <h1 className="text-5xl md:text-7xl font-display uppercase text-white leading-none mb-4">
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-5xl md:text-7xl font-display uppercase text-white leading-none mb-4"
+          >
             BEM-VINDO AO <br /> <span className="text-brand-neon">LIDERA UMADEMATS</span>
-          </h1>
-          <p className="text-white/50 font-sans text-sm md:text-lg max-w-md uppercase tracking-wider mb-10 font-bold">
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-white/50 font-sans text-sm md:text-lg max-w-md uppercase tracking-wider mb-10 font-bold"
+          >
             Portal exclusivo para líderes com materiais e orientações oficiais.
           </p>
-          <div className="flex flex-col gap-4 w-full max-w-xs">
+          
+          <motion.div 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col gap-4 w-full max-w-xs"
+          >
             <button onClick={() => setShowLogin(true)} className="w-full py-5 bg-brand-neon text-black font-bold uppercase rounded-2xl shadow-xl hover:scale-105 transition-all">
               ACESSAR
             </button>
             <button onClick={onBack} className="text-white/30 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors flex items-center justify-center gap-2">
               <ArrowLeft size={14} /> Voltar ao Site
             </button>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     );
@@ -104,7 +131,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   if (showLogin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0a1f] via-black to-black flex flex-col items-center justify-center p-6 relative">
+      <div className="min-h-screen bg-gradient-to-b from-blue-950 via-black to-black flex flex-col items-center justify-center p-6 relative">
          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-[#1a1a1a] border-4 border-brand-neon p-8 md:p-12 rounded-[2.5rem] w-full max-w-md shadow-2xl relative">
             <button onClick={() => setShowLogin(false)} className="absolute top-6 right-6 text-white/30 hover:text-white"><X size={24} /></button>
             <div className="w-16 h-16 bg-brand-neon rounded-2xl flex items-center justify-center mb-6 mx-auto"><Lock size={32} className="text-black" /></div>
@@ -129,7 +156,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#070714] via-black to-black text-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-black to-black text-white flex flex-col">
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5 p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
            <div className="flex items-center gap-4">
@@ -143,8 +170,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8 relative">
-        {/* Glows de fundo no conteúdo */}
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-brand-purple/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-20"><Zap className="animate-spin mb-4" /> <span className="uppercase font-bold tracking-widest">Carregando Materiais...</span></div>
@@ -157,7 +183,6 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 onClick={() => setSelectedOrientation(ori)}
                 className="bg-[#151515] border-2 border-white/5 rounded-3xl overflow-hidden group hover:border-brand-neon transition-all relative flex flex-col text-left h-full shadow-2xl"
               >
-                {/* Imagem de Capa 16:9 */}
                 <div className="w-full aspect-video bg-black relative">
                    {ori.cover_url ? (
                      <img src={ori.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={ori.title} />

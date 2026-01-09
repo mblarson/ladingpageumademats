@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2 } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -13,6 +13,282 @@ import { PresenceCounter } from './PresenceCounter';
 import { supabase } from '../lib/supabaseClient';
 
 const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "M", "N", "VISITANTE"];
+
+// --- BIBLE ADMIN COMPONENT ---
+const BibleAdmin: React.FC = () => {
+    const [progressData, setProgressData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showReadersModal, setShowReadersModal] = useState(false);
+
+    useEffect(() => {
+        const fetchProgress = async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('user_progress')
+                    .select('user_name, reading_item_id, created_at')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                if (data) setProgressData(data);
+            } catch (e) {
+                console.error("Erro ao carregar progresso bíblico:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProgress();
+    }, []);
+
+    const userStats = useMemo(() => {
+        const stats: Record<string, { count: number, lastActivity: string }> = {};
+        progressData.forEach(item => {
+            const name = item.user_name || 'Usuário Anônimo';
+            if (!stats[name]) stats[name] = { count: 0, lastActivity: item.created_at };
+            stats[name].count++;
+        });
+        return Object.entries(stats).sort((a, b) => b[1].count - a[1].count);
+    }, [progressData]);
+
+    const emChamasData = useMemo(() => {
+        const fmt = (d: Date) => d.toLocaleDateString('en-CA'); 
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const d1 = new Date(today); d1.setDate(today.getDate() - 1);
+        const d2 = new Date(today); d2.setDate(today.getDate() - 2);
+        const d3 = new Date(today); d3.setDate(today.getDate() - 3);
+
+        const targets = [fmt(d1), fmt(d2), fmt(d3)];
+
+        const userDaysMap = new Map<string, Set<string>>();
+        
+        progressData.forEach(item => {
+            const itemDateStr = fmt(new Date(item.created_at));
+            if (targets.includes(itemDateStr)) {
+                if (!userDaysMap.has(item.user_name)) {
+                    userDaysMap.set(item.user_name, new Set());
+                }
+                userDaysMap.get(item.user_name)?.add(itemDateStr);
+            }
+        });
+
+        return Array.from(userDaysMap.entries())
+            .filter(([_, daysSet]) => daysSet.size === 3)
+            .map(([userName]) => userName);
+    }, [progressData]);
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-20 opacity-20">
+            <RefreshCw className="animate-spin mb-4" />
+            <span className="uppercase font-bold tracking-widest text-xs">Carregando Dados Bíblicos...</span>
+        </div>
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-8">
+                <BookOpen className="text-brand-purple" />
+                <h2 className="text-2xl font-display uppercase tracking-wider">Engajamento na Leitura</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5">
+                    <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1">Total de Leituras</span>
+                    <span className="text-4xl font-display text-white">{progressData.length}</span>
+                </div>
+                <button 
+                  onClick={() => setShowReadersModal(true)}
+                  className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 text-left hover:border-brand-neon transition-colors group"
+                >
+                    <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 group-hover:text-brand-neon">Leitores</span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-4xl font-display text-white">{userStats.length}</span>
+                        <ChevronRight size={20} className="text-white/10 group-hover:text-brand-neon transition-colors" />
+                    </div>
+                </button>
+                <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Flame size={80} className="text-orange-500" />
+                    </div>
+                    <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1">Em Chamas</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-4xl font-display text-white">{emChamasData.length}</span>
+                        <Flame size={24} className="text-orange-500 animate-pulse" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                    <h3 className="text-sm font-bold uppercase tracking-widest">Top 3 Leitores</h3>
+                    <Trophy size={18} className="text-brand-neon" />
+                </div>
+                <div className="divide-y divide-white/5">
+                    {userStats.length > 0 ? userStats.slice(0, 3).map(([name, data], idx) => (
+                        <div key={idx} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-brand-neon text-black' : 'bg-white/10 text-white'}`}>
+                                    {idx + 1}
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold uppercase text-xs tracking-wide">{name}</p>
+                                    <p className="text-[9px] text-white/30 uppercase">Última leitura: {new Date(data.lastActivity).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-brand-purple font-display text-2xl">{data.count}</span>
+                                <span className="text-[10px] text-white/20 uppercase font-bold">Capítulos</span>
+                            </div>
+                        </div>
+                    )) : (
+                        <div className="p-10 text-center text-white/20 text-xs uppercase font-bold tracking-widest">Nenhum progresso registrado ainda.</div>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                    <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Flame size={18} className="text-orange-500" /> Em Chamas (3 dias seguidos, sem hoje)
+                    </h3>
+                </div>
+                <div className="p-6">
+                    {emChamasData.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {emChamasData.map((name, idx) => (
+                                <motion.div 
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    key={idx} 
+                                    className="bg-orange-500/10 text-orange-500 border border-orange-500/20 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-2"
+                                >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                                    {name}
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-8 text-center">
+                            <p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Nenhum leitor com sequência de 3 dias consecutivos (excluindo hoje).</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <AnimatePresence>
+                {showReadersModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setShowReadersModal(false)} 
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }} 
+                            exit={{ scale: 0.9, opacity: 0 }} 
+                            className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+                        >
+                            <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                                <h3 className="font-display uppercase text-xl text-white">Lista de Leitores</h3>
+                                <button onClick={() => setShowReadersModal(false)} className="text-white/30 hover:text-white transition-colors">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
+                                {userStats.map(([name, data], idx) => (
+                                    <div key={idx} className="bg-white/5 p-3 rounded-xl flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple">
+                                                <User size={14} />
+                                            </div>
+                                            <span className="text-sm font-bold uppercase tracking-wide text-white">{name}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-white/30 uppercase">{data.count} Capítulos</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+// --- KEEPALIVE ADMIN COMPONENT ---
+const KeepaliveAdmin: React.FC = () => {
+    const { logs, isPinging, triggerKeepalive, timeToNextPing, autoPingEnabled, setAutoPingEnabled } = useKeepalive();
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-8">
+                <Activity className="text-blue-500" />
+                <h2 className="text-2xl font-display uppercase tracking-wider">Monitor do Banco (Keepalive)</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#1a1a1a] border border-white/10 p-8 rounded-3xl relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase text-white/30 tracking-widest mb-1">Próximo Pulso em</span>
+                            <span className="text-5xl font-mono text-white">
+                                {Math.floor(timeToNextPing / 60000)}:{(Math.floor((timeToNextPing % 60000) / 1000)).toString().padStart(2, '0')}
+                            </span>
+                        </div>
+                        <button 
+                            onClick={() => triggerKeepalive()} 
+                            disabled={isPinging}
+                            className={`p-6 rounded-2xl flex items-center justify-center transition-all ${isPinging ? 'bg-white/10 animate-pulse' : 'bg-blue-500 hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20'}`}
+                        >
+                            <RefreshCw className={`${isPinging ? 'animate-spin' : ''}`} size={32} />
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
+                        <button 
+                            onClick={() => setAutoPingEnabled(!autoPingEnabled)}
+                            className={`w-10 h-5 rounded-full relative p-1 transition-colors ${autoPingEnabled ? 'bg-blue-500' : 'bg-white/20'}`}
+                        >
+                            <motion.div animate={{ x: autoPingEnabled ? 20 : 0 }} className="w-3 h-3 bg-white rounded-full" />
+                        </button>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Auto-Ping Ativado</span>
+                    </div>
+                </div>
+
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden flex flex-col h-[400px]">
+                    <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Logs de Atividade</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                            <span className="text-[8px] font-bold uppercase text-green-500">Live</span>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                        {logs.map((log) => (
+                            <div key={log.id} className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between group">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 rounded-full ${log.status === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-white font-mono uppercase">{log.event_type}</span>
+                                        <span className="text-[8px] text-white/20">{new Date(log.created_at).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <span className={`text-[8px] font-bold uppercase px-2 py-0.5 rounded ${log.status === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                    {log.status}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- LIDERA ADMIN COMPONENTS ---
 const LideraAdmin: React.FC = () => {
@@ -175,7 +451,7 @@ const LideraAdmin: React.FC = () => {
             </div>
 
             {editingOrientation ? (
-                <div className="bg-[#1a1a1a] border-2 border-brand-neon p-6 md:p-10 rounded-[2.5rem] space-y-8 shadow-2xl relative overflow-hidden">
+                <div className="max-w-4xl mx-auto bg-[#1a1a1a] border-2 border-brand-neon p-6 md:p-8 rounded-[2rem] space-y-6 shadow-2xl relative overflow-hidden">
                     <div className="flex items-center justify-between">
                          <button onClick={() => setEditingOrientation(null)} className="text-white/50 hover:text-white uppercase font-bold text-xs flex items-center gap-2"><ArrowLeft size={14} /> Voltar</button>
                          <div className="flex items-center gap-4">
@@ -438,7 +714,6 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
-  const { autoPingEnabled, setAutoPingEnabled } = useKeepalive();
   
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
   const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible' | 'lidera'>('analytics');
@@ -541,6 +816,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         <main className="flex-1 overflow-y-auto bg-black p-4 md:p-8 custom-scrollbar">
           {activeTab === 'presence' && <PresenceControl />}
           {activeTab === 'lidera' && <LideraAdmin />}
+          {activeTab === 'bible' && <BibleAdmin />}
+          {activeTab === 'keepalive' && <KeepaliveAdmin />}
           {activeTab === 'analytics' && (
             <div className="max-w-6xl mx-auto space-y-8">
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

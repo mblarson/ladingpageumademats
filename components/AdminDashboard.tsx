@@ -287,20 +287,19 @@ create policy "Acesso Total" on storage.objects for all using ( bucket_id = 'lid
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                     {orientations.length > 0 ? orientations.map((ori) => (
-                        <button key={ori.id} onClick={() => handleEdit(ori)} className="bg-[#1a1a1a] border-2 border-white/5 rounded-3xl overflow-hidden group hover:border-brand-neon transition-all flex flex-col text-left">
-                            <div className="w-full aspect-video bg-black relative">
-                                {ori.cover_url && <img src={ori.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                                <div className="absolute bottom-4 left-6 right-6">
-                                    <h3 className="font-display uppercase text-2xl text-white leading-none mb-1">{ori.title}</h3>
-                                    <p className="text-[10px] uppercase font-bold text-white/30 tracking-widest">{ori.subtitle || 'Sem categoria'}</p>
+                        <button key={ori.id} onClick={() => handleEdit(ori)} className="w-full bg-[#151515] border border-white/5 hover:border-brand-neon p-6 rounded-2xl transition-all group flex items-center justify-between text-left">
+                            <div className="flex flex-col">
+                                <h3 className="text-xl font-display uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors leading-none mb-1">{ori.title}</h3>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">{ori.subtitle || 'Sem categoria'}</span>
+                                  {!ori.is_published && (
+                                    <span className="bg-red-500/10 text-red-500 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Rascunho</span>
+                                  )}
                                 </div>
-                                {!ori.is_published && (
-                                  <div className="absolute top-4 right-4 bg-red-500 text-white text-[8px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter">Rascunho</div>
-                                )}
                             </div>
+                            <ChevronRight size={20} className="text-white/10 group-hover:text-brand-neon transition-colors" />
                         </button>
                     )) : (
                       <div className="col-span-2 py-20 text-center opacity-20 uppercase font-bold text-xs tracking-[0.3em] border-2 border-dashed border-white/5 rounded-3xl">Nenhuma orientação cadastrada ainda.</div>
@@ -521,7 +520,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                        <currentTab.icon size={20} className={currentTab.textColor} />
                        <span className={`font-display italic text-2xl uppercase tracking-wide ${currentTab.textColor}`}>{currentTab.label}</span>
                    </div>
-                   <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center">{isMenuOpen ? <X className={currentTab.textColor} size={18} /> : <Menu className={currentTab.textColor} size={18} />}</div>
+                   <div className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10">{isMenuOpen ? <X className={currentTab.textColor} size={18} /> : <Menu className={currentTab.textColor} size={18} />}</div>
                 </button>
                 <AnimatePresence>
                    {isMenuOpen && (

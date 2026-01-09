@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
 
@@ -21,18 +21,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   // Lógica de Intervalo do Slider
   useEffect(() => {
-    // Início após 1 segundo
     const initialTimeout = setTimeout(() => {
       setCurrentIndex(1);
-      
-      // Ciclo a cada 4 segundos
       const interval = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % 4);
       }, 4000);
-
       return () => clearInterval(interval);
     }, 1000);
-
     return () => clearTimeout(initialTimeout);
   }, []);
 
@@ -56,10 +51,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     exit: { x: "-100%", opacity: 1 }
   };
 
-  // Cores de fundo por slide
   const getSlideBg = (index: number) => {
-    if (index === 1) return '#000000'; // Slide LIDERA é preto
-    return activeConfig.hero_bgColor; // Outros são o azul original
+    if (index === 1) return '#000000';
+    return activeConfig.hero_bgColor;
   };
 
   return (
@@ -75,8 +69,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
          </motion.div>
       </div>
 
-      {/* 2. MENU NAVEGAÇÃO */}
-      <motion.nav {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})} className="absolute top-[8%] md:top-[12%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]">
+      {/* 2. MENU NAVEGAÇÃO - AJUSTE DE ESPAÇAMENTO */}
+      <motion.nav 
+        key="main-nav"
+        {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})} 
+        className="absolute top-[12%] md:top-[15%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]"
+      >
         <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
              <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} /></div>
@@ -84,15 +82,36 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         </button>
       </motion.nav>
 
-      {/* 3. MASCOTE (FIXO EM RELAÇÃO AO SLIDE) */}
+      {/* 3. MASCOTE PENDURADO (SPIDER STYLE) - TAMANHO AMPLIADO PARA DESKTOP E MOBILE */}
+      <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
+        <motion.div 
+          className="w-[2px] bg-white/20"
+          animate={{ height: [100, 200, 100] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.img 
+          src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" 
+          alt="Spider Mascot" 
+          className="w-44 md:w-96 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" 
+          animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} 
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} 
+          {...dragFreeProps} 
+        />
+      </div>
+
+      {/* 4. MASCOTE DO AVIÃO (CONTÍNUO E INDEPENDENTE) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-[105]">
         <motion.img 
+          key="plane-mascot-static"
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png" 
           alt="Mascot" 
           className="absolute top-[75%] md:top-[75%] w-24 md:w-32 object-contain pointer-events-auto" 
-          initial={{ x: -200, opacity: 1 }} 
+          initial={{ x: "-20vw", opacity: 1 }} 
           animate={{ x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], y: [0, -15, 0] }} 
-          transition={{ x: { duration: 8, repeat: Infinity, repeatDelay: 1, ease: "linear" }, y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" } }} 
+          transition={{ 
+            x: { duration: 8, repeat: Infinity, repeatDelay: 1, ease: "linear" }, 
+            y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" } 
+          }} 
           {...dragFreeProps} 
         />
       </div>
@@ -106,17 +125,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           animate="center"
           exit="exit"
           transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          className="absolute inset-0 flex flex-col items-center justify-start pt-[14%] md:pt-[16%] px-4 pb-12 cursor-pointer"
+          className="absolute inset-0 flex flex-col items-center justify-start pt-[24%] md:pt-[18%] px-4 pb-12 cursor-pointer"
           style={{ backgroundColor: getSlideBg(currentIndex) }}
           onClick={() => currentIndex === 1 && onNavigate('lidera')}
         >
-          {/* Grid de fundo do slide */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
           <div className="relative z-10 text-center flex flex-col items-center justify-center w-full max-w-7xl mx-auto flex-1">
-            {/* BADGE BEM VINDO - SUBIDA PARA FICAR LOGO ABAIXO DO MENU */}
+            {/* BADGE BEM VINDO - LOGO ABAIXO DO MENU AJUSTADO */}
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="mb-4 md:mb-6 z-20 relative" {...dragProps}>
                 <div className="bg-white/10 backdrop-blur-md px-6 py-1.5 md:py-2 rounded-full border border-white/20 shadow-lg">
                   <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
@@ -163,7 +181,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         </motion.div>
       </AnimatePresence>
 
-      {/* MODAL DO MENU (FIXO) */}
+      {/* MODAL DO MENU */}
       <AnimatePresence>
         {isMenuOpen && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-6">

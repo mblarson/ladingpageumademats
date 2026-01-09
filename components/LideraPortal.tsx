@@ -168,7 +168,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-950 via-black to-black text-white flex flex-col">
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5 p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
            <div className="flex items-center gap-4">
               <button onClick={() => isAuthenticated ? setIsAuthenticated(false) : onBack()} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ArrowLeft size={24} /></button>
               <h1 className="font-display text-xl md:text-2xl uppercase tracking-tighter">LIDERA <span className="text-brand-neon">UMADEMATS</span></h1>
@@ -179,13 +179,13 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8 relative">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 relative">
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-600/5 blur-[150px] rounded-full pointer-events-none" />
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-20"><Zap className="animate-spin mb-4" /> <span className="uppercase font-bold tracking-widest">Sincronizando...</span></div>
         ) : orientations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 relative z-10">
             {orientations.map((ori, idx) => (
               <motion.button 
                 key={ori.id} 
@@ -194,25 +194,25 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 transition={{ delay: idx * 0.1 }}
                 whileHover={{ scale: 1.02, translateY: -5 }}
                 onClick={() => setSelectedOrientation(ori)}
-                className="bg-[#151515] border-2 border-white/5 rounded-3xl overflow-hidden group hover:border-brand-neon transition-all relative flex flex-col text-left h-full shadow-2xl"
+                className="bg-[#151515] border-2 border-white/5 rounded-2xl overflow-hidden group hover:border-brand-neon transition-all relative flex flex-col text-left h-full shadow-2xl"
               >
                 <div className="w-full aspect-video bg-black relative">
                    {ori.cover_url ? (
                      <img src={ori.cover_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={ori.title} />
                    ) : (
                      <div className="w-full h-full flex items-center justify-center text-white/5 opacity-40">
-                       <ImageIcon size={64} />
+                       <ImageIcon size={48} />
                      </div>
                    )}
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                   <div className="absolute bottom-4 left-6 right-6">
-                      <h3 className="text-2xl md:text-3xl font-display uppercase leading-none text-white mb-1 drop-shadow-lg">{ori.title}</h3>
-                      <p className="text-brand-neon text-[10px] font-sans font-bold uppercase tracking-widest opacity-80">{ori.subtitle}</p>
+                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                   <div className="absolute bottom-3 left-4 right-4">
+                      <h3 className="text-lg md:text-xl font-display uppercase leading-tight text-white mb-1 drop-shadow-lg line-clamp-2">{ori.title}</h3>
+                      <p className="text-brand-neon text-[8px] md:text-[9px] font-sans font-bold uppercase tracking-widest opacity-80">{ori.subtitle}</p>
                    </div>
                 </div>
-                <div className="p-4 flex items-center justify-between border-t border-white/5 bg-white/5 group-hover:bg-brand-neon/5 transition-colors">
-                   <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Abrir detalhes</span>
-                   <ChevronRight size={16} className="text-brand-neon opacity-50 group-hover:opacity-100 transition-opacity" />
+                <div className="p-3 flex items-center justify-between border-t border-white/5 bg-white/5 group-hover:bg-brand-neon/5 transition-colors">
+                   <span className="text-[9px] uppercase font-bold text-white/30 tracking-widest">Acessar</span>
+                   <ChevronRight size={14} className="text-brand-neon opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
               </motion.button>
             ))}

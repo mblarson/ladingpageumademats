@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus, Lock, X } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
 
@@ -16,6 +16,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.05, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   const bgElements = [...Array(6)].map((_, i) => ({
     id: i,
@@ -176,7 +177,8 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             transition={{ delay: 0.2 }}
             onMouseEnter={() => setHoveredCard('shirt')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => handleCardClick(activeConfig.action_shirtLink)}
+            // AÇÃO ALTERADA: Bloqueio via Modal
+            onClick={() => setShowBlockedModal(true)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
             className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
@@ -301,6 +303,56 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           </motion.div>
         </motion.div>
       </div>
+
+      {/* MODAL DE BLOQUEIO DE ACESSO */}
+      <AnimatePresence>
+        {showBlockedModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+             {/* Backdrop */}
+             <motion.div
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                onClick={() => setShowBlockedModal(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+             />
+             
+             {/* Modal Content */}
+             <motion.div
+                initial={{ scale: 0.9, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative bg-[#1a1a1a] border-2 border-white/10 p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl overflow-hidden"
+             >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
+                
+                <button
+                    onClick={() => setShowBlockedModal(false)}
+                    className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"
+                >
+                    <X size={24} />
+                </button>
+
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-lg">
+                    <Lock size={32} className="text-white" />
+                </div>
+
+                <h3 className="text-2xl font-display uppercase text-white mb-4 leading-none">ACESSO BLOQUEADO</h3>
+                <p className="text-white/60 font-sans text-sm leading-relaxed mb-8">
+                    Acesso exclusivo para liderança.<br/>
+                    Solicite o acesso para a secretaria da UMADEMATS.
+                </p>
+
+                <button
+                    onClick={() => setShowBlockedModal(false)}
+                    className="w-full py-4 bg-white text-black font-bold uppercase rounded-xl hover:bg-gray-200 transition-colors shadow-lg active:scale-95"
+                >
+                    Fechar
+                </button>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

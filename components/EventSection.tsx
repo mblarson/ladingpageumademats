@@ -61,6 +61,41 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
   </motion.div>
 );
 
+const ComingSoonCard: React.FC<{ delay: number }> = ({ delay }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 50 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ delay, duration: 0.5 }}
+    className="relative overflow-hidden rounded-[2rem] aspect-[16/9] md:aspect-[2/1] shadow-2xl w-full border-2 border-white/10 bg-[#0d0d0d] flex items-center justify-center group select-none"
+  >
+    {/* Animated Question Mark */}
+    <motion.div 
+        animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2]
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="text-white/10 pointer-events-none"
+    >
+       <span className="text-[8rem] md:text-[10rem] font-display font-bold leading-none">?</span>
+    </motion.div>
+
+    {/* Construction Tape Overlay */}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+         <div className="w-[110%] bg-brand-neon py-3 md:py-4 -rotate-2 border-y-[4px] border-black shadow-lg relative overflow-hidden flex items-center justify-center">
+             {/* Zebra Stripes */}
+             <div className="absolute inset-0 opacity-20" 
+                  style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, transparent 10px, transparent 20px)' }} 
+             />
+             <span className="relative z-10 text-black font-display text-2xl md:text-4xl uppercase tracking-[0.2em] font-black drop-shadow-sm">
+                EM BREVE
+             </span>
+         </div>
+    </div>
+  </motion.div>
+);
+
 interface EventSectionProps {
   previewConfig?: SiteConfig;
 }
@@ -341,6 +376,8 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
             {guests.map((guest, index) => ( <GuestCard key={index} {...guest} delay={index * 0.2} enableDrag={activeConfig.ui_allowDrag} /> ))}
+            <ComingSoonCard delay={guests.length * 0.2} />
+            <ComingSoonCard delay={(guests.length + 1) * 0.2} />
           </div>
         </div>
 

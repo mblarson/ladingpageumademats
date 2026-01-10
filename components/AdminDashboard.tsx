@@ -692,6 +692,34 @@ const PresenceControl: React.FC = () => {
                             <ColumnLayout accentColor="text-brand-neon" items={SECTORS_LIST.filter(s => (groupedData[selectedMonth].sectors[s] || 0) > 0).map(s => ({ label: `Setor ${s}`, value: groupedData[selectedMonth].sectors[s] }))} />
                         </div>
                     </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 px-2">
+                             <User size={18} className="text-brand-pink" />
+                             <h4 className="text-lg font-display uppercase tracking-wide text-white">Registros Individuais</h4>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                            {groupedData[selectedMonth].responsibles.map((record: any) => (
+                                <button 
+                                    key={record.id} 
+                                    onClick={() => setSelectedResp(record)}
+                                    className="w-full flex items-center justify-between p-6 bg-[#1a1a1a] border border-white/10 hover:border-brand-pink rounded-2xl transition-all group shadow-sm hover:translate-x-1"
+                                >
+                                    <div className="flex flex-col items-start text-left">
+                                        <span className="text-lg font-bold uppercase text-white group-hover:text-brand-pink transition-colors">{record.responsible}</span>
+                                        <span className="text-[10px] font-bold uppercase text-white/30 tracking-widest">{new Date(record.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-2xl font-display text-white">{record.total_general}</span>
+                                            <span className="text-[9px] font-bold uppercase text-white/30">Pessoas</span>
+                                        </div>
+                                        <ChevronRight size={20} className="text-white/20 group-hover:text-brand-pink transition-colors" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -740,7 +768,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 text-center shadow-2xl">
             <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-black" size={32} /></div>
-            <h2 className="text-2xl font-display text-white mb-2">Painel Restrito</h2>
+            <h2 className="text-2xl font-display text-white mb-2">Gestão Umademats</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-6">
                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon" />
                <button type="submit" className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl hover:bg-brand-neon/80 transition-colors shadow-lg">Acessar</button>
@@ -756,7 +784,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 gap-8">
         <h2 className="text-3xl font-display uppercase text-white tracking-widest">Controle Administrativo</h2>
         <div className="flex flex-col gap-3 w-full max-w-sm">
-          <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Painel de Gestão</button>
+          <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Gestão Umademats</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
         <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>

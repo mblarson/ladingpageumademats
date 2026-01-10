@@ -9,7 +9,7 @@ import { LideraPortal } from './components/LideraPortal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
-import { X, LogIn, ShieldCheck, Zap } from 'lucide-react';
+import { X, LogIn, ShieldCheck, Zap, Lock } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
 export type PageType = 'home' | 'bible' | 'admin' | 'lidera';
@@ -106,7 +106,7 @@ export default function App() {
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2 text-[10px] opacity-30">Desenvolvido para o Reino.</p>
         <button onClick={() => handleNavigate('admin')} className="absolute bottom-4 right-4 opacity-50 hover:opacity-100 transition-opacity text-white font-bold p-2 text-[10px]" title="Área Administrativa">
-           UMADEMATS
+           <Lock size={14} />
         </button>
       </footer>
     </main>

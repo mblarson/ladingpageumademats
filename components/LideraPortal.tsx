@@ -51,26 +51,31 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   const checkUser = async () => {
     setIsCheckingProfile(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.user) {
-      setUser(session.user);
-      // Verificar se já tem perfil na tabela lidera_logins
-      const { data: profileData, error } = await supabase
-        .from('lidera_logins')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setUser(session.user);
+        // Verificar se já tem perfil na tabela lidera_logins
+        const { data: profileData, error } = await supabase
+          .from('lidera_logins')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
 
-      if (profileData) {
-        setProfile(profileData);
-        setIsAuthenticated(true);
-      } else {
-        // Não tem perfil, precisa do onboarding
-        setIsAuthenticated(false);
+        if (profileData) {
+          setProfile(profileData);
+          setIsAuthenticated(true);
+        } else {
+          // Não tem perfil, precisa do onboarding
+          setIsAuthenticated(false);
+        }
       }
+    } catch (e) {
+      console.error("Erro ao verificar usuário:", e);
+    } finally {
+      setIsCheckingProfile(false);
     }
-    setIsCheckingProfile(false);
   };
 
   const fetchOrientations = async () => {
@@ -103,11 +108,14 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleGoogleLogin = async () => {
+    // Flag fundamental para o App.tsx saber que deve voltar para o Lidera após o redirect
     localStorage.setItem('return_to_lidera', 'true');
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname
+        // Redireciona para a raiz, o App.tsx cuidará de ler o localStorage e voltar para cá
+        redirectTo: window.location.origin
       }
     });
     if (error) alert("Erro ao conectar com Google: " + error.message);

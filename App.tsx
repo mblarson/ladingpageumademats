@@ -21,21 +21,36 @@ export default function App() {
     if (typeof window !== 'undefined') {
       try {
         const path = window.location.pathname.replace(/\/$/, '');
+        
+        // Redirecionamento legado de camisetas
         if (path === '/pedidoscamisetas') {
             window.location.href = 'https://projeto-camiseta.vercel.app/';
             return 'home';
         }
+
+        // Verificação de rotas por URL
         if (path === '/admin') return 'admin';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
         
+        // Verificação de persistência após login Social (Google)
         const shouldReturnToBible = localStorage.getItem('return_to_bible');
         if (shouldReturnToBible) {
           localStorage.removeItem('return_to_bible'); 
           return 'bible';
         }
+
+        const shouldReturnToLidera = localStorage.getItem('return_to_lidera');
+        if (shouldReturnToLidera) {
+          localStorage.removeItem('return_to_lidera');
+          return 'lidera';
+        }
+
+        // Fallback por query params
         const params = new URLSearchParams(window.location.search);
         if (params.get('page') === 'bible') return 'bible';
+        if (params.get('page') === 'lidera') return 'lidera';
+
       } catch (e) {
         console.warn("Error reading initial route:", e);
       }
@@ -54,7 +69,6 @@ export default function App() {
 
   const safePushState = (path: string) => {
     try { 
-      // Only push state if it's a relative path and doesn't violate origin
       window.history.pushState({}, '', path); 
     } catch (e) { 
       console.warn("Navigation pushState failed (safe to ignore in preview):", e); 

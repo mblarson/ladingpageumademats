@@ -126,8 +126,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           exit="exit"
           // FIXED: Removed duplicate 'stiffness' property in the motion transition configuration
           transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          // AJUSTE DE POSICIONAMENTO: pt-[35%] no mobile para empurrar o conteúdo abaixo do menu
-          className="absolute inset-0 flex flex-col items-center justify-start pt-[35%] md:pt-0 px-4 pb-12 cursor-pointer"
+          // AJUSTE DE PADDING MOBILE: pt-[30%] para compensar remoção do badge e manter titulo abaixo do menu
+          className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer"
           style={{ backgroundColor: getSlideBg(currentIndex) }}
           onClick={() => currentIndex === 1 && onNavigate('lidera')}
         >
@@ -135,16 +135,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
-          {/* AJUSTE DE POSICIONAMENTO: md:pt-[18%] no desktop para garantir que o texto fique abaixo do menu */}
-          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[18%]">
-            {/* BADGE BEM VINDO - LOGO ABAIXO DO MENU AJUSTADO */}
-            <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="mb-4 md:mb-6 z-20 relative" {...dragProps}>
-                <div className="bg-white/10 backdrop-blur-md px-6 py-1.5 md:py-2 rounded-full border border-white/20 shadow-lg">
-                  <span className="text-white font-sans text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase">
-                    {currentIndex === 1 ? 'ÁREA DA LIDERANÇA' : 'BEM VINDO AO PORTAL'}
-                  </span>
-                </div>
-            </motion.div>
+          {/* AJUSTE DE PADDING DESKTOP: md:pt-[15%] para garantir que o título fique limpo abaixo do menu (que está em 10%) */}
+          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[15%]">
+            
+            {/* ITEM REMOVIDO: Badge de Bem Vindo / Área de Liderança foi retirado conforme solicitado */}
 
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
               {currentIndex === 0 && (

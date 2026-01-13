@@ -131,9 +131,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           initial="enter"
           animate="center"
           exit="exit"
-          // FIXED: Removed duplicate 'stiffness' property in the motion transition configuration
           transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          // AJUSTE DE PADDING MOBILE: pt-[30%] para compensar remoção do badge e manter titulo abaixo do menu
           className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer"
           style={{ backgroundColor: getSlideBg(currentIndex) }}
           onClick={() => currentIndex === 1 && onNavigate('lidera')}
@@ -142,41 +140,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
-          {/* AJUSTE DE PADDING DESKTOP: md:pt-[15%] para garantir que o título fique limpo abaixo do menu (que está em 10%) */}
           <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[15%]">
             
-            {/* ITEM REMOVIDO: Badge de Bem Vindo / Área de Liderança foi retirado conforme solicitado */}
-
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
               {currentIndex === 0 && (
                 <div className="flex items-center justify-center w-full" {...dragProps}>
-                  <h1 className="text-[42vw] md:text-[13vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                  <h1 className="text-[42vw] md:text-[16vw] xl:text-[18vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
                 </div>
               )}
               {currentIndex === 1 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
+                  <h2 className="text-[22vw] md:text-[11vw] xl:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-6 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <h3 className="text-[12vw] md:text-[6vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3>
+                    <h3 className="text-[12vw] md:text-[7vw] xl:text-[8vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3>
                   </div>
                 </div>
               )}
               {currentIndex === 2 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
+                  <h2 className="text-[22vw] md:text-[11vw] xl:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
                   <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-6 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
                     <div className="absolute -top-12 md:-top-16 left-1/2 -translate-x-1/2 w-20 md:w-28 z-20 pointer-events-none">
                       <img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png" alt="Mini Mascot" className="w-full h-auto drop-shadow-md" />
                     </div>
-                    <h3 className="text-[11vw] md:text-[5vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3>
+                    <h3 className="text-[11vw] md:text-[6vw] xl:text-[7vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3>
                   </div>
                 </div>
               )}
               {currentIndex === 3 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                   <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
+                   <h2 className="text-[22vw] md:text-[11vw] xl:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-6 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}>
-                    <h3 className="text-[10vw] md:text-[5vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3>
+                    <h3 className="text-[10vw] md:text-[6vw] xl:text-[7vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3>
                   </div>
                 </div>
               )}

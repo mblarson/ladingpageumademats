@@ -75,10 +75,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})} 
         className="absolute top-[12%] md:top-[10%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]"
       >
-        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+        <button 
+            onClick={() => setIsMenuOpen(true)} 
+            className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95 will-change-transform" 
+            style={{ backgroundColor: activeConfig.hero_accentColor }}
+        >
              <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
-             <div className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none group-hover:translate-x-full transition-transform duration-700" />
+             <div 
+                className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none group-hover:translate-x-full transition-transform duration-700 will-change-transform" 
+                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }} 
+             />
         </button>
       </motion.nav>
 
@@ -185,7 +192,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                 <button onClick={() => setIsMenuOpen(false)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"><X size={32} /></button>
                 <div className="flex flex-col gap-4 w-full max-w-md">
                     {menuItems.map((item, idx) => (
-                        <motion.button key={idx} initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }} onClick={item.action} className="group flex items-center justify-between p-4 rounded-2xl bg-[#1a1a1a] border border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-all">
+                        <motion.button key={idx} initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }} onClick={item.action} className="group flex items-center justify-between p-4 rounded-2xl bg-[#1a1a1a] border border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-colors duration-200">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black transition-colors"><item.icon size={20} /></div>
                                 <span className="font-display italic text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon transition-colors">{item.label}</span>

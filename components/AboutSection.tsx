@@ -75,7 +75,7 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
       <span className={`inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full ${color} border border-black text-[8px] md:text-xs font-bold font-sans uppercase tracking-widest shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap`}>
         {role}
       </span>
-      <h3 className="text-base md:text-3xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
+      <h3 className="text-base md:text-2xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
         {name}
       </h3>
     </div>
@@ -148,7 +148,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                viewport={{ once: true }}
                className="relative z-10"
              >
-                <h2 className="text-[15vw] md:text-9xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
+                <h2 className="text-[15vw] md:text-7xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
                     {activeConfig.about_title}
                 </h2>
                 
@@ -172,7 +172,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="w-full md:max-w-5xl aspect-video rounded-[1rem] md:rounded-[2rem] overflow-hidden border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white relative z-10"
+                className="w-full md:max-w-4xl aspect-video rounded-[1rem] md:rounded-[2rem] overflow-hidden border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white relative z-10"
             >
                 <img 
                     src={activeConfig.about_bannerUrl} 
@@ -187,7 +187,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="mt-6 text-white text-center font-sans text-sm md:text-xl font-medium max-w-4xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
+              className="mt-6 text-white text-center font-sans text-sm md:text-lg font-medium max-w-4xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
             >
               {activeConfig.about_text}
             </motion.p>

@@ -61,8 +61,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       {/* ELEMENTOS FIXOS (FORA DA ANIMAÇÃO DE SLIDE) */}
       
       {/* 1. MARQUEE SUPERIOR */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-4 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
+      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
             ))}
@@ -73,11 +73,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       <motion.nav 
         key="main-nav"
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})} 
-        className="absolute top-[12%] md:top-[15%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]"
+        className="absolute top-[12%] md:top-[10%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]"
       >
-        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-6 md:py-3 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
-             <div className="z-10 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} /></div>
+        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-all active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+             <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
              <div className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none group-hover:translate-x-full transition-transform duration-700" />
         </button>
       </motion.nav>
@@ -92,7 +92,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         <motion.img 
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" 
           alt="Spider Mascot" 
-          className="w-44 md:w-96 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" 
+          className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" 
           animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} 
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} 
           {...dragFreeProps} 
@@ -135,46 +135,46 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           </div>
 
           {/* AJUSTE VERTICAL: Reduzi md:pt-[21%] para md:pt-[10%] para subir os textos */}
-          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[10%]">
+          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[8%]">
             {/* BADGE BEM VINDO - LOGO ABAIXO DO MENU AJUSTADO */}
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="mb-4 md:mb-6 z-20 relative" {...dragProps}>
                 <div className="bg-white/10 backdrop-blur-md px-6 py-1.5 md:py-2 rounded-full border border-white/20 shadow-lg">
-                  <span className="text-white font-sans text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase">
+                  <span className="text-white font-sans text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase">
                     {currentIndex === 1 ? 'ÁREA DA LIDERANÇA' : 'BEM VINDO AO PORTAL'}
                   </span>
                 </div>
             </motion.div>
 
-            <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-6">
+            <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
               {currentIndex === 0 && (
                 <div className="flex items-center justify-center w-full" {...dragProps}>
-                  <h1 className="text-[42vw] md:text-[16vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                  <h1 className="text-[42vw] md:text-[13vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
                 </div>
               )}
               {currentIndex === 1 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
-                  <div className="mt-4 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-16 md:py-10 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <h3 className="text-[12vw] md:text-[8vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3>
+                  <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
+                  <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-6 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                    <h3 className="text-[12vw] md:text-[6vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3>
                   </div>
                 </div>
               )}
               {currentIndex === 2 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
-                  <div className="mt-6 md:mt-10 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-16 md:py-10 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                  <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
+                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-6 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
                     <div className="absolute -top-12 md:-top-16 left-1/2 -translate-x-1/2 w-20 md:w-28 z-20 pointer-events-none">
                       <img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png" alt="Mini Mascot" className="w-full h-auto drop-shadow-md" />
                     </div>
-                    <h3 className="text-[11vw] md:text-[6vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3>
+                    <h3 className="text-[11vw] md:text-[5vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3>
                   </div>
                 </div>
               )}
               {currentIndex === 3 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                   <h2 className="text-[22vw] md:text-[12vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
-                  <div className="mt-4 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-16 md:py-10 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}>
-                    <h3 className="text-[10vw] md:text-[6vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3>
+                   <h2 className="text-[22vw] md:text-[9vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
+                  <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-6 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}>
+                    <h3 className="text-[10vw] md:text-[5vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3>
                   </div>
                 </div>
               )}

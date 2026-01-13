@@ -36,7 +36,7 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
     <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent`} />
     
     <div className="absolute top-4 right-4 md:top-6 md:right-6">
-      <span className={`px-4 py-1.5 md:px-6 md:py-2 rounded-full text-[10px] md:text-sm font-bold uppercase tracking-wider text-black bg-white shadow-lg animate-pulse`}>
+      <span className={`px-4 py-1.5 md:px-6 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-black bg-white shadow-lg animate-pulse`}>
         {role}
       </span>
     </div>
@@ -52,10 +52,10 @@ const GuestCard: React.FC<GuestCardProps> = ({ name, role, image, color, delay, 
     </div>
 
     <div className="absolute bottom-0 left-0 p-5 md:p-8 w-full flex flex-col items-start pointer-events-none">
-      <h3 className="text-2xl md:text-5xl font-display uppercase text-white leading-none mb-1 md:mb-2 drop-shadow-lg">{name}</h3>
+      <h3 className="text-2xl md:text-3xl font-display uppercase text-white leading-none mb-1 md:mb-2 drop-shadow-lg">{name}</h3>
       <div className="flex items-center gap-2">
          <div className="w-2 h-2 rounded-full bg-brand-neon animate-ping" />
-         <p className="text-brand-neon font-sans text-[10px] md:text-sm tracking-[0.2em] font-bold uppercase shadow-black drop-shadow-md">CONFIRMADO</p>
+         <p className="text-brand-neon font-sans text-[10px] md:text-xs tracking-[0.2em] font-bold uppercase shadow-black drop-shadow-md">CONFIRMADO</p>
       </div>
     </div>
   </motion.div>
@@ -78,17 +78,17 @@ const ComingSoonCard: React.FC<{ delay: number }> = ({ delay }) => (
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         className="text-white/10 pointer-events-none"
     >
-       <span className="text-[8rem] md:text-[10rem] font-display font-bold leading-none">?</span>
+       <span className="text-[8rem] md:text-[8rem] font-display font-bold leading-none">?</span>
     </motion.div>
 
     {/* Construction Tape Overlay */}
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-         <div className="w-[110%] bg-brand-neon py-3 md:py-4 -rotate-2 border-y-[4px] border-black shadow-lg relative overflow-hidden flex items-center justify-center">
+         <div className="w-[110%] bg-brand-neon py-3 md:py-3 -rotate-2 border-y-[4px] border-black shadow-lg relative overflow-hidden flex items-center justify-center">
              {/* Zebra Stripes */}
              <div className="absolute inset-0 opacity-20" 
                   style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, transparent 10px, transparent 20px)' }} 
              />
-             <span className="relative z-10 text-black font-display text-2xl md:text-4xl uppercase tracking-[0.2em] font-black drop-shadow-sm">
+             <span className="relative z-10 text-black font-display text-2xl md:text-3xl uppercase tracking-[0.2em] font-black drop-shadow-sm">
                 EM BREVE
              </span>
          </div>
@@ -222,13 +222,13 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
         .comic-halftone { background-image: radial-gradient(circle, #4F46E5 2px, transparent 2.5px); background-size: 30px 30px; }
       `}</style>
 
-      <div className="absolute -top-6 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-2 md:border-y-4 border-black bg-brand-pink py-2 md:py-4 shadow-2xl">
-         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-4xl text-black uppercase tracking-wide" animate={{ x: ["0%", "-50%"] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }}>
+      <div className="absolute -top-6 md:-top-12 left-0 right-0 z-[100] rotate-2 scale-110 border-y-2 md:border-y-2 border-black bg-brand-pink py-2 md:py-2.5 shadow-2xl">
+         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["0%", "-50%"] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }}>
             {[...Array(10)].map((_, i) => ( <span key={i} className="mx-6 flex items-center gap-4">{activeConfig.event_marqueeText}</span> ))}
          </motion.div>
       </div>
 
-      <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-32 px-4 overflow-hidden z-20">
+      <div className="relative w-full bg-brand-neon pt-20 pb-20 md:pb-24 px-4 overflow-hidden z-20">
          <div className="absolute inset-0 pointer-events-none">
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.6)_0%,rgba(204,255,0,0)_60%,rgba(0,0,0,0.05)_100%)]" />
              <div className="absolute inset-0 opacity-10 comic-halftone" />
@@ -246,16 +246,16 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                 <div id="congress-timer-anchor" className="flex flex-col items-center text-center mb-8 relative">
                   <motion.div className="relative z-10" initial={{ scale: 0.9 }} whileInView={{ scale: 1 }} viewport={{ once: true }} {...dragProps}>
                      <div className="animate-wiggle-slow origin-center">
-                        <h2 className="text-[19vw] md:text-[13rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
+                        <h2 className="text-[19vw] md:text-[8rem] 2xl:text-[9rem] font-fun text-[#4F46E5] uppercase leading-[0.8] drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] md:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer select-none">
                           {activeConfig.event_title}
                         </h2>
                      </div>
                   </motion.div>
                   <motion.div 
                     {...dragProps}
-                    className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-10 md:py-4 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-10 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
+                    className="bg-brand-pink border-[3px] md:border-4 border-black px-6 py-2 md:px-6 md:py-3 rounded-full shadow-[4px_4px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_rgba(0,0,0,1)] -mt-4 md:-mt-6 z-20 relative hover:rotate-0 transition-transform hover:scale-110"
                   >
-                    <h3 className="text-[6vw] md:text-5xl font-display uppercase text-white tracking-widest leading-none"> {activeConfig.event_badge} </h3>
+                    <h3 className="text-[6vw] md:text-3xl font-display uppercase text-white tracking-widest leading-none"> {activeConfig.event_badge} </h3>
                   </motion.div>
                 </div>
 
@@ -275,40 +275,40 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                           { val: timeLeft.seconds, label: "Seg", color: "text-brand-pink" }
                         ].map((unit, i) => (
                            <React.Fragment key={unit.label}>
-                             <div className="flex flex-col items-center min-w-[65px] md:min-w-[110px]">
-                                <span className={`text-3xl md:text-7xl font-fun leading-none tracking-tighter ${unit.color || 'text-white'} drop-shadow-[3px_3px_0px_rgba(0,0,0,1)]`}>
+                             <div className="flex flex-col items-center min-w-[65px] md:min-w-[80px]">
+                                <span className={`text-3xl md:text-5xl font-fun leading-none tracking-tighter ${unit.color || 'text-white'} drop-shadow-[3px_3px_0px_rgba(0,0,0,1)]`}>
                                   {String(unit.val).padStart(2, '0')}
                                 </span>
                                 <span className="text-[8px] md:text-xs font-display uppercase text-white/40 tracking-widest mt-1 font-black">
                                   {unit.label}
                                 </span>
                              </div>
-                             {i < 3 && <div className="text-xl md:text-5xl font-fun text-white/20 pb-4 hidden sm:block">:</div>}
+                             {i < 3 && <div className="text-xl md:text-4xl font-fun text-white/20 pb-4 hidden sm:block">:</div>}
                            </React.Fragment>
                         ))}
                     </motion.div>
                 </div>
 
-                <div className="flex flex-col items-center justify-center gap-6 mt-6 md:mt-10 w-full">
-                  <motion.div {...dragProps} onClick={addToCalendar} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-3xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-4 py-2.5 md:px-8 md:py-4 rounded-xl border-4 border-black hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex flex-col items-center justify-center gap-6 mt-6 md:mt-8 w-full">
+                  <motion.div {...dragProps} onClick={addToCalendar} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-xl font-bold font-sans whitespace-nowrap bg-[#4F46E5]/10 backdrop-blur-md text-[#4F46E5] px-4 py-2.5 md:px-6 md:py-3 rounded-xl border-4 border-black hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="absolute -top-8 -right-4 md:-top-10 md:-right-10 z-50 animate-sticker origin-bottom-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">CLIQUE P/ AGENDAR!</span>
                              <MousePointer2 size={12} className="text-black fill-black rotate-[-15deg]" />
                         </div>
                     </div>
-                    <Calendar className="w-4 h-4 md:w-8 md:h-8" />
+                    <Calendar className="w-4 h-4 md:w-6 md:h-6" />
                     <span>{activeConfig.event_date}</span>
                   </motion.div>
                   
-                  <motion.div {...dragProps} onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-2xl font-bold font-sans md:whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
+                  <motion.div {...dragProps} onClick={openMap} className="relative group flex items-center gap-2 md:gap-3 text-sm md:text-lg font-bold font-sans md:whitespace-nowrap bg-white/40 backdrop-blur-md text-[#4F46E5] px-4 py-2 rounded-xl border-2 border-black hover:border-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all hover:scale-105 cursor-pointer">
                      <div className="absolute -bottom-6 -right-2 md:-bottom-8 md:-right-6 z-40 animate-sticker-reverse origin-top-left cursor-pointer">
                         <div className="bg-white border-2 border-black px-2 py-0.5 md:px-3 md:py-1 shadow-[3px_3px_0px_rgba(0,0,0,1)] flex items-center gap-1">
                              <Navigation size={12} className="text-brand-pink fill-brand-pink" />
                              <span className="text-[10px] md:text-sm font-fun text-brand-pink tracking-wide leading-none">ABRIR NO GPS</span>
                         </div>
                     </div>
-                    <MapPin className="text-[#4F46E5] group-hover:text-white w-4 h-4 md:w-6 md:h-6 shrink-0" />
+                    <MapPin className="text-[#4F46E5] group-hover:text-white w-4 h-4 md:w-5 md:h-5 shrink-0" />
                     <span className="text-left leading-tight">{activeConfig.event_location}</span>
                   </motion.div>
                 </div>
@@ -325,13 +325,13 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                                      <div className="absolute top-[20%] right-[20%] text-brand-pink animate-bounce"><Star size={24} fill="currentColor" /></div>
                                  </div>
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
-                                     <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
+                                     <h2 className="text-[10vw] md:text-[5rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
                                  </div>
                                  <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
                                     <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png" alt="Camiseta Terracota" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl rotate-2 scale-[1.65]" />
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-2xl text-brand-pink uppercase tracking-wide">Garanta a sua</span></div>
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-xl text-brand-pink uppercase tracking-wide">Garanta a sua</span></div>
                              </div>
                         </motion.div>
                     )}
@@ -343,13 +343,13 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
                                       <div className="absolute top-[15%] left-[10%] text-[#4F46E5] animate-pulse"><Zap size={32} fill="currentColor" /></div>
                                  </div>
                                  <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
-                                     <h2 className="text-[10vw] md:text-[6rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
+                                     <h2 className="text-[10vw] md:text-[5rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
                                  </div>
                                  <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
                                     <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png" alt="Camiseta Verde" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl -rotate-2 scale-[1.65]" />
                                     <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
                                  </div>
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-2xl text-white uppercase tracking-wide">Edição Especial</span></div>
+                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-xl text-white uppercase tracking-wide">Edição Especial</span></div>
                              </div>
                         </motion.div>
                     )}
@@ -364,14 +364,14 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
          </div>
       </div>
 
-      <div className="relative w-full bg-black pt-16 pb-28 md:pb-36 px-4 overflow-visible z-10">
+      <div className="relative w-full bg-black pt-16 pb-28 md:pb-32 px-4 overflow-visible z-10">
         <div className="absolute inset-0 animated-bg-stripes pointer-events-none z-0" />
         <div className="absolute bottom-40 right-[-5%] text-brand-pink/20 animate-float" style={{ animationDelay: '2s', animationDuration: '10s' }}><Zap size={150} fill="currentColor" /></div>
         <div className="absolute top-1/3 right-[10%] text-white/5 animate-spin" style={{ animationDuration: '20s' }}><Sparkles size={80} /></div>
 
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className="mb-10 flex flex-col items-center">
-              <h3 className="text-4xl md:text-7xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)] animate-pulse-scale">{activeConfig.event_guestTitle}</h3>
+              <h3 className="text-4xl md:text-5xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)] animate-pulse-scale">{activeConfig.event_guestTitle}</h3>
               <p className="text-white/60 font-sans text-xs md:text-sm font-bold tracking-[0.2em] uppercase">EM BREVE MAIS CONFIRMADOS</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
@@ -382,7 +382,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
         </div>
 
         <div className="absolute -bottom-6 left-0 right-0 z-50 border-y-4 border-black bg-brand-pink py-3 md:py-6 overflow-hidden rotate-1 scale-105 origin-bottom-left shadow-2xl">
-           <motion.div className="flex whitespace-nowrap font-fun text-2xl md:text-5xl text-black uppercase tracking-wide" animate={{ x: ["0%", "-50%"] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }}>
+           <motion.div className="flex whitespace-nowrap font-fun text-2xl md:text-4xl text-black uppercase tracking-wide" animate={{ x: ["0%", "-50%"] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }}>
               {[...Array(10)].map((_, i) => ( <span key={i} className="mx-6 flex items-center gap-4">{activeConfig.event_marqueeText}</span> ))}
            </motion.div>
         </div>

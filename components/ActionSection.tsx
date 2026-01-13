@@ -37,7 +37,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   };
 
   return (
-    <section id="action-section" className="relative w-full py-24 md:py-32 bg-[#4F46E5] overflow-hidden z-20">
+    <section id="action-section" className="relative w-full py-24 md:py-20 bg-[#4F46E5] overflow-hidden z-20">
       
       <div className="absolute top-0 left-0 right-0 leading-none z-10">
         <svg className="w-full h-16 md:h-24 fill-black" viewBox="0 0 1440 100" preserveAspectRatio="none">
@@ -108,11 +108,11 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         
-        <div className="flex flex-col items-center justify-center mb-12 md:mb-20 text-center">
-             <h2 className="text-[14vw] md:text-8xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
+        <div className="flex flex-col items-center justify-center mb-12 md:mb-16 text-center">
+             <h2 className="text-[14vw] md:text-6xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
              {activeConfig.action_title1}
              <br />
-             <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-7xl block mt-2">{activeConfig.action_title2}</span>
+             <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-5xl block mt-2">{activeConfig.action_title2}</span>
            </h2>
         </div>
 
@@ -128,7 +128,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
+            className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none">
@@ -142,14 +142,14 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
               </div>
 
               <div className="absolute top-0 right-0 p-0 overflow-hidden opacity-10 transition-opacity group-hover:opacity-20">
-                 <Gamepad2 size={100} strokeWidth={0.5} className="md:size-[200px] transform translate-x-4 -translate-y-4 md:translate-x-12 md:-translate-y-12 text-white" />
+                 <Gamepad2 size={100} strokeWidth={0.5} className="md:size-[140px] transform translate-x-4 -translate-y-4 md:translate-x-8 md:-translate-y-8 text-white" />
               </div>
 
               <div className="relative z-10">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
                       <Gamepad2 className="text-black w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-4xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
+                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
                       Games
                       <br/>
                       <span className="text-brand-pink">Umademats</span>
@@ -181,7 +181,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => setShowBlockedModal(true)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
+            className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none">
@@ -197,7 +197,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-black rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 -rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
                       <Shirt className="text-brand-neon w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-4xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
+                  <h3 className="text-xl md:text-3xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
                       Registro
                       <br/>
                       <span className="text-brand-purple">Camisetas</span>
@@ -229,7 +229,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 0.99 }}
             {...dragProps}
-            className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-8 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
+            className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
@@ -251,12 +251,12 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
                       <Book className="text-brand-purple w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-5xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
+                  <h3 className="text-xl md:text-4xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
                       Plano de
                       <br/>
                       <span className="text-brand-neon">Leitura</span>
                   </h3>
-                  <p className="text-white/80 font-sans text-[10px] md:text-lg max-w-md leading-tight md:leading-relaxed font-medium drop-shadow-sm">
+                  <p className="text-white/80 font-sans text-[10px] md:text-sm max-w-md leading-tight md:leading-relaxed font-medium drop-shadow-sm">
                       Acompanhe o devocional diário.
                   </p>
                   
@@ -280,14 +280,14 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
       <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none">
         <motion.div 
-          className="bg-brand-pink py-2 md:py-4 border-y-2 border-black -rotate-1 scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
+          className="bg-brand-pink py-2 md:py-3 border-y-2 border-black -rotate-1 scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1.1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           <motion.div 
-            className="flex whitespace-nowrap items-center font-display uppercase text-lg md:text-3xl text-black italic tracking-tighter"
+            className="flex whitespace-nowrap items-center font-display uppercase text-lg md:text-2xl text-black italic tracking-tighter"
             animate={{ x: ["0%", "-50%"] }}
             transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
             style={{ willChange: 'transform' }}

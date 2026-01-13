@@ -52,27 +52,43 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const checkUser = async () => {
     setIsCheckingProfile(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // AJUSTE DE SEGURANÇA: Substituído getSession() por getUser()
+      // getUser() valida o token no servidor do Supabase, garantindo que a sessão é real e válida.
+      // Isso impede que tokens locais expirados ou inválidos permitam acesso à tela de Capital/Interior.
+      const { data: { user: validatedUser }, error: authError } = await supabase.auth.getUser();
       
-      if (session?.user) {
-        setUser(session.user);
-        // Verificar se já tem perfil na tabela lidera_logins
-        const { data: profileData, error } = await supabase
-          .from('lidera_logins')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+      if (authError || !validatedUser) {
+        // Se não houver usuário validado, limpa qualquer estado residual
+        setUser(null);
+        setProfile(null);
+        setIsAuthenticated(false);
+        return; 
+      }
 
-        if (profileData) {
-          setProfile(profileData);
-          setIsAuthenticated(true);
-        } else {
-          // Não tem perfil, precisa do onboarding
-          setIsAuthenticated(false);
-        }
+      // Se chegou aqui, o usuário está autenticado de fato
+      setUser(validatedUser);
+
+      // Verificar se já tem perfil na tabela lidera_logins
+      const { data: profileData, error } = await supabase
+        .from('lidera_logins')
+        .select('*')
+        .eq('user_id', validatedUser.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setProfile(profileData);
+        setIsAuthenticated(true);
+      } else {
+        // Não tem perfil, precisa do onboarding
+        // Mantém isAuthenticated false para não mostrar o conteúdo principal,
+        // mas como user está setado, cairá no fluxo de Onboarding
+        setIsAuthenticated(false);
       }
     } catch (e) {
       console.error("Erro ao verificar usuário:", e);
+      // Em caso de erro crítico, reseta para evitar tela indevida
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsCheckingProfile(false);
     }
@@ -224,6 +240,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   }
 
   // 2. TELA DE ONBOARDING (APENAS PRIMEIRO ACESSO GOOGLE)
+  // SEGURANÇA: Esta tela só aparece se user existir e validado pelo getUser() acima
   if (user && !profile && !isCheckingProfile) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative">

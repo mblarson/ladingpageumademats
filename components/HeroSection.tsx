@@ -58,6 +58,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   return (
     <section className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
+      {/* DINAMIC STYLE OVERRIDE FOR DESKTOP ONLY */}
+      <style>{`
+        @media (min-width: 768px) {
+          .hero-main-title { 
+            font-size: calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+          .hero-secondary-title { 
+            font-size: calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+          .hero-box-title { 
+            font-size: calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+        }
+        @media (min-width: 1280px) {
+          .hero-main-title { 
+            font-size: calc(9vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+          .hero-secondary-title { 
+            font-size: calc(6.5vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+          .hero-box-title { 
+            font-size: calc(4.5vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; 
+          }
+        }
+      `}</style>
+
       {/* 1. MARQUEE SUPERIOR */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
          <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
@@ -113,7 +139,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
-          {/* CONTAINER PRINCIPAL DE TEXTOS DESKTOP */}
+          {/* CONTAINER PRINCIPAL DE TEXTOS */}
           <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
             
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
@@ -121,8 +147,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               {/* SLIDE 0: UMADEMATS */}
               {currentIndex === 0 && (
                 <div className="flex items-center justify-center w-full" {...dragProps}>
-                  {/* md:text-[8vw] e xl:text-[9vw] - Aumentado proporcionalmente para desktop */}
-                  <h1 className="text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">
+                  <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">
                     UMADE<br />
                     <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
                   </h1>
@@ -132,13 +157,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               {/* SLIDE 1: LIDERA */}
               {currentIndex === 1 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  {/* md:text-[6vw] e xl:text-[6.5vw] - Ajuste de impacto visual */}
-                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
                     LIDERA
                   </h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    {/* md:text-[4vw] e xl:text-[4.5vw] - Ajuste na caixa do subtítulo */}
-                    <h3 className="text-[12vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
+                    <h3 className="hero-box-title text-[12vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
                       UMADEMATS
                     </h3>
                   </div>
@@ -148,11 +171,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               {/* SLIDE 2: GAMES */}
               {currentIndex === 2 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
                     JOGUE AGORA
                   </h2>
                   <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <h3 className="text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
+                    <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
                       "AS AVENTURAS DE PENTECA"
                     </h3>
                   </div>
@@ -162,11 +185,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               {/* SLIDE 3: LEIA A BÍBLIA */}
               {currentIndex === 3 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
                     LEIA A BÍBLIA
                   </h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}>
-                    <h3 className="text-[10vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-white uppercase text-center tracking-tight">
+                    <h3 className="hero-box-title text-[10vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-white uppercase text-center tracking-tight">
                       JUNTO COM A UMADEMATS
                     </h3>
                   </div>

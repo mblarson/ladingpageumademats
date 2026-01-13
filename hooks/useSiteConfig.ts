@@ -18,6 +18,7 @@ export interface SiteConfig {
   hero_button3: string;
   hero_mascotUrl: string;
   hero_showMascot: boolean;
+  hero_desktopFontSizeFactor: number; // NOVO: Controle de escala de fonte para Desktop
 
   // EVENT SECTION
   event_marqueeText: string;
@@ -55,6 +56,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   hero_button3: 'Quem Somos',
   hero_mascotUrl: 'https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png',
   hero_showMascot: true,
+  hero_desktopFontSizeFactor: 1.0, // Valor base original
 
   // EVENT
   event_marqueeText: 'UMADEMATS 2026 • JUBILEU DE OURO •',

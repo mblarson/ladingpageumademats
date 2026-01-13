@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2 } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -587,7 +587,7 @@ const PresenceControl: React.FC = () => {
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-2"><MapPin size={18} className="text-brand-neon" /><h4 className="text-lg font-display uppercase tracking-wide text-white">Totais por Setor</h4></div>
-                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10 shadow-lg"><ColumnLayout accentColor="text-brand-neon" items={SECTORS_LIST.filter(s => (groupedData[selectedMonth].sectors[s] || 0) > 0).map(s => ({ label: `Setor ${s}`, value: groupedData[selectedMonth].sectors[s] }))} /></div>
+                        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-white/10 shadow-lg"><ColumnLayout accentColor="text-brand-neon" items={SECTORS_LIST.filter(s => (groupedData[selectedMonth].sectors[s] || 0) > 0).map(s => ({ label: `Setor ${s}`, value: selectedResp?.sectors?.[s] || groupedData[selectedMonth].sectors[s] }))} /></div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 px-2"><User size={18} className="text-brand-pink" /><h4 className="text-lg font-display uppercase tracking-wide text-white">Registros Individuais</h4></div>
@@ -692,7 +692,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                    )}
                 </AnimatePresence>
             </div>
-            {activeTab === 'builder' && (<div className="mt-8 pt-6 border-t border-white/5"><button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2"><Save size={18} /> Publicar Alterações</button></div>)}
+            
+            {/* BUILDER SIDEBAR CONTROLS */}
+            {activeTab === 'builder' && (
+              <div className="mt-8 pt-6 border-t border-white/5 space-y-6 overflow-y-auto no-scrollbar pb-10">
+                 <div className="px-2">
+                    <h4 className="text-[10px] uppercase font-bold text-white/40 tracking-widest mb-4 flex items-center gap-2">
+                       <Type size={12} /> Tipografia Desktop
+                    </h4>
+                    <div className="space-y-4">
+                       <div className="flex flex-col gap-2">
+                          <div className="flex justify-between items-center">
+                             <span className="text-xs font-bold text-white/60">Tamanho texto 1ª seção</span>
+                             <span className="text-[10px] bg-brand-neon text-black px-2 py-0.5 rounded font-bold">
+                                {Math.round(draftConfig.hero_desktopFontSizeFactor * 100)}%
+                             </span>
+                          </div>
+                          <input 
+                             type="range" 
+                             min="0.8" 
+                             max="1.5" 
+                             step="0.05"
+                             value={draftConfig.hero_desktopFontSizeFactor}
+                             onChange={(e) => setDraftConfig({...draftConfig, hero_desktopFontSizeFactor: parseFloat(e.target.value)})}
+                             className="w-full accent-brand-neon cursor-pointer h-1.5 bg-white/10 rounded-lg appearance-none"
+                          />
+                          <p className="text-[9px] text-white/30 italic">Ajusta apenas os títulos principais no computador.</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2"><Save size={18} /> Publicar Alterações</button>
+              </div>
+            )}
         </aside>
         <main className="flex-1 overflow-y-auto bg-black p-4 md:p-8 custom-scrollbar">
           {activeTab === 'presence' && <PresenceControl />}

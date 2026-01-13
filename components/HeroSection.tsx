@@ -58,8 +58,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   return (
     <section className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
-      {/* ELEMENTOS FIXOS (FORA DA ANIMAÇÃO DE SLIDE) */}
-      
       {/* 1. MARQUEE SUPERIOR */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
          <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
@@ -69,7 +67,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
          </motion.div>
       </div>
 
-      {/* 2. MENU NAVEGAÇÃO - AJUSTE DE ESPAÇAMENTO */}
+      {/* 2. MENU NAVEGAÇÃO */}
       <motion.nav 
         key="main-nav"
         {...(activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: 0, left: -20, right: 20, bottom: 50 } } : {})} 
@@ -77,28 +75,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       >
         <button 
             onClick={() => setIsMenuOpen(true)} 
-            className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95 will-change-transform" 
+            className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" 
             style={{ backgroundColor: activeConfig.hero_accentColor }}
         >
              <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
-             <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-colors group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
-             <div 
-                className="absolute top-0 right-0 w-24 h-full bg-white/20 skew-x-[-20deg] blur-md pointer-events-none group-hover:translate-x-full transition-transform duration-700 will-change-transform" 
-                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }} 
-             />
+             <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
 
-      {/* 3. MASCOTE PENDURADO (SPIDER STYLE) - TAMANHO AMPLIADO PARA DESKTOP E MOBILE */}
+      {/* 3. MASCOTE ARANHA */}
       <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-        <motion.div 
-          className="w-[2px] bg-white/20"
-          animate={{ height: [100, 200, 100] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
         <motion.img 
           src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" 
-          alt="Spider Mascot" 
           className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" 
           animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} 
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} 
@@ -106,24 +95,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         />
       </div>
 
-      {/* 4. MASCOTE DO AVIÃO (CONTÍNUO E INDEPENDENTE) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-[105]">
-        <motion.img 
-          key="plane-mascot-static"
-          src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png" 
-          alt="Mascot" 
-          className="absolute top-[75%] md:top-[75%] w-24 md:w-32 object-contain pointer-events-auto" 
-          initial={{ x: "-20vw", opacity: 1 }} 
-          animate={{ x: ["calc(-20vw - 100px)", "calc(100vw + 200px)"], y: [0, -15, 0] }} 
-          transition={{ 
-            x: { duration: 8, repeat: Infinity, repeatDelay: 1, ease: "linear" }, 
-            y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" } 
-          }} 
-          {...dragFreeProps} 
-        />
-      </div>
-
-      {/* SLIDER ANIMADO (FUNDO + TEXTO) */}
+      {/* SLIDER ANIMADO */}
       <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={currentIndex}
@@ -136,42 +108,67 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           style={{ backgroundColor: getSlideBg(currentIndex) }}
           onClick={() => currentIndex === 1 && onNavigate('lidera')}
         >
+          {/* Grid de Fundo */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
           </div>
 
+          {/* CONTAINER PRINCIPAL DE TEXTOS DESKTOP */}
           <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
             
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
+              
+              {/* SLIDE 0: UMADEMATS */}
               {currentIndex === 0 && (
                 <div className="flex items-center justify-center w-full" {...dragProps}>
-                  <h1 className="text-[42vw] md:text-[7vw] xl:text-[8vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                  {/* md:text-[8vw] e xl:text-[9vw] - Aumentado proporcionalmente para desktop */}
+                  <h1 className="text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">
+                    UMADE<br />
+                    <span style={{ color: activeConfig.hero_accentColor }}>MATS</span>
+                  </h1>
                 </div>
               )}
+
+              {/* SLIDE 1: LIDERA */}
               {currentIndex === 1 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
+                  {/* md:text-[6vw] e xl:text-[6.5vw] - Ajuste de impacto visual */}
+                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                    LIDERA
+                  </h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <h3 className="text-[12vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3>
+                    {/* md:text-[4vw] e xl:text-[4.5vw] - Ajuste na caixa do subtítulo */}
+                    <h3 className="text-[12vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
+                      UMADEMATS
+                    </h3>
                   </div>
                 </div>
               )}
+
+              {/* SLIDE 2: GAMES */}
               {currentIndex === 2 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="text-[22vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
+                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                    JOGUE AGORA
+                  </h2>
                   <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <div className="absolute -top-12 md:-top-16 left-1/2 -translate-x-1/2 w-20 md:w-28 z-20 pointer-events-none">
-                      <img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascoteviao.png" alt="Mini Mascot" className="w-full h-auto drop-shadow-md" />
-                    </div>
-                    <h3 className="text-[11vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3>
+                    <h3 className="text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">
+                      "AS AVENTURAS DE PENTECA"
+                    </h3>
                   </div>
                 </div>
               )}
+
+              {/* SLIDE 3: LEIA A BÍBLIA */}
               {currentIndex === 3 && (
                 <div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                   <h2 className="text-[22vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
+                  <h2 className="text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">
+                    LEIA A BÍBLIA
+                  </h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}>
-                    <h3 className="text-[10vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3>
+                    <h3 className="text-[10vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-white uppercase text-center tracking-tight">
+                      JUNTO COM A UMADEMATS
+                    </h3>
                   </div>
                 </div>
               )}
@@ -187,12 +184,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                 <button onClick={() => setIsMenuOpen(false)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"><X size={32} /></button>
                 <div className="flex flex-col gap-4 w-full max-w-md">
                     {menuItems.map((item, idx) => (
-                        <motion.button key={idx} initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }} onClick={item.action} className="group flex items-center justify-between p-4 rounded-2xl bg-[#1a1a1a] border border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-colors duration-200">
+                        <motion.button key={idx} initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }} onClick={item.action} className="group flex items-center justify-between p-4 rounded-2xl bg-[#1a1a1a] border border-white/10 hover:border-brand-neon hover:bg-brand-neon/10 transition-colors">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black transition-colors"><item.icon size={20} /></div>
-                                <span className="font-display italic text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon transition-colors">{item.label}</span>
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black"><item.icon size={20} /></div>
+                                <span className="font-display italic text-2xl text-white uppercase tracking-wide group-hover:text-brand-neon">{item.label}</span>
                             </div>
-                            <ArrowRight className="text-white/30 group-hover:text-brand-neon group-hover:translate-x-1 transition-all" />
+                            <ArrowRight className="text-white/30 group-hover:text-brand-neon group-hover:translate-x-1" />
                         </motion.button>
                     ))}
                 </div>

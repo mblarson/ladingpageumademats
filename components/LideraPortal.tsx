@@ -33,6 +33,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // Onboarding Form State
   const [tempLocalidade, setTempLocalidade] = useState<'capital' | 'interior' | null>(null);
@@ -52,23 +53,17 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const checkUser = async () => {
     setIsCheckingProfile(true);
     try {
-      // AJUSTE DE SEGURANÇA: Substituído getSession() por getUser()
-      // getUser() valida o token no servidor do Supabase, garantindo que a sessão é real e válida.
-      // Isso impede que tokens locais expirados ou inválidos permitam acesso à tela de Capital/Interior.
       const { data: { user: validatedUser }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !validatedUser) {
-        // Se não houver usuário validado, limpa qualquer estado residual
         setUser(null);
         setProfile(null);
         setIsAuthenticated(false);
         return; 
       }
 
-      // Se chegou aqui, o usuário está autenticado de fato
       setUser(validatedUser);
 
-      // Verificar se já tem perfil na tabela lidera_logins
       const { data: profileData, error } = await supabase
         .from('lidera_logins')
         .select('*')
@@ -79,14 +74,10 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         setProfile(profileData);
         setIsAuthenticated(true);
       } else {
-        // Não tem perfil, precisa do onboarding
-        // Mantém isAuthenticated false para não mostrar o conteúdo principal,
-        // mas como user está setado, cairá no fluxo de Onboarding
         setIsAuthenticated(false);
       }
     } catch (e) {
       console.error("Erro ao verificar usuário:", e);
-      // Em caso de erro crítico, reseta para evitar tela indevida
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -124,17 +115,22 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const handleGoogleLogin = async () => {
-    // Flag fundamental para o App.tsx saber que deve voltar para o Lidera após o redirect
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    
     localStorage.setItem('return_to_lidera', 'true');
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Redireciona para a raiz, o App.tsx cuidará de ler o localStorage e voltar para cá
         redirectTo: window.location.origin
       }
     });
-    if (error) alert("Erro ao conectar com Google: " + error.message);
+    
+    if (error) {
+      alert("Erro ao conectar com Google: " + error.message);
+      setIsLoggingIn(false);
+    }
   };
 
   const handlePasswordLogin = (e: React.FormEvent) => {
@@ -212,13 +208,20 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </p>
           
           <div className="flex flex-col gap-4 w-full max-w-xs">
-            <button 
+            <motion.button 
               onClick={handleGoogleLogin}
-              className="w-full py-5 bg-white text-black font-bold uppercase rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={isLoggingIn}
+              className={`w-full py-5 bg-white text-black font-bold uppercase rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-colors active:bg-gray-100 select-none cursor-pointer ${isLoggingIn ? 'opacity-50 grayscale' : ''}`}
             >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              Login com Google
-            </button>
+              {isLoggingIn ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 pointer-events-none" />
+              )}
+              {isLoggingIn ? 'Conectando...' : 'Login com Google'}
+            </motion.button>
             
             <button 
               onClick={() => setShowLogin(true)} 
@@ -239,8 +242,7 @@ export const LideraPortal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
   }
 
-  // 2. TELA DE ONBOARDING (APENAS PRIMEIRO ACESSO GOOGLE)
-  // SEGURANÇA: Esta tela só aparece se user existir e validado pelo getUser() acima
+  // 2. TELA DE ONBOARDING
   if (user && !profile && !isCheckingProfile) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative">

@@ -373,13 +373,6 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
     else onBack();
   };
 
-  const markMonthAsRead = (monthId: number) => {
-    const month = ANNUAL_PLAN[monthId];
-    const unreadItems = month.items.filter(item => !completedItems.includes(item.id));
-    // Passa também a referência do texto para salvar no banco
-    unreadItems.forEach(item => toggleItemCompletion(item.id, item.ref));
-  };
-
   const openReading = (item: {id: string, ref: string}) => {
     setReadingItem(item);
   };
@@ -513,28 +506,12 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
               <h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{month.name}</h1>
            </div>
            
-           <button 
-             onClick={() => markMonthAsRead(selectedMonthId)}
-             disabled={isAllRead}
-             className={`
-                flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs transition-all shadow-lg
-                ${isAllRead 
-                  ? 'bg-green-500/20 text-green-500 cursor-default border border-green-500/50' 
-                  : 'bg-brand-neon hover:bg-brand-neon/80 text-black border border-transparent'}
-             `}
-           >
-             {isAllRead ? (
-               <>
-                 <CheckCircle2 size={18} />
-                 Mês Concluído
-               </>
-             ) : (
-               <>
-                 <CheckCircle2 size={18} />
-                 Marcar mês como lido
-               </>
-             )}
-           </button>
+           {isAllRead && (
+             <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none">
+                <CheckCircle2 size={18} />
+                Mês Concluído
+             </div>
+           )}
         </div>
 
         <div className="mb-8">

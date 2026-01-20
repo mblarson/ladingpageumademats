@@ -67,21 +67,48 @@ const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
   }))
 }));
 
+// Mapeamento de Livros para API (Português -> Inglês)
+const BIBLE_BOOK_MAP: Record<string, string> = {
+  "Gênesis": "Genesis", "Êxodo": "Exodus", "Levítico": "Leviticus", "Números": "Numbers",
+  "Deuteronômio": "Deuteronomy", "Josué": "Joshua", "Juízes": "Judges", "Rute": "Ruth",
+  "1 Samuel": "1 Samuel", "2 Samuel": "2 Samuel", "1 Reis": "1 Kings", "2 Reis": "2 Kings",
+  "1 Crônicas": "1 Chronicles", "2 Crônicas": "2 Chronicles", "Esdras": "Ezra", "Neemias": "Nehemiah",
+  "Ester": "Esther", "Jó": "Job", "Salmos": "Psalms", "Provérbios": "Proverbs",
+  "Eclesiastes": "Ecclesiastes", "Cantares": "Song of Solomon", "Isaías": "Isaiah",
+  "Jeremias": "Jeremiah", "Lamentações": "Lamentations", "Ezequiel": "Ezekiel", "Daniel": "Daniel",
+  "Oséias": "Hosea", "Joel": "Joel", "Amós": "Amos", "Obadias": "Obadiah", "Jonas": "Jonah",
+  "Miquéias": "Micah", "Naum": "Nahum", "Habacuque": "Habakkuk", "Sofonias": "Zephaniah",
+  "Ageu": "Haggai", "Zacarias": "Zechariah", "Malaquias": "Malachi", "Mateus": "Matthew",
+  "Marcos": "Mark", "Lucas": "Luke", "João": "John", "Atos": "Acts", "Romanos": "Romans",
+  "1 Coríntios": "1 Corinthians", "2 Coríntios": "2 Corinthians", "Gálatas": "Galatians",
+  "Efésios": "Ephesians", "Filipenses": "Philippians", "Colossenses": "Colossians",
+  "1 Tessalonicenses": "1 Thessalonians", "2 Tessalonicenses": "2 Thessalonians",
+  "1 Timóteo": "1 Timothy", "2 Timóteo": "2 Timothy", "Tito": "Titus", "Filemom": "Philemon",
+  "Hebreus": "Hebrews", "Tiago": "James", "1 Pedro": "1 Peter", "2 Pedro": "2 Peter",
+  "1 João": "1 John", "2 João": "2 John", "3 João": "3 John", "Judas": "Jude", "Apocalipse": "Revelation"
+};
+
 interface BibleReadingPageProps {
   onBack: () => void;
   onIntroComplete?: () => void;
 }
 
+interface Verse {
+  book_name: string;
+  chapter: number;
+  verse: number;
+  text: string;
+}
+
 interface BibleTextResponse {
   reference: string;
   text: string;
-  verses: { book_name: string; chapter: number; verse: number; text: string }[];
+  verses: Verse[];
   error?: string;
 }
 
 // --- COMPONENTS ---
 
-// 1. INTRO SCREEN (Loading Divertido)
 const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
     const [progress, setProgress] = useState(0);
     const [messageIndex, setMessageIndex] = useState(0);
@@ -97,9 +124,8 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
     ];
 
     useEffect(() => {
-        // Timer da Barra de Progresso (3 segundos = 3000ms)
         const duration = 3000;
-        const intervalTime = 30; // Atualiza a cada 30ms para suavidade
+        const intervalTime = 30; 
         const steps = duration / intervalTime;
         let currentStep = 0;
 
@@ -110,11 +136,10 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
             if (currentStep >= steps) {
                 clearInterval(progressTimer);
-                setTimeout(onFinish, 500); // Pequeno delay no final antes de desmontar
+                setTimeout(onFinish, 500);
             }
         }, intervalTime);
 
-        // Timer das Mensagens (Troca a cada 800ms)
         const messageTimer = setInterval(() => {
             setMessageIndex(prev => (prev + 1) % funMessages.length);
         }, 800);
@@ -131,14 +156,12 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
             initial={{ opacity: 1 }}
             exit={{ y: "-100%", transition: { duration: 0.8, ease: "easeInOut" } }}
         >
-            {/* Fundo Estilizado */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1a1a1a_0%,#000000_100%)] opacity-80" />
             <div className="absolute inset-0 opacity-10" style={{ 
                 backgroundImage: 'radial-gradient(#4F46E5 2px, transparent 2px)',
                 backgroundSize: '30px 30px'
             }} />
 
-            {/* Mascote Flutuando */}
             <div className="relative z-10 mb-12">
                 <motion.div
                     animate={{ 
@@ -149,25 +172,18 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     className="relative"
                 >
-                     {/* Glow atrás do mascote */}
                      <div className="absolute inset-0 bg-brand-neon/20 blur-3xl rounded-full scale-150 animate-pulse" />
-                     
                      <img 
                         src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
                         alt="Mascote Bíblia"
                         className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(204,255,0,0.3)]"
                      />
-                     
-                     {/* Partículas flutuantes */}
                      <div className="absolute -top-4 -right-4 text-brand-pink animate-bounce"><Star fill="currentColor" /></div>
                      <div className="absolute bottom-4 -left-8 text-brand-purple animate-pulse"><Zap fill="currentColor" size={32} /></div>
                 </motion.div>
             </div>
 
-            {/* Container da Barra e Texto */}
             <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-4">
-                
-                {/* Texto Divertido */}
                 <div className="h-8 flex items-center justify-center">
                     <AnimatePresence mode="wait">
                         <motion.p
@@ -182,11 +198,8 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                     </AnimatePresence>
                 </div>
 
-                {/* Barra de Progresso HQ */}
                 <div className="w-full h-6 md:h-8 bg-[#1a1a1a] border-4 border-white rounded-full overflow-hidden relative shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    {/* Listras de fundo da barra */}
                     <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(45deg, #ffffff 25%, transparent 25%, transparent 50%, #ffffff 50%, #ffffff 75%, transparent 75%, transparent)', backgroundSize: '20px 20px' }} />
-                    
                     <motion.div 
                         className="h-full bg-brand-neon relative"
                         style={{ width: `${progress}%` }}
@@ -194,17 +207,12 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                         <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 shadow-[0_0_10px_white]" />
                     </motion.div>
                 </div>
-
-                <p className="text-white/30 text-xs font-mono font-bold mt-2">
-                    CARREGANDO {Math.round(progress)}%
-                </p>
+                <p className="text-white/30 text-xs font-mono font-bold mt-2">CARREGANDO {Math.round(progress)}%</p>
             </div>
         </motion.div>
     );
 };
 
-
-// Leitor Modal
 const ReadingReader: React.FC<{ 
   item: { id: string; ref: string } | null; 
   onClose: () => void; 
@@ -217,22 +225,87 @@ const ReadingReader: React.FC<{
   useEffect(() => {
     if (!item) return;
 
+    const fetchPart = async (ref: string): Promise<Verse[]> => {
+      const encodedRef = encodeURIComponent(ref);
+      const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro na API (${res.status})`);
+      }
+      const data = await res.json();
+      return data.verses || [];
+    };
+
     const fetchText = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Sanitiza a referência (troca traços longos por curto) e codifica
-        const sanitizedRef = item.ref.replace(/–|—/g, '-');
-        const encodedRef = encodeURIComponent(sanitizedRef);
+        let cleanRef = item.ref.replace(/–|—/g, '-');
+        let bookPt = "";
+        let bookEn = "";
+
+        for (const [pt, en] of Object.entries(BIBLE_BOOK_MAP)) {
+          if (cleanRef.startsWith(pt)) {
+            bookPt = pt;
+            bookEn = en;
+            break;
+          }
+        }
+
+        if (!bookEn) throw new Error("Livro não identificado.");
+
+        // Lógica aprimorada de parser para evitar o erro "too many chapters"
+        // Formatos tratados: "Salmos 1-9", "Salmos 117-119:72", "Gênesis 1-3"
+        const rangeRegex = new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?\\s*(?:-\\s*(\\d+)(?::(\\d+))?)?`);
+        const rangeMatch = cleanRef.match(rangeRegex);
+
+        let finalVerses: Verse[] = [];
+
+        if (rangeMatch) {
+          const startChapter = parseInt(rangeMatch[1]);
+          const startVerse = rangeMatch[2] ? parseInt(rangeMatch[2]) : null;
+          const endChapter = rangeMatch[3] ? parseInt(rangeMatch[3]) : startChapter;
+          const endVerse = rangeMatch[4] ? parseInt(rangeMatch[4]) : null;
+
+          // SEMPRE buscamos capítulo por capítulo se houver um intervalo, 
+          // isso garante que nunca estouraremos o limite de "too many chapters" do backend.
+          for (let ch = startChapter; ch <= endChapter; ch++) {
+            let currentQuery = `${bookEn} ${ch}`;
+            
+            // Caso especial: início em versículo específico no primeiro capítulo do intervalo
+            if (ch === startChapter && startVerse) {
+              if (startChapter === endChapter && endVerse) {
+                // Intervalo de versículos no mesmo capítulo: Genesis 1:1-5
+                currentQuery += `:${startVerse}-${endVerse}`;
+              } else {
+                // Início no meio do capítulo mas continua para outros: Genesis 1:10-FIM
+                currentQuery += `:${startVerse}-999`; // bible-api entende 999 como "até o fim"
+              }
+            } 
+            // Caso especial: fim em versículo específico no último capítulo do intervalo
+            else if (ch === endChapter && endVerse) {
+              currentQuery += `:1-${endVerse}`;
+            }
+
+            try {
+              const part = await fetchPart(currentQuery);
+              finalVerses = [...finalVerses, ...part];
+            } catch (partErr: any) {
+              // Se falhar em um capítulo específico, lançamos o erro
+              throw partErr;
+            }
+          }
+        } else {
+          // Fallback para referências que o Regex não capturou (simples)
+          const apiRef = cleanRef.replace(bookPt, bookEn);
+          finalVerses = await fetchPart(apiRef);
+        }
+
+        if (finalVerses.length === 0) throw new Error("Nenhum versículo encontrado.");
         
-        // Usa API pública (bible-api.com) com tradução Almeida
-        const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida`);
-        
-        if (!res.ok) throw new Error("Não foi possível carregar o texto.");
-        
-        const data = await res.json();
-        setContent(data);
-      } catch (err) {
+        setContent({ reference: item.ref, text: "", verses: finalVerses });
+      } catch (err: any) {
+        console.error("🚨 [Bible API Error]:", err);
         setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
       } finally {
         setLoading(false);
@@ -246,32 +319,15 @@ const ReadingReader: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-       <motion.div 
-         initial={{ opacity: 0 }} 
-         animate={{ opacity: 1 }} 
-         exit={{ opacity: 0 }}
-         onClick={onClose}
-         className="absolute inset-0 bg-black/90 backdrop-blur-md"
-       />
-       
-       <motion.div 
-         initial={{ scale: 0.9, y: 50, opacity: 0 }}
-         animate={{ scale: 1, y: 0, opacity: 1 }}
-         exit={{ scale: 0.9, y: 50, opacity: 0 }}
-         className="relative bg-[#1a1a1a] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden"
-       >
-          {/* Header */}
+       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+       <motion.div initial={{ scale: 0.9, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 50, opacity: 0 }} className="relative bg-[#1a1a1a] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
           <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#151515]">
              <div>
                <h3 className="text-brand-neon font-sans text-xs font-bold uppercase tracking-wider mb-1">Leitura de Hoje</h3>
                <h2 className="text-2xl md:text-3xl font-display uppercase text-white">{item.ref}</h2>
              </div>
-             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
-                <X size={24} />
-             </button>
+             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"><X size={24} /></button>
           </div>
-
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
              {loading ? (
                <div className="flex flex-col items-center justify-center py-20 text-white/30">
@@ -281,8 +337,8 @@ const ReadingReader: React.FC<{
              ) : error ? (
                <div className="flex flex-col items-center justify-center py-20 text-red-400 text-center">
                   <AlertCircle size={40} className="mb-4" />
-                  <p>{error}</p>
-                  <button onClick={onClose} className="mt-4 text-white underline text-sm">Voltar</button>
+                  <p className="font-bold mb-2">{error}</p>
+                  <button onClick={onClose} className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white font-bold uppercase text-[10px] tracking-widest border border-white/10 transition-all">Voltar</button>
                </div>
              ) : (
                <div className="prose prose-invert max-w-none">
@@ -293,40 +349,23 @@ const ReadingReader: React.FC<{
                        {verse.text.endsWith('\n') ? <br/> : ' '}
                     </span>
                   ))}
-                  
-                  {/* Copyright Notice for API */}
-                  <div className="mt-12 text-center text-white/20 text-xs uppercase tracking-widest">
-                     Texto: João Ferreira de Almeida
-                  </div>
+                  <div className="mt-12 text-center text-white/20 text-xs uppercase tracking-widest">Texto: João Ferreira de Almeida</div>
                </div>
              )}
           </div>
-
-          {/* Footer Action */}
           <div className="p-4 border-t border-white/10 bg-[#151515] flex justify-center">
-             <button 
-               onClick={() => { onComplete(item.id, item.ref); onClose(); }}
-               disabled={loading || !!error}
-               className="w-full md:w-auto px-8 py-4 bg-brand-neon hover:bg-brand-neon/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"
-             >
-                <CheckCircle2 size={20} />
-                Concluir Leitura
-             </button>
+             <button onClick={() => { onComplete(item.id, item.ref); onClose(); }} disabled={loading || !!error} className="w-full md:w-auto px-8 py-4 bg-brand-neon hover:bg-brand-neon/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"><CheckCircle2 size={20} /> Concluir Leitura</button>
           </div>
        </motion.div>
     </div>
   );
 };
 
-
-// --- MAIN PAGE ---
 export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIntroComplete }) => {
   const [view, setView] = useState<'months' | 'details'>('months');
   const [selectedMonthId, setSelectedMonthId] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [readingItem, setReadingItem] = useState<{id: string, ref: string} | null>(null);
-  
-  // State para controlar a Intro Screen
   const [showIntro, setShowIntro] = useState(true);
   
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
@@ -352,307 +391,38 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   const handleLogin = async () => {
     localStorage.setItem('return_to_bible', 'true');
     const redirectTo = window.location.origin;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } },
-    });
-    if (error) alert('Erro ao conectar: ' + error.message);
+    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } } });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
+  const handleLogout = async () => { await supabase.auth.signOut(); };
+  const handleMonthSelect = (id: number) => { setSelectedMonthId(id); setView('details'); };
+  const handleBackNavigation = () => { if (view === 'details') setView('months'); else onBack(); };
+  const openReading = (item: {id: string, ref: string}) => setReadingItem(item);
 
-  const handleMonthSelect = (id: number) => {
-    setSelectedMonthId(id);
-    setView('details');
-  };
+  if (showIntro) return <BibleIntro onFinish={() => { setShowIntro(false); if (onIntroComplete) onIntroComplete(); }} />;
 
-  const handleBackNavigation = () => {
-    if (view === 'details') setView('months');
-    else onBack();
-  };
-
-  const openReading = (item: {id: string, ref: string}) => {
-    setReadingItem(item);
-  };
-
-  // --- RENDERERS ---
-
-  const renderMonths = () => (
-    <div className="flex flex-col w-full">
-      <div className="px-4 mb-6">
-        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4">
-           <div className="bg-brand-neon/10 p-3 rounded-full">
-              <BarChart3 className="text-brand-neon" size={24} />
-           </div>
-           <div className="flex-1">
-              <div className="flex justify-between text-xs font-bold uppercase mb-2">
-                 <span className="text-white">Progresso Anual</span>
-                 <span className="text-brand-neon">{totalAnnualProgress}%</span>
-              </div>
-              <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${totalAnnualProgress}%` }}
-                  className="h-full bg-gradient-to-r from-brand-pink to-brand-neon rounded-full"
-                />
-              </div>
-           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 pb-12">
-        {ANNUAL_PLAN.map((month) => {
-          const stats = getMonthStats(month.id);
-          const isComplete = stats.percentage === 100;
-          
-          return (
-            <motion.button
-              key={month.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.02, translateY: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleMonthSelect(month.id)}
-              className={`
-                relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left
-                border transition-all duration-300 group
-                ${isComplete 
-                  ? 'bg-brand-neon/10 border-brand-neon text-white' 
-                  : 'bg-[#1a1a1a] border-white/5 hover:border-white/20 text-gray-300'}
-              `}
-            >
-              {isComplete && (
-                <div className="absolute top-0 right-0 p-3">
-                  <div className="bg-brand-neon rounded-full p-1 shadow-lg">
-                    <Check size={12} className="text-black" strokeWidth={3} />
-                  </div>
-                </div>
-              )}
-              
-              <div>
-                <span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">
-                  Mês {(month.id + 1).toString().padStart(2,'0')}
-                </span>
-                <h3 className={`text-2xl font-display uppercase tracking-wide group-hover:text-brand-neon transition-colors ${isComplete ? 'text-brand-neon' : 'text-white'}`}>
-                  {month.name}
-                </h3>
-              </div>
-
-              <div className="w-full">
-                <div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-70">
-                  <span>Progresso</span>
-                  <span>{stats.percentage}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${stats.percentage}%` }}
-                    className={`h-full rounded-full ${isComplete ? 'bg-brand-neon' : 'bg-brand-pink'}`}
-                  />
-                </div>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      <div className="w-full px-6 py-8 border-t border-white/5 mt-auto flex justify-center">
-         {!showResetConfirm ? (
-           <button 
-             onClick={() => setShowResetConfirm(true)}
-             className="text-white/30 text-xs uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-2"
-           >
-             <Trash2 size={14} />
-             Reiniciar Histórico
-           </button>
-         ) : (
-            <div className="flex flex-col items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl w-full max-w-sm">
-               <div className="flex items-center gap-2 text-red-400">
-                  <AlertCircle size={16} />
-                  <span className="text-sm font-bold">Apagar todo o progresso?</span>
-               </div>
-               <div className="flex gap-3 w-full">
-                 <button 
-                   onClick={() => setShowResetConfirm(false)}
-                   className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-wide text-white"
-                 >
-                   Cancelar
-                 </button>
-                 <button 
-                   onClick={() => { resetProgress(); setShowResetConfirm(false); }}
-                   className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-xs font-bold uppercase tracking-wide text-white shadow-lg"
-                 >
-                   Sim, Apagar
-                 </button>
-               </div>
-            </div>
-         )}
-      </div>
-    </div>
-  );
-
-  const renderReadingsList = () => {
-    const month = ANNUAL_PLAN[selectedMonthId];
-    const stats = getMonthStats(selectedMonthId);
-    const isAllRead = stats.percentage === 100;
-
-    return (
-      <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-           <div>
-              <h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2>
-              <h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{month.name}</h1>
-           </div>
-           
-           {isAllRead && (
-             <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none">
-                <CheckCircle2 size={18} />
-                Mês Concluído
-             </div>
-           )}
-        </div>
-
-        <div className="mb-8">
-            <div className="flex justify-between text-xs text-white/50 mb-1 font-mono">
-                <span>{stats.completed} / {stats.total} leituras</span>
-                <span>{stats.percentage}%</span>
-            </div>
-            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${stats.percentage}%` }}
-                    className="h-full bg-brand-neon"
-                />
-            </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-           {month.items.map((item, index) => {
-             const isRead = isItemComplete(item.id);
-             return (
-               <motion.div
-                 key={item.id}
-                 initial={{ opacity: 0, y: 10 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: index * 0.03 }}
-                 onClick={() => openReading(item)} // OPEN READER
-                 className={`
-                    group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none
-                    ${isRead 
-                      ? 'bg-[#1a1a1a] border-brand-neon/30 opacity-60 hover:opacity-100' 
-                      : 'bg-[#151515] border-white/5 hover:bg-[#202020] hover:border-white/20'}
-                 `}
-               >
-                  <div className="flex items-center gap-4">
-                      {/* Status Icon */}
-                      <div className={`
-                         w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors
-                         ${isRead ? 'bg-brand-neon border-brand-neon' : 'bg-transparent border-white/20 group-hover:border-white/50'}
-                      `}>
-                         {isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}
-                      </div>
-
-                      <span className={`
-                        font-serif text-lg md:text-xl transition-colors
-                        ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}
-                      `}>
-                        {item.ref}
-                      </span>
-                  </div>
-
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-neon text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                      Ler Agora <ChevronRight size={14} />
-                  </div>
-               </motion.div>
-             );
-           })}
-        </div>
-
-        <div className="mt-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-3 text-blue-200">
-             <ShieldCheck className="shrink-0" />
-             <p className="text-xs leading-relaxed">
-                Este sistema apenas organiza o seu progresso. Lembre-se de ler a Bíblia Sagrada em seu momento devocional para edificação espiritual.
-             </p>
-        </div>
-      </div>
-    );
-  };
-
-  // Se a Intro ainda estiver ativa, mostra ela
-  if (showIntro) {
-      return <BibleIntro onFinish={() => {
-          setShowIntro(false);
-          // Adiciona um pequeno delay para garantir que o dashboard apareceu antes de chamar o modal
-          setTimeout(() => {
-              if (onIntroComplete) onIntroComplete();
-          }, 500);
-      }} />;
-  }
-
-  // Conteúdo Principal da Bíblia
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] text-gray-200 flex flex-col font-sans">
-      
-      {/* READER MODAL */}
-      <AnimatePresence>
-        {readingItem && (
-          <ReadingReader 
-            item={readingItem} 
-            onClose={() => setReadingItem(null)} 
-            onComplete={(id, ref) => {
-               if(!isItemComplete(id)) toggleItemCompletion(id, ref);
-            }} 
-          />
-        )}
-      </AnimatePresence>
-
+      <AnimatePresence>{readingItem && <ReadingReader item={readingItem} onClose={() => setReadingItem(null)} onComplete={(id, ref) => { if(!isItemComplete(id)) toggleItemCompletion(id, ref); }} />}</AnimatePresence>
       <header className="sticky top-0 z-40 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5">
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
-            <button 
-              onClick={handleBackNavigation}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors text-white group"
-            >
-              <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
-            </button>
-            
+            <button onClick={handleBackNavigation} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white group"><ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" /></button>
             <div className="flex flex-col justify-center h-full pt-1">
-              <h1 className="font-display italic uppercase text-2xl tracking-tight text-white leading-[0.8]">
-                UMADE<span className="text-brand-neon">MATS</span>
-              </h1>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">
-                Leitura Bíblica 2026
-              </span>
+              <h1 className="font-display italic uppercase text-2xl tracking-tight text-white leading-[0.8]">UMADE<span className="text-brand-neon">MATS</span></h1>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">Leitura Bíblica 2026</span>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
              {!loading && (
-               <>
-                 {user ? (
-                   <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-1.5 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 rounded-full border border-white/10 transition-all group max-w-[200px]">
-                      <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0">
-                         {user.user_metadata.avatar_url ? (
-                           <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
-                         ) : (
-                           <User size={16} className="text-white/70 m-auto mt-2" />
-                         )}
-                      </div>
-                      <div className="flex flex-col items-start overflow-hidden">
-                          <span className="text-[10px] text-white/50 uppercase font-bold tracking-wider leading-none group-hover:text-red-400">Sair de</span>
-                          <span className="text-xs text-white font-bold truncate w-full group-hover:text-red-300">
-                             {user.user_metadata.full_name || user.email?.split('@')[0]}
-                          </span>
-                      </div>
-                   </button>
-                 ) : (
-                   <button onClick={handleLogin} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full hover:bg-gray-100 transition-colors shadow-lg">
-                      <span className="text-xs font-bold font-sans text-gray-700 tracking-wide">Entrar com Google</span>
-                   </button>
-                 )}
-               </>
+               user ? (
+                 <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-1.5 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 rounded-full border border-white/10 transition-all group max-w-[200px]">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shrink-0">{user.user_metadata.avatar_url ? <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" /> : <User size={16} className="text-white/70 m-auto mt-2" />}</div>
+                    <div className="flex flex-col items-start overflow-hidden"><span className="text-[10px] text-white/50 uppercase font-bold tracking-wider leading-none group-hover:text-red-400">Sair de</span><span className="text-xs text-white font-bold truncate w-full group-hover:text-red-300">{user.user_metadata.full_name || user.email?.split('@')[0]}</span></div>
+                 </button>
+               ) : (
+                 <button onClick={handleLogin} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full hover:bg-gray-100 transition-colors shadow-lg"><span className="text-xs font-bold font-sans text-gray-700 tracking-wide">Entrar com Google</span></button>
+               )
              )}
           </div>
         </div>
@@ -660,36 +430,72 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
 
       <main className="flex-1 w-full max-w-6xl mx-auto relative">
         <AnimatePresence mode="wait">
-          {view === 'months' && (
-            <motion.div 
-              key="months"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="w-full"
-            >
+          {view === 'months' ? (
+            <motion.div key="months" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="w-full">
                <div className="px-6 pt-8 pb-4">
                   <h2 className="text-3xl font-display uppercase text-white">Selecione o Mês</h2>
                   <p className="text-white/50 text-sm">Visualize o plano completo de leitura.</p>
                </div>
-               {renderMonths()}
+               <div className="flex flex-col w-full">
+                 <div className="px-4 mb-6">
+                   <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4">
+                      <div className="bg-brand-neon/10 p-3 rounded-full"><BarChart3 className="text-brand-neon" size={24} /></div>
+                      <div className="flex-1">
+                         <div className="flex justify-between text-xs font-bold uppercase mb-2"><span className="text-white">Progresso Anual</span><span className="text-brand-neon">{totalAnnualProgress}%</span></div>
+                         <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${totalAnnualProgress}%` }} className="h-full bg-gradient-to-r from-brand-pink to-brand-neon rounded-full" /></div>
+                      </div>
+                   </div>
+                 </div>
+                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 pb-12">
+                   {ANNUAL_PLAN.map((month) => {
+                     const stats = getMonthStats(month.id);
+                     const isComplete = stats.percentage === 100;
+                     return (
+                       <motion.button key={month.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02, translateY: -2 }} whileTap={{ scale: 0.98 }} onClick={() => handleMonthSelect(month.id)} className={`relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left border transition-all duration-300 group ${isComplete ? 'bg-brand-neon/10 border-brand-neon text-white' : 'bg-[#1a1a1a] border-white/5 hover:border-white/20 text-gray-300'}`}>
+                         {isComplete && <div className="absolute top-0 right-0 p-3"><div className="bg-brand-neon rounded-full p-1 shadow-lg"><Check size={12} className="text-black" strokeWidth={3} /></div></div>}
+                         <div><span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">Mês {(month.id + 1).toString().padStart(2,'0')}</span><h3 className={`text-2xl font-display uppercase tracking-wide group-hover:text-brand-neon transition-colors ${isComplete ? 'text-brand-neon' : 'text-white'}`}>{month.name}</h3></div>
+                         <div className="w-full"><div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-70"><span>Progresso</span><span>{stats.percentage}%</span></div><div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${stats.percentage}%` }} className={`h-full rounded-full ${isComplete ? 'bg-brand-neon' : 'bg-brand-pink'}`} /></div></div>
+                       </motion.button>
+                     );
+                   })}
+                 </div>
+                 <div className="w-full px-6 py-8 border-t border-white/5 mt-auto flex justify-center">
+                    {!showResetConfirm ? (
+                      <button onClick={() => setShowResetConfirm(true)} className="text-white/30 text-xs uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-2"><Trash2 size={14} /> Reiniciar Histórico</button>
+                    ) : (
+                       <div className="flex flex-col items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl w-full max-sm"><div className="flex items-center gap-2 text-red-400"><AlertCircle size={16} /><span className="text-sm font-bold">Apagar todo o progresso?</span></div><div className="flex gap-3 w-full"><button onClick={() => setShowResetConfirm(false)} className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-wide text-white">Cancelar</button><button onClick={() => { resetProgress(); setShowResetConfirm(false); }} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-xs font-bold uppercase tracking-wide text-white shadow-lg">Sim, Apagar</button></div></div>
+                    )}
+                 </div>
+               </div>
             </motion.div>
-          )}
-
-          {view === 'details' && (
-            <motion.div 
-              key="details"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="w-full"
-            >
-               {renderReadingsList()}
+          ) : (
+            <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-full">
+               <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
+                 <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div><h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2><h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{ANNUAL_PLAN[selectedMonthId].name}</h1></div>
+                    {getMonthStats(selectedMonthId).percentage === 100 && <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none"><CheckCircle2 size={18} /> Mês Concluído</div>}
+                 </div>
+                 <div className="mb-8">
+                     <div className="flex justify-between text-xs text-white/50 mb-1 font-mono"><span>{getMonthStats(selectedMonthId).completed} / {getMonthStats(selectedMonthId).total} leituras</span><span>{getMonthStats(selectedMonthId).percentage}%</span></div>
+                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${getMonthStats(selectedMonthId).percentage}%` }} className="h-full bg-brand-neon" /></div>
+                 </div>
+                 <div className="flex flex-col gap-2">
+                    {ANNUAL_PLAN[selectedMonthId].items.map((item, index) => {
+                      const isRead = isItemComplete(item.id);
+                      return (
+                        <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }} onClick={() => openReading(item)} className={`group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none ${isRead ? 'bg-[#1a1a1a] border-brand-neon/30 opacity-60 hover:opacity-100' : 'bg-[#151515] border-white/5 hover:bg-[#202020] hover:border-white/20'}`}>
+                           <div className="flex items-center gap-4"><div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${isRead ? 'bg-brand-neon border-brand-neon' : 'bg-transparent border-white/20 group-hover:border-white/50'}`}>{isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}</div><span className={`font-serif text-lg md:text-xl transition-colors ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}`}>{item.ref}</span></div>
+                           <div className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-neon text-xs font-bold uppercase tracking-wider flex items-center gap-1">Ler Agora <ChevronRight size={14} /></div>
+                        </motion.div>
+                      );
+                    })}
+                 </div>
+                 <div className="mt-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-3 text-blue-200"><ShieldCheck className="shrink-0" /><p className="text-xs leading-relaxed">Este sistema apenas organiza o seu progresso. Lembre-se de ler a Bíblia Sagrada em seu momento devocional para edificação espiritual.</p></div>
+               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
-
     </div>
   );
 };

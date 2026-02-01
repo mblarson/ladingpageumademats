@@ -123,19 +123,21 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
   };
 
   const handleUpdateTask = async (id: string, updates: Partial<OrgTask>) => {
+    setActiveTaskMenu(null);
     try {
-      await supabase.from('org_tasks').update(updates).eq('id', id);
-      setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
-      setActiveTaskMenu(null);
+      const { error } = await supabase.from('org_tasks').update(updates).eq('id', id);
+      if (error) throw error;
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     } catch (e) { console.error(e); }
   };
 
   const handleDeleteTask = async (id: string) => {
-    if (!confirm("Excluir tarefa?")) return;
+    setActiveTaskMenu(null);
+    if (!confirm("Excluir esta tarefa permanentemente?")) return;
     try {
-      await supabase.from('org_tasks').delete().eq('id', id);
-      setTasks(tasks.filter(t => t.id !== id));
-      setActiveTaskMenu(null);
+      const { error } = await supabase.from('org_tasks').delete().eq('id', id);
+      if (error) throw error;
+      setTasks(prev => prev.filter(t => t.id !== id));
     } catch (e) { console.error(e); }
   };
 
@@ -239,31 +241,73 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
                   <div className="space-y-4">
                      <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest flex items-center gap-2"><LayoutGrid size={14} className="text-brand-purple" /> Checklist de Tarefas</h4>
                      <div className="flex gap-2">
-                        <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="Nova tarefa..." className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-zinc-900 focus:border-brand-purple outline-none" />
-                        <button onClick={handleCreateTask} className="bg-zinc-800 text-white p-3 rounded-xl hover:scale-105 transition-all"><Plus size={20} /></button>
+                        <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleCreateTask()} placeholder="Nova tarefa..." className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-zinc-900 focus:border-brand-purple outline-none" />
+                        <button onClick={handleCreateTask} className="bg-zinc-800 text-white p-3 rounded-xl hover:scale-105 transition-all shadow-md"><Plus size={20} /></button>
                      </div>
                      <div className="space-y-2">
                         {tasks.filter(t => t.card_id === selectedCard.id).map(task => (
-                           <div key={task.id} className={`flex flex-col p-4 rounded-xl border-2 transition-all relative ${task.is_completed ? 'border-zinc-100 bg-zinc-50' : 'border-red-500 bg-white'}`}>
+                           <div 
+                            key={task.id} 
+                            onClick={(e) => { e.stopPropagation(); setActiveTaskMenu(activeTaskMenu === task.id ? null : task.id); }}
+                            className={`flex flex-col p-4 rounded-xl border-2 transition-all relative cursor-pointer active:bg-zinc-50 hover:border-zinc-300 ${task.is_completed ? 'border-zinc-100 bg-zinc-50' : 'border-red-500 bg-white'}`}
+                           >
                               <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                  <button onClick={() => handleUpdateTask(task.id, { is_completed: !task.is_completed })} className={`p-1 rounded-full transition-all ${task.is_completed ? 'bg-green-500 text-white' : 'bg-zinc-100 text-zinc-300'}`}>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleUpdateTask(task.id, { is_completed: !task.is_completed }); }} 
+                                    className={`p-1.5 rounded-full transition-all shrink-0 ${task.is_completed ? 'bg-green-500 text-white shadow-sm' : 'bg-zinc-100 text-zinc-300 hover:text-green-500'}`}
+                                  >
                                     {task.is_completed ? <Check size={14} strokeWidth={4} /> : <Circle size={14} />}
                                   </button>
-                                  <span className={`text-sm font-bold ${task.is_completed ? 'text-zinc-400 line-through' : 'text-zinc-800'}`}>{task.title}</span>
+                                  <span className={`text-sm font-bold leading-tight ${task.is_completed ? 'text-zinc-400 line-through' : 'text-zinc-800'}`}>{task.title}</span>
                                 </div>
                                 <div className="flex items-center gap-2 relative">
-                                  {task.needs_attention && <span className="text-[9px] font-black uppercase text-red-500 flex items-center gap-1 mr-2"><AlertCircle size={12} /> Em Atenção</span>}
-                                  <button onClick={(e) => { e.stopPropagation(); setActiveTaskMenu(activeTaskMenu === task.id ? null : task.id); }} className="p-1.5 text-zinc-400 hover:text-zinc-900 transition-colors"><MoreVertical size={18} /></button>
+                                  {task.needs_attention && <span className="text-[9px] font-black uppercase text-red-500 flex items-center gap-1 mr-1 shrink-0 bg-red-50 px-2 py-0.5 rounded-full"><AlertCircle size={10} /> Atenção</span>}
+                                  <MoreVertical size={18} className="text-zinc-400 group-hover:text-zinc-900" />
                                   
-                                  {/* MENU DE AÇÕES DA TAREFA (REQUISITO: EDITAR, EXCLUIR, SOLICITAR ATENÇÃO) */}
+                                  {/* MENU DE AÇÕES DA TAREFA */}
                                   <AnimatePresence>
                                     {activeTaskMenu === task.id && (
-                                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="absolute right-0 top-full mt-2 bg-white border border-zinc-200 rounded-xl shadow-xl z-[150] p-2 w-48 flex flex-col gap-1">
-                                         <button onClick={() => { const n = prompt("Editar tarefa:", task.title); if(n) handleUpdateTask(task.id, { title: n }); }} className="flex items-center gap-2 p-3 hover:bg-zinc-50 rounded-lg text-xs font-bold uppercase tracking-widest text-zinc-600"><Edit2 size={14} /> Editar</button>
-                                         <button onClick={() => handleDeleteTask(task.id)} className="flex items-center gap-2 p-3 hover:bg-red-50 rounded-lg text-xs font-bold uppercase tracking-widest text-red-500"><Trash2 size={14} /> Excluir</button>
+                                      <motion.div 
+                                        initial={{ opacity: 0, scale: 0.95, y: 5 }} 
+                                        animate={{ opacity: 1, scale: 1, y: 0 }} 
+                                        exit={{ opacity: 0, scale: 0.95, y: 5 }} 
+                                        className="absolute right-0 top-full mt-2 bg-white border border-zinc-200 rounded-2xl shadow-2xl z-[150] p-2 w-52 flex flex-col gap-1 overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                         <button 
+                                          onClick={(e) => { 
+                                            e.stopPropagation();
+                                            setActiveTaskMenu(null);
+                                            // Timeout para garantir que o menu fechou antes do prompt abrir e travar o loop de eventos
+                                            setTimeout(() => {
+                                              const n = prompt("Editar título da tarefa:", task.title); 
+                                              if(n && n.trim() !== "") handleUpdateTask(task.id, { title: n.trim() });
+                                            }, 50);
+                                          }} 
+                                          className="flex items-center gap-3 p-3 hover:bg-zinc-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-600 transition-colors text-left"
+                                         >
+                                            <Edit2 size={16} className="text-zinc-400" /> Editar
+                                         </button>
+                                         <button 
+                                          onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            handleDeleteTask(task.id); 
+                                          }} 
+                                          className="flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-colors text-left"
+                                         >
+                                            <Trash2 size={16} className="text-red-400" /> Excluir
+                                         </button>
                                          {!task.is_completed && (
-                                           <button onClick={() => handleUpdateTask(task.id, { needs_attention: !task.needs_attention })} className={`flex items-center gap-2 p-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${task.needs_attention ? 'bg-red-500 text-white shadow-lg' : 'hover:bg-red-50 text-red-500'}`}><AlertCircle size={14} /> {task.needs_attention ? 'Remover Atenção' : 'Solicitar Atenção'}</button>
+                                           <button 
+                                            onClick={(e) => { 
+                                              e.stopPropagation(); 
+                                              handleUpdateTask(task.id, { needs_attention: !task.needs_attention }); 
+                                            }} 
+                                            className={`flex items-center gap-3 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-left ${task.needs_attention ? 'bg-red-500 text-white shadow-lg' : 'hover:bg-red-50 text-red-500'}`}
+                                           >
+                                              <AlertCircle size={16} /> {task.needs_attention ? 'Remover Atenção' : 'Solicitar Atenção'}
+                                           </button>
                                          )}
                                       </motion.div>
                                     )}
@@ -275,11 +319,11 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
                      </div>
                   </div>
 
-                  {/* PARTICIPANTES INDIVIDUAIS (REQUISITO: BOTÃO + E TAGS INDIVIDUAIS) */}
+                  {/* PARTICIPANTES INDIVIDUAIS */}
                   <div className="space-y-4">
                      <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest flex items-center gap-2"><User size={14} className="text-blue-500" /> Participantes</h4>
                      <div className="flex gap-2">
-                        <input type="text" value={newParticipantName} onChange={e => setNewParticipantName(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleCreateParticipant()} placeholder="Nome completo do participante..." className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-zinc-900 focus:border-blue-500 outline-none" />
+                        <input type="text" value={newParticipantName} onChange={e => setNewParticipantName(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleCreateParticipant()} placeholder="Nome do participante..." className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-zinc-900 focus:border-blue-500 outline-none" />
                         <button onClick={handleCreateParticipant} className="bg-blue-500 text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md"><Plus size={20} /></button>
                      </div>
                      <div className="flex flex-wrap gap-2">
@@ -343,7 +387,7 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="relative bg-white border border-zinc-200 p-8 rounded-[2rem] w-full max-w-md shadow-2xl">
                <h3 className="text-xl font-bold uppercase tracking-tight mb-6">Novo Card em <span className="text-brand-purple">{selectedCard.column_id}</span></h3>
                <div className="space-y-4">
-                  <input type="text" value={newCardTitle} onChange={e => setNewCardTitle(e.target.value)} placeholder="Título do card..." autoFocus className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-zinc-900 focus:border-brand-purple outline-none font-bold" />
+                  <input type="text" value={newCardTitle} onChange={e => setNewCardTitle(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleCreateCard(selectedCard.column_id)} placeholder="Título do card..." autoFocus className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-zinc-900 focus:border-brand-purple outline-none font-bold" />
                   <div className="flex gap-3 pt-4">
                     <button onClick={() => setIsModalOpen(false)} className="flex-1 py-4 rounded-xl text-zinc-400 font-black uppercase text-[10px] tracking-widest">Cancelar</button>
                     <button onClick={() => handleCreateCard(selectedCard.column_id)} disabled={isSaving || !newCardTitle} className="flex-1 bg-zinc-800 text-white font-black uppercase py-4 rounded-xl text-[10px] tracking-widest shadow-lg disabled:opacity-30 flex items-center justify-center">{isSaving ? <Loader2 className="animate-spin" /> : 'Criar Card'}</button>

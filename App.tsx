@@ -7,12 +7,13 @@ import { ActionSection } from './components/ActionSection';
 import { BibleReadingPage } from './components/BibleReadingPage';
 import { LideraPortal } from './components/LideraPortal';
 import { AdminDashboard } from './components/AdminDashboard';
+import { OrganizationPortal } from './components/OrganizationPortal';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization';
 
 export default function App() {
   useSiteAnalytics();
@@ -22,18 +23,16 @@ export default function App() {
       try {
         const path = window.location.pathname.replace(/\/$/, '');
         
-        // Redirecionamento legado de camisetas
         if (path === '/pedidoscamisetas') {
             window.location.href = 'https://projeto-camiseta.vercel.app/';
             return 'home';
         }
 
-        // Verificação de rotas por URL
         if (path === '/admin') return 'admin';
+        if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
         
-        // Verificação de persistência após login Social (Google)
         const shouldReturnToBible = localStorage.getItem('return_to_bible');
         if (shouldReturnToBible) {
           localStorage.removeItem('return_to_bible'); 
@@ -46,10 +45,10 @@ export default function App() {
           return 'lidera';
         }
 
-        // Fallback por query params
         const params = new URLSearchParams(window.location.search);
         if (params.get('page') === 'bible') return 'bible';
         if (params.get('page') === 'lidera') return 'lidera';
+        if (params.get('page') === 'organization') return 'organization';
 
       } catch (e) {
         console.warn("Error reading initial route:", e);
@@ -80,14 +79,19 @@ export default function App() {
       home: '/',
       bible: '/biblia',
       admin: '/admin',
-      lidera: '/lideraumademats'
+      lidera: '/lideraumademats',
+      organization: '/admin/organizacao'
     };
     safePushState(paths[page]);
     setCurrentPage(page);
   };
 
   if (currentPage === 'admin') {
-    return <AdminDashboard onBack={() => handleNavigate('home')} />;
+    return <AdminDashboard onBack={() => handleNavigate('home')} onNavigateOrg={() => handleNavigate('organization')} />;
+  }
+
+  if (currentPage === 'organization') {
+    return <OrganizationPortal onBack={() => handleNavigate('admin')} />;
   }
 
   if (currentPage === 'bible') {

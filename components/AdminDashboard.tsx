@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -615,8 +615,8 @@ const PresenceControl: React.FC = () => {
     );
 };
 
-interface AdminDashboardProps { onBack: () => void; }
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
+interface AdminDashboardProps { onBack: () => void; onNavigateOrg?: () => void; }
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNavigateOrg }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
@@ -645,6 +645,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         <h2 className="text-3xl font-display uppercase text-white tracking-widest">Controle Administrativo</h2>
         <div className="flex flex-col gap-3 w-full max-w-sm">
           <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Gestão Umademats</button>
+          <button onClick={() => onNavigateOrg?.()} className="w-full bg-brand-purple border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center flex items-center justify-center gap-3"><LayoutGrid size={24} /> ORGANIZAÇÃO UMADEMATS</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
         <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>

@@ -43,3 +43,28 @@ ALTER TABLE public.organization_project_comments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Acesso público projetos" ON public.organization_projects FOR ALL USING (true);
 CREATE POLICY "Acesso público subtarefas" ON public.organization_project_tasks FOR ALL USING (true);
 CREATE POLICY "Acesso público comentários" ON public.organization_project_comments FOR ALL USING (true);
+
+-- ==========================================================
+-- PEDIDOS DE CAMISETAS - JUBILEU DE OURO
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS public.pedidos_camisetas (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome_completo TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    origem TEXT NOT NULL CHECK (origem IN ('Amigos', 'Instagram')),
+    status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'coletado')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Habilitar RLS
+ALTER TABLE public.pedidos_camisetas ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de Acesso
+CREATE POLICY "Acesso público para inserção" ON public.pedidos_camisetas FOR INSERT WITH CHECK (true);
+CREATE POLICY "Acesso público para leitura e atualização" ON public.pedidos_camisetas FOR ALL USING (true);
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_pedidos_camisetas_status ON public.pedidos_camisetas(status);
+CREATE INDEX IF NOT EXISTS idx_pedidos_camisetas_created_at ON public.pedidos_camisetas(created_at);
+

@@ -150,7 +150,9 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
     { name: "Pr. Elizeu Rodrigues", role: "Preletor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/elizeu.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/elizeurodriguesoficial/" },
     { name: "Lukas Agustinho", role: "Louvor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/lukas.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/lukasagustinho/" },
     { name: "Carol Braga", role: "Louvor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/carol.png", color: "bg-[#4F46E5] text-white", link: "https://www.instagram.com/carolbragabr/" },
-    { name: "Pr. Josué Brandão", role: "Preletor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/prjosuebrandao/" }
+    { name: "Pr. Josué Brandão", role: "Preletor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/josue.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/prjosuebrandao/" },
+    { name: "ATTOS 2 WORSHIP", role: "Louvor", image: "https://raw.githubusercontent.com/mblarson/imagens/main/Portal%20Umademats/attos2.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/attos2worship/" },
+    { name: "GABRIELA LOPES", role: "Preletora", image: "https://raw.githubusercontent.com/mblarson/imagens/main/Portal%20Umademats/gabrielalopessite.png", color: "bg-[#1a1a1a]", link: "https://www.instagram.com/gabrielalopes_oficial/" }
   ];
 
   const addToCalendar = () => {
@@ -376,8 +378,6 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12">
             {guests.map((guest, index) => ( <GuestCard key={index} {...guest} delay={index * 0.2} enableDrag={activeConfig.ui_allowDrag} /> ))}
-            <ComingSoonCard delay={guests.length * 0.2} />
-            <ComingSoonCard delay={(guests.length + 1) * 0.2} />
           </div>
         </div>
 

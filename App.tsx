@@ -8,15 +8,18 @@ import { BibleReadingPage } from './components/BibleReadingPage';
 import { LideraPortal } from './components/LideraPortal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { OrganizationPortal } from './components/OrganizationPortal';
+import { ShirtRequestPage } from './components/ShirtRequestPage';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
-import { X, LogIn, ShieldCheck, Zap, Lock } from 'lucide-react';
+import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request';
 
 export default function App() {
   useSiteAnalytics();
+
+  const [showBanner, setShowBanner] = useState(false);
 
   const [currentPage, setCurrentPage] = useState<PageType>(() => {
     if (typeof window !== 'undefined') {
@@ -28,6 +31,7 @@ export default function App() {
             return 'home';
         }
 
+        if (path === '/pedircamiseta') return 'shirt_request';
         if (path === '/admin') return 'admin';
         if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
@@ -66,6 +70,24 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [currentPage]);
 
+  useEffect(() => {
+    // Mostrar banner apenas na home e uma vez por sessão
+    if (currentPage === 'home') {
+      const hasSeenBanner = sessionStorage.getItem('umademats_shirt_banner_seen');
+      if (!hasSeenBanner) {
+        const timer = setTimeout(() => {
+          setShowBanner(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentPage]);
+
+  const closeBanner = () => {
+    setShowBanner(false);
+    sessionStorage.setItem('umademats_shirt_banner_seen', 'true');
+  };
+
   const safePushState = (path: string) => {
     try { 
       window.history.pushState({}, '', path); 
@@ -80,11 +102,16 @@ export default function App() {
       bible: '/biblia',
       admin: '/admin',
       lidera: '/lideraumademats',
-      organization: '/admin/organizacao'
+      organization: '/admin/organizacao',
+      shirt_request: '/pedircamiseta'
     };
     safePushState(paths[page]);
     setCurrentPage(page);
   };
+
+  if (currentPage === 'shirt_request') {
+    return <ShirtRequestPage onBack={() => handleNavigate('home')} />;
+  }
 
   if (currentPage === 'admin') {
     return <AdminDashboard onBack={() => handleNavigate('home')} onNavigateOrg={() => handleNavigate('organization')} />;
@@ -120,6 +147,54 @@ export default function App() {
       <EventSection />
       <ActionSection onNavigate={handleNavigate} />
       <AboutSection />
+      
+      <AnimatePresence>
+        {showBanner && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={closeBanner}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-[2.5rem] w-full max-w-md text-center shadow-[0_0_50px_rgba(204,255,0,0.2)] overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-brand-neon" />
+              <button 
+                onClick={closeBanner}
+                className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+              
+              <div className="w-16 h-16 bg-brand-neon/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-brand-neon/20">
+                <Zap size={32} className="text-brand-neon" />
+              </div>
+
+              <p className="text-lg md:text-xl font-display uppercase text-white mb-8 leading-tight">
+                Não é da IEADMS e quer pedir a camiseta do Jubileu de Ouro da Umademats? Clique aqui
+              </p>
+
+              <button 
+                onClick={() => {
+                  closeBanner();
+                  handleNavigate('shirt_request');
+                }}
+                className="w-full py-4 bg-brand-neon text-black font-bold uppercase rounded-xl hover:bg-brand-neon/80 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+              >
+                Solicitar Camiseta
+                <ArrowRight size={18} />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2 text-[10px] opacity-30">Desenvolvido para o Reino.</p>

@@ -176,7 +176,7 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
             </button>
             <div>
                <h1 className="text-xl font-bold uppercase tracking-tight text-zinc-800">ORGANIZAÇÃO <span className="text-brand-purple">UMADEMATS</span></h1>
-               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-neon shadow-[0_0_10px_#ccff00]" /><span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Fluxo de Trabalho</span></div>
+               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-neon shadow-[0_0_10px_#ccff00]" /><span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">UMADEMATS</span></div>
             </div>
          </div>
          <button onClick={fetchData} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400"><RefreshCw size={18} className={loading ? 'animate-spin' : ''} /></button>
@@ -324,7 +324,7 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
                      <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest flex items-center gap-2"><User size={14} className="text-blue-500" /> Participantes</h4>
                      <div className="flex gap-2">
                         <input type="text" value={newParticipantName} onChange={e => setNewParticipantName(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleCreateParticipant()} placeholder="Nome do participante..." className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-sm text-zinc-900 focus:border-blue-500 outline-none" />
-                        <button onClick={handleCreateParticipant} className="bg-blue-500 text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md"><Plus size={20} /></button>
+                        <button onClick={handleCreateParticipant} className="bg-blue-500 text-white p-3 rounded-xl h-fit hover:scale-105 active:scale-95 transition-all shadow-md"><Plus size={20} /></button>
                      </div>
                      <div className="flex flex-wrap gap-2">
                         {participants.filter(p => p.card_id === selectedCard.id).map(p => (

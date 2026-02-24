@@ -615,12 +615,123 @@ const PresenceControl: React.FC = () => {
     );
 };
 
+const ShirtRequestsAdmin: React.FC = () => {
+    const [requests, setRequests] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchRequests = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('pedidos_camisetas')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            if (data) setRequests(data);
+        } catch (e) {
+            console.error("Erro ao carregar pedidos:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRequests();
+    }, []);
+
+    const toggleStatus = async (id: string, currentStatus: string) => {
+        const newStatus = currentStatus === 'pendente' ? 'coletado' : 'pendente';
+        try {
+            const { error } = await supabase
+                .from('pedidos_camisetas')
+                .update({ status: newStatus })
+                .eq('id', id);
+            if (error) throw error;
+            setRequests(requests.map(r => r.id === id ? { ...r, status: newStatus } : r));
+        } catch (e) {
+            alert("Erro ao atualizar status.");
+        }
+    };
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-20 opacity-20">
+            <RefreshCw className="animate-spin mb-4" />
+            <span className="uppercase font-bold tracking-widest text-xs">Carregando Pedidos...</span>
+        </div>
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <ClipboardList className="text-brand-neon" />
+                    <h2 className="text-2xl font-display uppercase tracking-wider">Pedidos de Camisetas</h2>
+                </div>
+                <button onClick={fetchRequests} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-brand-neon transition-all">
+                    <RefreshCw size={20} />
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+                {requests.length > 0 ? requests.map((req) => (
+                    <motion.div 
+                        layout
+                        key={req.id} 
+                        className={`bg-[#1a1a1a] p-6 rounded-2xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                            req.status === 'coletado' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-white/5'
+                        }`}
+                    >
+                        <div className="flex flex-col">
+                            <h3 className="text-lg font-bold uppercase tracking-wide text-white">{req.nome_completo}</h3>
+                            <div className="flex items-center gap-3 mt-1">
+                                <span className="text-xs font-mono text-white/40">{req.telefone}</span>
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white/5 text-white/30">
+                                    Origem: {req.origem}
+                                </span>
+                            </div>
+                            <span className="text-[9px] text-white/20 uppercase mt-2">
+                                Solicitado em: {new Date(req.created_at).toLocaleString()}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <a 
+                                href={`https://wa.me/${req.telefone.replace(/\D/g, '')}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="flex-1 md:flex-none bg-green-500/10 text-green-500 border border-green-500/20 px-6 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
+                                <Phone size={14} /> WhatsApp
+                            </a>
+                            <button 
+                                onClick={() => toggleStatus(req.id, req.status)}
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                                    req.status === 'coletado' 
+                                        ? 'bg-green-500 text-white' 
+                                        : 'bg-white/5 text-white/20 hover:bg-white/10 hover:text-white'
+                                }`}
+                                title={req.status === 'coletado' ? "Marcar como Pendente" : "Marcar como Coletado"}
+                            >
+                                <CheckCircle2 size={24} />
+                            </button>
+                        </div>
+                    </motion.div>
+                )) : (
+                    <div className="p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">
+                        Nenhum pedido encontrado.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 interface AdminDashboardProps { onBack: () => void; onNavigateOrg?: () => void; }
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNavigateOrg }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible' | 'lidera'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible' | 'lidera' | 'shirt_requests'>('analytics');
   const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence'>('menu');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -655,6 +766,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
   const TABS = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'bg-white', textColor: 'text-black' },
     { id: 'lidera', label: 'Lidera UMADEMATS', icon: GraduationCap, color: 'bg-brand-neon', textColor: 'text-black' },
+    { id: 'shirt_requests', label: 'Pedidos Camisetas', icon: ClipboardList, color: 'bg-brand-neon', textColor: 'text-black' },
     { id: 'bible', label: 'Leitura Bíblica', icon: BookOpen, color: 'bg-brand-purple', textColor: 'text-white' },
     { id: 'presence', label: 'Presença', icon: List, color: 'bg-brand-pink', textColor: 'text-white' },
     { id: 'keepalive', label: 'Monitor', icon: Activity, color: 'bg-blue-500', textColor: 'text-white' },
@@ -729,6 +841,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
         </aside>
         <main className="flex-1 overflow-y-auto bg-black p-4 md:p-8 custom-scrollbar">
           {activeTab === 'presence' && <PresenceControl />}
+          {activeTab === 'shirt_requests' && <ShirtRequestsAdmin />}
           {activeTab === 'lidera' && <LideraAdmin />}
           {activeTab === 'bible' && <BibleAdmin />}
           {activeTab === 'keepalive' && <KeepaliveAdmin />}

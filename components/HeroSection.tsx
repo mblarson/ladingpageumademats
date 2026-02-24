@@ -19,12 +19,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Lógica de Intervalo do Slider - 5 slides agora
+  // Lógica de Intervalo do Slider - 6 slides agora
   useEffect(() => {
     const initialTimeout = setTimeout(() => {
       setCurrentIndex(1);
       const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % 5);
+        setCurrentIndex((prev) => (prev + 1) % 6);
       }, 4500);
       return () => clearInterval(interval);
     }, 1000);
@@ -53,11 +53,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   const getSlideBg = (index: number) => {
     if (index === 1 || index === 4) return '#000000';
+    if (index === 5) return '#000000';
     return activeConfig.hero_bgColor;
   };
 
   const handleSlideClick = () => {
       if (currentIndex === 1) onNavigate('lidera');
+      if (currentIndex === 5) onNavigate('shirt_request');
   };
 
   return (
@@ -146,36 +148,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                   <div className="absolute inset-0 bg-black/20" />
                 </motion.div>
               )}
+              {currentIndex === 5 && (
+                <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
+                  <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">JUBILEU DE OURO</h2>
+                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                    <h3 className="hero-box-title text-[9vw] md:text-[3vw] xl:text-[3.5vw] leading-none font-fun text-black uppercase tracking-tight text-center">PEÇA SUA CAMISETA</h3>
+                  </div>
+                  <p className="mt-8 text-[10px] md:text-xs uppercase font-bold text-white/40 tracking-[0.3em] text-center max-w-md">
+                    Não é da IEADMS e quer pedir a camiseta da Umademats? Clique no slide
+                  </p>
+                </motion.div>
+              )}
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
-
-      {/* Chamada Camiseta Jubileu */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 z-[120] w-[90%] max-w-md"
-      >
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onNavigate('shirt_request');
-          }}
-          className="w-full bg-black/60 backdrop-blur-md border border-white/10 hover:border-brand-neon p-4 rounded-2xl transition-all group flex items-center justify-between text-left shadow-2xl"
-        >
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase font-bold text-brand-neon tracking-widest mb-1">Jubileu de Ouro</span>
-            <p className="text-[11px] md:text-xs font-bold text-white leading-tight group-hover:text-brand-neon transition-colors">
-              Não é da IEADMS e quer pedir a camiseta do Jubileu de Ouro da Umademats? <span className="underline">Clique aqui</span>
-            </p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-brand-neon/10 flex items-center justify-center group-hover:bg-brand-neon group-hover:text-black transition-all shrink-0 ml-4">
-            <ArrowRight size={14} />
-          </div>
-        </button>
-      </motion.div>
 
       <AnimatePresence>
         {isMenuOpen && (

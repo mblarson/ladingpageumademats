@@ -405,9 +405,21 @@ const CelebrationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-neon to-transparent" />
         
         <div className="overflow-y-auto no-scrollbar flex-1 flex flex-col items-center">
-          <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-4 relative shrink-0">
-            <div className="absolute inset-0 bg-brand-neon rounded-full animate-ping opacity-20" />
-            <Star className="text-black fill-black" size={32} />
+          <div className="mb-4 shrink-0 relative">
+            <motion.img 
+              animate={{ 
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              src="https://raw.githubusercontent.com/mblarson/imagens/main/logo50anosquadrada.png" 
+              alt="Logo 50 Anos" 
+              className="w-20 h-auto mx-auto relative z-10 mix-blend-screen"
+              referrerPolicy="no-referrer"
+            />
           </div>
 
           <h2 className="text-2xl font-display uppercase text-white mb-4 leading-tight shrink-0">

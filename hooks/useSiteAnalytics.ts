@@ -15,7 +15,7 @@ export const useSiteAnalytics = () => {
           // Timeout e try-catch para evitar "Failed to fetch" de travar o app
           const { error } = await supabase.from('site_visits').insert({
             page: window.location.pathname
-          }).timeout(5000);
+          });
           
           if (!error) {
             sessionStorage.setItem('umademats_visited', 'true');

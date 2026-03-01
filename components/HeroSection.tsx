@@ -24,7 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     const initialTimeout = setTimeout(() => {
       setCurrentIndex(1);
       const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % 6);
+        setCurrentIndex((prev) => (prev + 1) % 5);
       }, 4500);
       return () => clearInterval(interval);
     }, 1000);
@@ -59,16 +59,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   const handleSlideClick = () => {
       if (currentIndex === 1) onNavigate('lidera');
-      if (currentIndex === 5) onNavigate('shirt_request');
   };
 
   return (
     <section className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
       <style>{`
         @media (min-width: 768px) {
-          .hero-main-title { font-size: calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; }
-          .hero-secondary-title { font-size: calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; }
-          .hero-box-title { font-size: calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}) !important; }
+          .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }
+          .hero-secondary-title { font-size: clamp(3rem, calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}), 7rem) !important; }
+          .hero-box-title { font-size: clamp(2rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
+        }
+        @media (min-width: 1601px) {
+          .hero-main-title { font-size: 9rem !important; }
+          .hero-secondary-title { font-size: 6.5rem !important; }
+          .hero-box-title { font-size: 4.5rem !important; }
         }
       `}</style>
 
@@ -82,9 +86,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       </div>
 
       {/* Nav Menu */}
-      <motion.nav className="absolute top-[12%] md:top-[10%] left-1/2 -translate-x-1/2 w-[85%] max-w-lg z-[110]">
+      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
         <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
@@ -146,17 +150,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black/20" />
-                </motion.div>
-              )}
-              {currentIndex === 5 && (
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">JUBILEU DE OURO</h2>
-                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                    <h3 className="hero-box-title text-[9vw] md:text-[3vw] xl:text-[3.5vw] leading-none font-fun text-black uppercase tracking-tight text-center">PEÇA SUA CAMISETA</h3>
-                  </div>
-                  <p className="mt-8 text-[10px] md:text-xs uppercase font-bold text-white/40 tracking-[0.3em] text-center max-w-md">
-                    Não é da IEADMS e quer pedir a camiseta da Umademats? Clique no slide
-                  </p>
                 </motion.div>
               )}
             </div>

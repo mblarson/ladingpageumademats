@@ -71,7 +71,7 @@ export const PresenceCounter: React.FC<{ onBack: () => void }> = ({ onBack }) =>
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-black text-white p-4 md:p-8 flex flex-col items-center fluid-container">
       <style>{`
         @media print {
           body * { visibility: hidden; }

@@ -135,15 +135,15 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
   useEffect(() => {
     if (!isInView) return; 
     const timer = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % 3);
+      setSlideIndex((prev) => (prev + 1) % 1);
     }, 6000);
     return () => clearInterval(timer);
   }, [isInView]);
 
   const handleDragEnd = (event: any, info: PanInfo) => {
     const threshold = 50;
-    if (info.offset.x < -threshold) setSlideIndex((prev) => (prev + 1) % 3);
-    else if (info.offset.x > threshold) setSlideIndex((prev) => (prev === 0 ? 2 : prev - 1));
+    if (info.offset.x < -threshold) setSlideIndex((prev) => (prev + 1) % 1);
+    else if (info.offset.x > threshold) setSlideIndex((prev) => (prev === 0 ? 0 : prev - 1));
   };
 
   const guests = [
@@ -207,7 +207,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
   };
 
   return (
-    <section id="event-section" ref={sectionRef} className="relative w-full flex flex-col z-30">
+    <section id="event-section" ref={sectionRef} className="relative w-full flex flex-col z-30 hero-section-container">
       <style>{`
         @keyframes slide-stripes { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
         .animated-bg-stripes { background-image: linear-gradient(45deg, rgba(204,255,0,0.05) 25%, transparent 25%, transparent 50%, rgba(204,255,0,0.05) 50%, rgba(204,255,0,0.05) 75%, transparent 75%, transparent); background-size: 40px 40px; animation: slide-stripes 2s linear infinite; }
@@ -237,7 +237,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
              <div className="absolute inset-0 opacity-[0.05] bg-[repeating-linear-gradient(45deg,#000_0,#000_1px,transparent_0,transparent_50%)] bg-[size:10px_10px]" />
          </div>
 
-         <div className="max-w-5xl mx-auto relative z-10 cursor-grab active:cursor-grabbing">
+         <div className="max-container max-w-5xl mx-auto relative z-10 cursor-grab active:cursor-grabbing">
             <motion.div
                 drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2} onDragEnd={handleDragEnd}
                 animate={{ x: slideIndex === 0 ? 0 : -30, opacity: slideIndex === 0 ? 1 : 0, pointerEvents: slideIndex === 0 ? 'auto' : 'none' }}
@@ -318,43 +318,6 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
 
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                 <AnimatePresence mode="wait">
-                    {slideIndex === 1 && (
-                        <motion.div key="shirt-terracota" drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2} onDragEnd={handleDragEnd} initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -50, opacity: 0 }} transition={{ duration: 0.5 }} className="absolute inset-0 cursor-grab active:cursor-grabbing pointer-events-auto">
-                             <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                 <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
-                                     <div className="absolute w-[50vh] h-[50vh] md:w-[60vh] md:h-[60vh] border-[2px] border-dashed border-[#4F46E5] rounded-full animate-[spin_20s_linear_infinite]" />
-                                     <div className="absolute w-[30vh] h-[30vh] bg-brand-pink/20 blur-3xl rounded-full animate-pulse" />
-                                     <div className="absolute top-[20%] right-[20%] text-brand-pink animate-bounce"><Star size={24} fill="currentColor" /></div>
-                                 </div>
-                                 <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
-                                     <h2 className="text-[10vw] md:text-[5rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
-                                 </div>
-                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
-                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaterracota.png" alt="Camiseta Terracota" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl rotate-2 scale-[1.65]" />
-                                    <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
-                                 </div>
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-white border-2 border-black px-4 py-1.5 -rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-xl text-brand-pink uppercase tracking-wide">Garanta a sua</span></div>
-                             </div>
-                        </motion.div>
-                    )}
-                    {slideIndex === 2 && (
-                        <motion.div key="shirt-green" drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2} onDragEnd={handleDragEnd} initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -50, opacity: 0 }} transition={{ duration: 0.5 }} className="absolute inset-0 cursor-grab active:cursor-grabbing pointer-events-auto">
-                            <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                 <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0">
-                                      <div className="absolute w-[80vh] h-[80vh] animate-[spin_30s_linear_infinite]" style={{ background: 'repeating-conic-gradient(from 0deg, rgba(79, 70, 229, 0.05) 0deg 10deg, transparent 10deg 20deg)' }} />
-                                      <div className="absolute top-[15%] left-[10%] text-[#4F46E5] animate-pulse"><Zap size={32} fill="currentColor" /></div>
-                                 </div>
-                                 <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-2 md:pt-4 z-20 pointer-events-none">
-                                     <h2 className="text-[10vw] md:text-[5rem] leading-[0.8] font-fun text-[#4F46E5] opacity-80 mix-blend-multiply transform -rotate-2 text-center whitespace-nowrap drop-shadow-sm uppercase">CAMISETA CONGRESSO</h2>
-                                 </div>
-                                 <div className="relative z-10 w-full flex items-center justify-center h-full translate-y-[8%] md:translate-y-[6%]">
-                                    <img src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetaverde.png" alt="Camiseta Verde" className="h-[90vh] md:h-[115vh] w-auto object-contain drop-shadow-2xl -rotate-2 scale-[1.65]" />
-                                    <div className="absolute bottom-[10%] w-[60%] h-[20px] bg-black/20 blur-xl rounded-[100%]" />
-                                 </div>
-                                 <div className="absolute bottom-[12%] md:bottom-[5%] left-1/2 -translate-x-1/2 bg-brand-pink border-2 border-black px-4 py-1.5 rotate-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] z-30 whitespace-nowrap"><span className="font-display text-sm md:text-xl text-white uppercase tracking-wide">Edição Especial</span></div>
-                             </div>
-                        </motion.div>
-                    )}
                 </AnimatePresence>
             </div>
          </div>
@@ -371,7 +334,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
         <div className="absolute bottom-40 right-[-5%] text-brand-pink/20 animate-float" style={{ animationDelay: '2s', animationDuration: '10s' }}><Zap size={150} fill="currentColor" /></div>
         <div className="absolute top-1/3 right-[10%] text-white/5 animate-spin" style={{ animationDuration: '20s' }}><Sparkles size={80} /></div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-container max-w-5xl mx-auto relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className="mb-10 flex flex-col items-center">
               <h3 className="text-4xl md:text-5xl font-display uppercase italic font-black text-brand-neon leading-none mb-2 z-10 relative drop-shadow-[0_0_15px_rgba(204,255,0,0.5)] animate-pulse-scale">{activeConfig.event_guestTitle}</h3>
               <p className="text-white/60 font-sans text-xs md:text-sm font-bold tracking-[0.2em] uppercase">EM BREVE MAIS CONFIRMADOS</p>

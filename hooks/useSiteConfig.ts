@@ -38,6 +38,9 @@ export interface SiteConfig {
   about_title: string; // "QUEM SOMOS"
   about_text: string;
   about_bannerUrl: string;
+
+  // BIBLE CAMPAIGN
+  bible_campaign_active: boolean;
 }
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
@@ -76,6 +79,9 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   about_title: 'QUEM SOMOS',
   about_text: 'Igreja com visão para o século XXI, dedicada a apresentar Deus ao mundo, cumprir o evangelho de Cristo, incentivar a faith e fortalecer uma comunidade vitoriosa sustentada pela promessa de que as portas do inferno não prevalecerão. Estamos em Campo Grande - MS no endereço Av. Dr. João Rosa Píres, 482 - Amambai.',
   about_bannerUrl: 'https://raw.githubusercontent.com/mblarson/imagens/main/ieadms.png',
+
+  // BIBLE CAMPAIGN
+  bible_campaign_active: false,
 };
 
 export const useSiteConfig = () => {

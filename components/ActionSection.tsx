@@ -106,7 +106,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
         />
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 relative z-10">
+      <div className="max-container max-w-6xl mx-auto px-4 relative z-10">
         
         <div className="flex flex-col items-center justify-center mb-12 md:mb-16 text-center">
              <h2 className="text-[14vw] md:text-6xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
@@ -128,7 +128,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
+            className="col-span-2 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none">
@@ -145,7 +145,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                  <Gamepad2 size={100} strokeWidth={0.5} className="md:size-[140px] transform translate-x-4 -translate-y-4 md:translate-x-8 md:-translate-y-8 text-white" />
               </div>
 
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-col justify-center h-full max-w-[60%]">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
                       <Gamepad2 className="text-black w-4 h-4 md:w-6 md:h-6" />
                   </div>
@@ -154,66 +154,17 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                       <br/>
                       <span className="text-brand-pink">Umademats</span>
                   </h3>
-                  <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-md">
+                  <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed drop-shadow-md">
                       Participe das competições e divirta-se.
                   </p>
               </div>
 
-              <div className="relative z-10 flex items-center justify-between mt-4 border-t border-white/20 pt-4">
-                  <span className="text-white font-bold font-sans tracking-widest text-[8px] md:text-xs drop-shadow-md">ENTRAR</span>
+              <div className="relative z-10 h-full flex items-end pb-2">
                   <motion.div 
                     animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
-                    className="bg-brand-pink p-1.5 md:p-3 rounded-full text-white shadow-lg"
+                    className="bg-brand-pink p-2 md:p-4 rounded-full text-white shadow-lg"
                   >
-                      <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
-                  </motion.div>
-              </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: 0.2 }}
-            onMouseEnter={() => setHoveredCard('shirt')}
-            onMouseLeave={() => setHoveredCard(null)}
-            // AÇÃO ALTERADA: Bloqueio via Modal
-            onClick={() => setShowBlockedModal(true)}
-            whileHover={{ scale: 0.98 }}
-            {...dragProps}
-            className="relative bg-brand-neon rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[3/4] md:aspect-[4/3] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-transparent hover:border-white transition-all"
-            style={{ willChange: 'transform' }}
-          >
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                 <img 
-                   src="https://raw.githubusercontent.com/mblarson/imagens/main/camisetapedido.png" 
-                   alt="Camiseta Pedido"
-                   className="w-full h-full object-cover opacity-50 mix-blend-multiply transition-transform duration-700 ease-out group-hover:scale-105"
-                   loading="lazy"
-                 />
-              </div>
-
-              <div className="relative z-10">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-black rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 -rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                      <Shirt className="text-brand-neon w-4 h-4 md:w-6 md:h-6" />
-                  </div>
-                  <h3 className="text-xl md:text-3xl font-display uppercase text-black mb-1 md:mb-2 leading-[0.9]">
-                      Registro
-                      <br/>
-                      <span className="text-brand-purple">Camisetas</span>
-                  </h3>
-                  <p className="text-black/70 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed font-medium line-clamp-2 md:line-clamp-none">
-                      Garanta sua camiseta oficial.
-                  </p>
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between mt-4 border-t border-black/10 pt-4">
-                  <span className="text-black font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">PEDIR</span>
-                  <motion.div 
-                    animate={{ x: hoveredCard === 'shirt' ? 5 : 0 }}
-                    className="bg-black p-1.5 md:p-3 rounded-full text-brand-neon shadow-lg"
-                  >
-                      <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                      <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
                   </motion.div>
               </div>
           </motion.div>

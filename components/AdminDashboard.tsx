@@ -16,6 +16,7 @@ const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "
 
 // --- BIBLE ADMIN COMPONENT ---
 const BibleAdmin: React.FC = () => {
+    const { config, saveConfig } = useSiteConfig();
     const [progressData, setProgressData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showReadersModal, setShowReadersModal] = useState(false);
@@ -39,6 +40,13 @@ const BibleAdmin: React.FC = () => {
         };
         fetchProgress();
     }, []);
+
+    const handleToggleCampaign = () => {
+        saveConfig({
+            ...config,
+            bible_campaign_active: !config.bible_campaign_active
+        });
+    };
 
     const userStats = useMemo(() => {
         const stats: Record<string, { count: number, lastActivity: string }> = {};
@@ -79,10 +87,32 @@ const BibleAdmin: React.FC = () => {
     );
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-8">
-                <BookOpen className="text-brand-purple" />
-                <h2 className="text-2xl font-display uppercase tracking-wider">Engajamento na Leitura</h2>
+        <div className="space-y-6 fluid-container">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <BookOpen className="text-brand-purple" />
+                    <h2 className="text-2xl font-display uppercase tracking-wider">Engajamento na Leitura</h2>
+                </div>
+
+                {/* Toggle Campanha de Premiação */}
+                <div className="flex items-center gap-4 bg-[#1a1a1a] border border-white/10 px-6 py-3 rounded-2xl shadow-lg">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase text-white/30 tracking-widest leading-none mb-1">Campanha</span>
+                        <span className="text-xs font-bold uppercase text-white tracking-wider">Conceder Premiação</span>
+                    </div>
+                    <button 
+                        onClick={handleToggleCampaign}
+                        className={`w-14 h-7 rounded-full relative p-1 transition-all duration-300 ${config.bible_campaign_active ? 'bg-brand-neon shadow-[0_0_15px_rgba(204,255,0,0.3)]' : 'bg-white/10'}`}
+                    >
+                        <motion.div 
+                            animate={{ x: config.bible_campaign_active ? 28 : 0 }}
+                            className={`w-5 h-5 rounded-full shadow-md transition-colors ${config.bible_campaign_active ? 'bg-black' : 'bg-white/40'}`}
+                        />
+                    </button>
+                    <span className={`text-[10px] font-black uppercase tracking-tighter w-8 ${config.bible_campaign_active ? 'text-brand-neon' : 'text-white/20'}`}>
+                        {config.bible_campaign_active ? 'ON' : 'OFF'}
+                    </span>
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5">
@@ -178,7 +208,7 @@ const BibleAdmin: React.FC = () => {
 const KeepaliveAdmin: React.FC = () => {
     const { logs, isPinging, triggerKeepalive, timeToNextPing, autoPingEnabled, setAutoPingEnabled } = useKeepalive();
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 fluid-container">
             <div className="flex items-center gap-3 mb-8"><Activity className="text-blue-500" /><h2 className="text-2xl font-display uppercase tracking-wider">Monitor do Banco (Keepalive)</h2></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-[#1a1a1a] border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-lg">
@@ -329,7 +359,7 @@ const LideraAdmin: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 fluid-container">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                     <GraduationCap className="text-brand-neon" />
@@ -568,7 +598,7 @@ const PresenceControl: React.FC = () => {
     if (loading) return <div className="p-10 text-center uppercase tracking-widest opacity-20">Carregando Auditoria...</div>;
     const months = Object.keys(groupedData);
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 fluid-container">
             <div className="flex items-center gap-3 mb-4"><PieChart className="text-brand-neon" /><h2 className="text-2xl font-display uppercase tracking-wider">Controle de Presença</h2></div>
             {selectedResp ? (
                 <div className="bg-[#1a1a1a] border-2 border-brand-pink p-8 rounded-3xl shadow-xl">
@@ -699,7 +729,7 @@ const ShirtRequestsAdmin: React.FC = () => {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 fluid-container">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                     <ClipboardList className="text-brand-neon" />

@@ -62,6 +62,14 @@
       }
       body {
         overflow-x: hidden;
+        width: 100%;
+        position: relative;
+      }
+      /* Prevent fonts from growing too much on ultra-wide screens */
+      @media (min-width: 1601px) {
+        body {
+          font-size: 18px;
+        }
       }
     </style>
   <script type="importmap">

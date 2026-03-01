@@ -1,0 +1,80 @@
+
+/* Global Responsive Constraints */
+/* Smartphones (≤ 600px) - UNTOUCHED as per requirement */
+
+@media (min-width: 601px) {
+  :root {
+    /* Fluid scale but with strict upper limits to prevent "fonts too big" */
+    --fluid-h1: clamp(2.5rem, 8vw, 6.5rem);
+    --fluid-h2: clamp(2rem, 6vw, 4.5rem);
+    --fluid-h3: clamp(1.5rem, 4vw, 3rem);
+    --fluid-p: clamp(0.9rem, 1.1vw, 1.1rem);
+  }
+
+  /* Container constraints to prevent excessive stretching on ultra-wide screens */
+  .max-container {
+    width: 100%;
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  /* Limit button scaling */
+  button {
+    max-width: 100%;
+  }
+}
+
+/* Specific Breakpoint: Tablets (601px - 900px) */
+@media (min-width: 601px) and (max-width: 900px) {
+  html { font-size: 14px; }
+  .hero-nav-menu { max-width: 400px !important; }
+}
+
+/* Specific Breakpoint: Notebooks (901px - 1280px) */
+@media (min-width: 901px) and (max-width: 1280px) {
+  html { font-size: 16px; }
+  .hero-nav-menu { max-width: 450px !important; }
+}
+
+/* Specific Breakpoint: Large Monitors (1281px - 1600px) */
+@media (min-width: 1281px) and (max-width: 1600px) {
+  html { font-size: 17px; }
+  .hero-nav-menu { max-width: 500px !important; }
+}
+
+/* Specific Breakpoint: Projectors / Ultra Large (≥ 1601px) */
+@media (min-width: 1601px) {
+  html { font-size: 18px; }
+  .max-container { max-width: 1600px; }
+  .hero-nav-menu { max-width: 550px !important; }
+}
+
+/* Landscape Mode Adjustments */
+@media (orientation: landscape) {
+  /* Prevent Hero menu from overlapping content in short landscape screens */
+  @media (max-height: 700px) {
+    .hero-nav-menu {
+      top: 15% !important;
+    }
+    .hero-section-container {
+      min-height: 120vh;
+    }
+  }
+}
+
+/* Prevent overflow globally */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Utility to prevent text from growing too much */
+.text-limit {
+  max-width: 80ch;
+  margin-left: auto;
+  margin-right: auto;
+}

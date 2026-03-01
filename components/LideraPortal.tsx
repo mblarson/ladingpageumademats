@@ -40,17 +40,17 @@ export const LideraPortal: React.FC<LideraPortalProps> = ({ onBack }) => {
         </motion.div>
         
         {/* Título da Marca */}
-        <h1 className="text-4xl md:text-6xl font-display uppercase text-white leading-none mb-6 tracking-tighter">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-display uppercase text-white leading-none mb-6 tracking-tighter">
           LIDERA <br /> <span className="text-brand-neon">UMADEMATS</span>
         </h1>
         
         {/* MENSAGEM PRINCIPAL (SOLICITADA) */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 md:p-10 rounded-[2rem] shadow-2xl relative overflow-hidden">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 md:p-10 lg:p-12 rounded-[2rem] shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
-            <h2 className="text-3xl md:text-5xl font-display uppercase text-white leading-[1.1] mb-2 tracking-tight">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-display uppercase text-white leading-[1.1] mb-2 tracking-tight">
                 SEGURA MAIS <br className="hidden md:block" /> UM POUCO.
             </h2>
-            <p className="text-brand-neon font-fun text-xl md:text-3xl uppercase tracking-wider">
+            <p className="text-brand-neon font-fun text-xl md:text-3xl lg:text-4xl uppercase tracking-wider">
                 EM BREVE LANÇAREMOS
             </p>
         </div>

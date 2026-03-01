@@ -1,8 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star, Camera, Share2 } from 'lucide-react';
 import { useReadingProgress } from '../hooks/useReadingProgress';
+import { useSiteConfig } from '../hooks/useSiteConfig';
 import { supabase } from '../lib/supabaseClient';
 
 // --- DADOS FIXOS DO PLANO DE LEITURA ---
@@ -361,14 +363,99 @@ const ReadingReader: React.FC<{
   );
 };
 
+// --- CELEBRATION MODAL COMPONENT ---
+const CelebrationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  useEffect(() => {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 300 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }} 
+        onClick={onClose}
+        className="absolute inset-0 bg-black/90 backdrop-blur-xl" 
+      />
+      <motion.div 
+        initial={{ scale: 0.8, y: 100, opacity: 0 }} 
+        animate={{ scale: 1, y: 0, opacity: 1 }} 
+        exit={{ scale: 0.8, y: 100, opacity: 0 }} 
+        className="relative bg-gradient-to-b from-[#1a1a1a] to-black border-2 border-brand-neon/30 w-full max-w-sm rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(204,255,0,0.2)] p-6 text-center max-h-[90vh] flex flex-col"
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-neon to-transparent" />
+        
+        <div className="overflow-y-auto no-scrollbar flex-1 flex flex-col items-center">
+          <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-4 relative shrink-0">
+            <div className="absolute inset-0 bg-brand-neon rounded-full animate-ping opacity-20" />
+            <Star className="text-black fill-black" size={32} />
+          </div>
+
+          <h2 className="text-2xl font-display uppercase text-white mb-4 leading-tight shrink-0">
+            Parabéns!
+          </h2>
+          
+          <div className="space-y-4 mb-6">
+            <p className="text-white/80 text-base leading-relaxed font-medium">
+              Você tem se demonstrado dedicado à Palavra de Deus.
+            </p>
+            <p className="text-brand-neon text-lg font-bold uppercase tracking-wide">
+              Reconhecendo esse comprometimento, a Umademats te dará um brinde SURPRESA.
+            </p>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex items-center gap-3 text-left">
+              <div className="w-8 h-8 rounded-full bg-brand-pink/20 flex items-center justify-center shrink-0">
+                <Camera className="text-brand-pink" size={16} />
+              </div>
+              <p className="text-white/60 text-[11px] italic leading-tight">
+                Tire um print dessa tela e poste nos stories marcando <span className="text-white font-bold not-italic">@umademats</span>!
+              </p>
+            </div>
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-bold">
+              Deus te abençoe.
+            </p>
+          </div>
+        </div>
+
+        <button 
+          onClick={onClose}
+          className="w-full bg-brand-neon text-black font-black uppercase py-4 rounded-2xl hover:bg-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 group shrink-0 mt-2"
+        >
+          Continuar Lendo <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+        </button>
+      </motion.div>
+    </div>
+  );
+};
+
 export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIntroComplete }) => {
   const [view, setView] = useState<'months' | 'details'>('months');
   const [selectedMonthId, setSelectedMonthId] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [readingItem, setReadingItem] = useState<{id: string, ref: string} | null>(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
   
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
+  const { config } = useSiteConfig();
 
   const getMonthStats = (monthId: number) => {
     const month = ANNUAL_PLAN[monthId];
@@ -399,11 +486,31 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   const handleBackNavigation = () => { if (view === 'details') setView('months'); else onBack(); };
   const openReading = (item: {id: string, ref: string}) => setReadingItem(item);
 
+  const handleCompleteReading = (id: string, ref: string) => {
+    if (!isItemComplete(id)) {
+      toggleItemCompletion(id, ref);
+      if (config.bible_campaign_active) {
+        setShowCelebration(true);
+      }
+    }
+  };
+
   if (showIntro) return <BibleIntro onFinish={() => { setShowIntro(false); if (onIntroComplete) onIntroComplete(); }} />;
 
   return (
     <div className="min-h-screen w-full bg-[#0f0f0f] text-gray-200 flex flex-col font-sans">
-      <AnimatePresence>{readingItem && <ReadingReader item={readingItem} onClose={() => setReadingItem(null)} onComplete={(id, ref) => { if(!isItemComplete(id)) toggleItemCompletion(id, ref); }} />}</AnimatePresence>
+      <AnimatePresence>
+        {readingItem && (
+          <ReadingReader 
+            item={readingItem} 
+            onClose={() => setReadingItem(null)} 
+            onComplete={handleCompleteReading} 
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showCelebration && <CelebrationModal onClose={() => setShowCelebration(false)} />}
+      </AnimatePresence>
       <header className="sticky top-0 z-40 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5">
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
@@ -428,7 +535,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto relative">
+      <main className="flex-1 w-full fluid-container relative">
         <AnimatePresence mode="wait">
           {view === 'months' ? (
             <motion.div key="months" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="w-full">

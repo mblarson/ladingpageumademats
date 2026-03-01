@@ -97,7 +97,7 @@ export const ShirtRequestPage: React.FC<ShirtRequestPageProps> = ({ onBack }) =>
 
   return (
     <div className="min-h-screen bg-brand-dark text-white font-sans selection:bg-brand-neon selection:text-black">
-      <div className="max-w-xl mx-auto px-6 py-12 md:py-20">
+      <div className="fluid-container py-12 md:py-20 lg:py-32 max-w-2xl">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 text-white/40 hover:text-white transition-colors uppercase font-bold text-xs tracking-widest mb-10 group"
@@ -107,11 +107,11 @@ export const ShirtRequestPage: React.FC<ShirtRequestPageProps> = ({ onBack }) =>
         </button>
 
         <div className="mb-12">
-          <h1 className="text-5xl md:text-6xl font-display uppercase leading-[0.85] tracking-tighter mb-4">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-display uppercase leading-[0.85] tracking-tighter mb-4">
             Peça sua <br />
             <span className="text-brand-neon">Camiseta</span>
           </h1>
-          <p className="text-white/40 uppercase font-bold text-xs tracking-[0.2em]">Jubileu de Ouro • Umademats 2026</p>
+          <p className="text-white/40 uppercase font-bold text-xs md:text-sm tracking-[0.2em]">Jubileu de Ouro • Umademats 2026</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

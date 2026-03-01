@@ -170,16 +170,18 @@ export const OrganizationPortal: React.FC<{ onBack: () => void }> = ({ onBack })
   return (
     <div className="min-h-screen bg-[#f8fafc] text-zinc-900 flex flex-col font-sans overflow-hidden relative">
       <header className="sticky top-0 z-50 bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between min-w-full shadow-sm">
-         <div className="flex items-center gap-6">
-            <button onClick={onBack} className="p-2 rounded-full hover:bg-zinc-100 transition-colors">
-              <ArrowLeft size={20} className="text-zinc-500" />
-            </button>
-            <div>
-               <h1 className="text-xl font-bold uppercase tracking-tight text-zinc-800">ORGANIZAÇÃO <span className="text-brand-purple">UMADEMATS</span></h1>
-               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-neon shadow-[0_0_10px_#ccff00]" /><span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">UMADEMATS</span></div>
+         <div className="fluid-container flex items-center justify-between py-0 w-full">
+            <div className="flex items-center gap-6">
+                <button onClick={onBack} className="p-2 rounded-full hover:bg-zinc-100 transition-colors">
+                <ArrowLeft size={20} className="text-zinc-500" />
+                </button>
+                <div>
+                <h1 className="text-xl font-bold uppercase tracking-tight text-zinc-800">ORGANIZAÇÃO <span className="text-brand-purple">UMADEMATS</span></h1>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-neon shadow-[0_0_10px_#ccff00]" /><span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">UMADEMATS</span></div>
+                </div>
             </div>
+            <button onClick={fetchData} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400"><RefreshCw size={18} className={loading ? 'animate-spin' : ''} /></button>
          </div>
-         <button onClick={fetchData} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400"><RefreshCw size={18} className={loading ? 'animate-spin' : ''} /></button>
       </header>
 
       <main className="flex-1 p-6 flex flex-col md:flex-row gap-4 h-[calc(100vh-80px)] overflow-x-auto custom-scrollbar">

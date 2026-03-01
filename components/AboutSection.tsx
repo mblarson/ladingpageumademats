@@ -135,7 +135,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
         </svg>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
+      <div className="max-container max-w-7xl mx-auto px-4 relative z-10">
         
         {/* Section Header */}
         <div className="flex flex-col items-center mb-8 md:mb-12 relative">

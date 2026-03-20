@@ -207,7 +207,7 @@ export const EventSection: React.FC<EventSectionProps> = ({ previewConfig }) => 
   };
 
   return (
-    <section id="event-section" ref={sectionRef} className="relative w-full flex flex-col z-30 hero-section-container">
+    <section ref={sectionRef} className="relative w-full flex flex-col z-30 hero-section-container">
       <style>{`
         @keyframes slide-stripes { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
         .animated-bg-stripes { background-image: linear-gradient(45deg, rgba(204,255,0,0.05) 25%, transparent 25%, transparent 50%, rgba(204,255,0,0.05) 50%, rgba(204,255,0,0.05) 75%, transparent 75%, transparent); background-size: 40px 40px; animation: slide-stripes 2s linear infinite; }

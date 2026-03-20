@@ -146,6 +146,7 @@ export default function App() {
       {tourUser && (
         <WelcomeExperience 
           name={tourUser} 
+          customImage={tourUser === 'Sulamita' ? 'https://raw.githubusercontent.com/mblarson/imagens/main/sulamita.png' : undefined}
           onFinish={() => setTourUser(null)} 
         />
       )}

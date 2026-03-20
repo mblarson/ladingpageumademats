@@ -14,7 +14,9 @@ import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request';
+import { WelcomeExperience } from './components/WelcomeExperience';
+
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'sulamita' | 'gilmarfiuza';
 
 export default function App() {
   useSiteAnalytics();
@@ -34,6 +36,8 @@ export default function App() {
         if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
+        if (path === '/sulamita') return 'sulamita';
+        if (path === '/gilmarfiuza') return 'gilmarfiuza';
         
         const shouldReturnToBible = localStorage.getItem('return_to_bible');
         if (shouldReturnToBible) {
@@ -83,11 +87,21 @@ export default function App() {
       admin: '/admin',
       lidera: '/lideraumademats',
       organization: '/admin/organizacao',
-      shirt_request: '/pedircamiseta'
+      shirt_request: '/pedircamiseta',
+      sulamita: '/sulamita',
+      gilmarfiuza: '/gilmarfiuza'
     };
     safePushState(paths[page]);
     setCurrentPage(page);
   };
+
+  if (currentPage === 'sulamita') {
+    return <WelcomeExperience name="Sulamita" onFinish={() => handleNavigate('home')} />;
+  }
+
+  if (currentPage === 'gilmarfiuza') {
+    return <WelcomeExperience name="Pr. Gilmar Fiuza" onFinish={() => handleNavigate('home')} />;
+  }
 
   if (currentPage === 'shirt_request') {
     return <ShirtRequestPage onBack={() => handleNavigate('home')} />;

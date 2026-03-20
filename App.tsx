@@ -21,6 +21,8 @@ export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 
 export default function App() {
   useSiteAnalytics();
 
+  const [tourUser, setTourUser] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState<PageType>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -36,8 +38,15 @@ export default function App() {
         if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
-        if (path === '/sulamita') return 'sulamita';
-        if (path === '/gilmarfiuza') return 'gilmarfiuza';
+        
+        if (path === '/sulamita') {
+          setTourUser('Sulamita');
+          return 'home';
+        }
+        if (path === '/gilmarfiuza') {
+          setTourUser('Pr. Gilmar Fiuza');
+          return 'home';
+        }
         
         const shouldReturnToBible = localStorage.getItem('return_to_bible');
         if (shouldReturnToBible) {
@@ -95,14 +104,6 @@ export default function App() {
     setCurrentPage(page);
   };
 
-  if (currentPage === 'sulamita') {
-    return <WelcomeExperience name="Sulamita" onFinish={() => handleNavigate('home')} />;
-  }
-
-  if (currentPage === 'gilmarfiuza') {
-    return <WelcomeExperience name="Pr. Gilmar Fiuza" onFinish={() => handleNavigate('home')} />;
-  }
-
   if (currentPage === 'shirt_request') {
     return <ShirtRequestPage onBack={() => handleNavigate('home')} />;
   }
@@ -142,6 +143,13 @@ export default function App() {
       <ActionSection onNavigate={handleNavigate} />
       <AboutSection />
       
+      {tourUser && (
+        <WelcomeExperience 
+          name={tourUser} 
+          onFinish={() => setTourUser(null)} 
+        />
+      )}
+
       <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
         <p className="mt-2 text-[10px] opacity-30">Desenvolvido para o Reino.</p>

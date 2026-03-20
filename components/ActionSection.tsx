@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus, Lock, X } from 'lucide-react';
+import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus, Lock, X, Users } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
 
@@ -116,7 +116,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
            </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-8 w-full">
+        <div id="games-section" className="grid grid-cols-2 gap-3 md:gap-8 w-full">
           
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -170,58 +170,89 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           </motion.div>
 
           <motion.div
-            id="bible-card"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            id="lidera-section"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: 0.2 }}
+            onMouseEnter={() => setHoveredCard('lidera')}
+            onMouseLeave={() => setHoveredCard(null)}
+            onClick={() => onNavigate('lidera')}
+            whileHover={{ scale: 0.98 }}
+            {...dragProps}
+            className="col-span-2 md:col-span-1 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[1.5/1] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-green/50 group shadow-2xl transition-all"
+            style={{ willChange: 'transform' }}
+          >
+              <div className="absolute inset-0 z-0 pointer-events-none opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Users size={200} className="absolute -right-10 -bottom-10 text-white" />
+              </div>
+
+              <div className="relative z-10">
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-brand-green rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
+                      <Users className="text-black w-4 h-4 md:w-6 md:h-6" />
+                  </div>
+                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
+                      Lidera
+                      <br/>
+                      <span className="text-brand-green">Umademats</span>
+                  </h3>
+                  <p className="text-gray-400 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed">
+                      Portal exclusivo para líderes e oficiais.
+                  </p>
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between mt-4">
+                  <span className="text-brand-green font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">ACESSAR PORTAL</span>
+                  <motion.div 
+                    animate={{ x: hoveredCard === 'lidera' ? 5 : 0 }}
+                    className="bg-brand-green p-2 md:p-3 rounded-full text-black shadow-lg"
+                  >
+                      <ArrowRight className="w-3 h-3 md:w-5 md:h-5" />
+                  </motion.div>
+              </div>
+          </motion.div>
+
+          <motion.div
+            id="bible-section"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.3 }}
             onMouseEnter={() => setHoveredCard('devocional')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => onNavigate('bible')}
-            whileHover={{ scale: 0.99 }}
+            whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="col-span-2 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
+            className="col-span-2 md:col-span-1 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[1.5/1] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-                  <div className="absolute -right-20 -bottom-20 animate-[spin_20s_linear_infinite]">
-                      <Zap size={300} className="text-black" fill="currentColor" />
+                  <div className="absolute -right-10 -bottom-10 animate-[spin_20s_linear_infinite]">
+                      <Zap size={150} className="text-black" fill="currentColor" />
                   </div>
               </div>
               
-              <div className="absolute right-[-2rem] bottom-[-2rem] md:right-0 md:bottom-0 h-[120%] md:h-[110%] w-auto z-0 pointer-events-none opacity-40 group-hover:opacity-60 transition-opacity">
-                  <img 
-                      src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
-                      alt="Mascote Bíblia"
-                      className="h-full w-auto object-contain drop-shadow-2xl"
-                      loading="lazy"
-                  />
-              </div>
-
-              <div className="relative z-10 flex flex-col justify-center h-full max-w-[60%]">
+              <div className="relative z-10">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
                       <Book className="text-brand-purple w-4 h-4 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-4xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
+                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
                       Plano de
                       <br/>
                       <span className="text-brand-neon">Leitura</span>
                   </h3>
-                  <p className="text-white/80 font-sans text-[10px] md:text-sm max-w-md leading-tight md:leading-relaxed font-medium drop-shadow-sm">
+                  <p className="text-white/80 font-sans text-[10px] md:text-sm max-w-md leading-tight md:leading-relaxed font-medium">
                       Acompanhe o devocional diário.
                   </p>
-                  
-                  <div className="flex items-center gap-2 mt-4">
-                      <span className="text-white font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase border-b border-white/30 pb-0.5">ACESSAR AGORA</span>
-                  </div>
               </div>
 
-              <div className="relative z-10 h-full flex items-end pb-2">
+              <div className="relative z-10 flex items-center justify-between mt-4">
+                  <span className="text-brand-neon font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">LER AGORA</span>
                   <motion.div 
                     animate={{ x: hoveredCard === 'devocional' ? 5 : 0 }}
-                    className="bg-brand-neon p-2 md:p-4 rounded-full text-black shadow-lg"
+                    className="bg-brand-neon p-2 md:p-3 rounded-full text-black shadow-lg"
                   >
-                      <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
+                      <ArrowRight className="w-3 h-3 md:w-5 md:h-5" />
                   </motion.div>
               </div>
           </motion.div>

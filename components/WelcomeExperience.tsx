@@ -1,170 +1,267 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Gamepad2, 
-  BookOpen, 
-  Users, 
-  Sparkles, 
-  ArrowRight, 
-  CheckCircle2,
-  ChevronRight,
-  Trophy,
-  Target,
-  Rocket
-} from 'lucide-react';
+import { Sparkles, ArrowRight, X, Gamepad2, Users, Book, Calendar, Zap, PlayCircle } from 'lucide-react';
 
 interface WelcomeExperienceProps {
   name: string;
   onFinish: () => void;
 }
 
-const steps = [
+interface TourStep {
+  id: string;
+  targetId: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const tourSteps: TourStep[] = [
   {
     id: 'intro',
-    title: 'Bem-vindo ao Portal UMADEMATS!',
-    icon: <Sparkles className="text-brand-neon" size={48} />,
-    content: 'O portal oficial da juventude UMADEMATS. Aqui você encontra tudo o que precisa para crescer e se divertir no Reino.',
-    color: 'from-brand-neon/20 to-transparent'
+    targetId: 'hero-section',
+    title: 'Bem-vindo ao Portal',
+    description: 'Preparamos este tour rápido para você conhecer as novidades do nosso portal oficial.',
+    icon: <Sparkles className="text-brand-neon" />,
+    color: 'from-brand-blue to-brand-green'
   },
   {
     id: 'games',
-    title: '🎮 Jogo do Penteca',
-    icon: <Gamepad2 className="text-brand-neon" size={48} />,
-    content: 'O destaque principal! Divirta-se com os jogos do nosso mascote Penteca. É diversão garantida com propósito!',
-    highlight: true,
-    color: 'from-brand-neon/30 to-brand-neon/10'
+    targetId: 'games-section',
+    title: 'Jogo do Penteca',
+    description: 'Nossa maior novidade! Participe das aventuras do Penteca, junte pontos e divirta-se com a galera.',
+    icon: <Gamepad2 className="text-brand-pink" />,
+    color: 'from-brand-pink to-purple-600'
   },
   {
     id: 'lidera',
-    title: '📚 Lidera Umademats',
-    icon: <Users className="text-brand-neon" size={48} />,
-    content: 'Sua ferramenta essencial de liderança. Conteúdos exclusivos para capacitar você a guiar sua geração.',
-    color: 'from-blue-500/20 to-transparent'
+    targetId: 'lidera-section',
+    title: 'Lidera Umademats',
+    description: 'Área exclusiva para nossos líderes. Aqui você encontra materiais, orientações e gestão completa.',
+    icon: <Users className="text-brand-green" />,
+    color: 'from-brand-green to-emerald-700'
   },
   {
     id: 'bible',
-    title: '📖 Leitura Bíblica',
-    icon: <BookOpen className="text-brand-neon" size={48} />,
-    content: 'Acompanhe seu progresso e mantenha a constância na Palavra. Um sistema feito para te ajudar a ler a Bíblia todo dia.',
-    color: 'from-emerald-500/20 to-transparent'
+    targetId: 'bible-section',
+    title: 'Leitura Bíblica',
+    description: 'Mantenha sua vida espiritual em dia. Acompanhe o plano de leitura e marque seu progresso.',
+    icon: <Book className="text-brand-neon" />,
+    color: 'from-brand-purple to-indigo-800'
   },
   {
-    id: 'congress',
-    title: '🎉 Congresso',
-    icon: <Rocket className="text-brand-neon" size={48} />,
-    content: 'Fique por dentro de tudo sobre o nosso congresso. Notícias, inscrições e momentos inesquecíveis.',
-    color: 'from-purple-500/20 to-transparent'
+    id: 'event',
+    targetId: 'event-section',
+    title: 'Congresso 2026',
+    description: 'Fique por dentro de tudo o que vai rolar no nosso grande congresso. Inscrições, preletores e muito mais.',
+    icon: <Calendar className="text-brand-neon" />,
+    color: 'from-orange-500 to-red-600'
   }
 ];
 
-export function WelcomeExperience({ name, onFinish }: WelcomeExperienceProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFinish }) => {
+  const [currentStep, setCurrentStep] = useState(-1); // -1 is the initial personalized welcome
+  const [spotlight, setSpotlight] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+  useEffect(() => {
+    // Prevent body scroll during tour
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  const updateSpotlight = (targetId: string) => {
+    const element = document.getElementById(targetId);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      setSpotlight({
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        height: rect.height
+      });
+    } else {
+      setSpotlight(null);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < tourSteps.length - 1) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      const targetId = tourSteps[nextStep].targetId;
+      const element = document.getElementById(targetId);
+      
+      if (element) {
+        setIsScrolling(true);
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Wait for scroll to finish
+        setTimeout(() => {
+          updateSpotlight(targetId);
+          setIsScrolling(false);
+        }, 800);
+      } else {
+        setSpotlight(null);
+      }
     } else {
       onFinish();
     }
   };
 
-  const step = steps[currentStep];
+  const handleSkip = () => {
+    onFinish();
+  };
+
+  // Initial personalized welcome screen
+  if (currentStep === -1) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-brand-dark overflow-hidden">
+        {/* Modern Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-blue/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-green/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }} />
+          
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 border-2 border-brand-neon/30 rounded-full animate-[spin_30s_linear_infinite]" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 border-2 border-brand-blue/30 rounded-full animate-[spin_40s_linear_infinite_reverse]" />
+          </div>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="relative z-10 max-w-2xl w-full px-6 text-center"
+        >
+          <div className="mb-8 flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-brand-neon blur-2xl opacity-20 animate-pulse" />
+              <img 
+                src="https://raw.githubusercontent.com/mblarson/imagens/main/logo50anosquadrada.png" 
+                alt="UMADEMATS 50 Anos"
+                className="w-32 h-32 md:w-48 md:h-48 relative z-10 drop-shadow-[0_0_20px_rgba(204,255,0,0.3)]"
+              />
+            </div>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-display uppercase text-white mb-6 leading-tight">
+            Paz do Senhor, <span className="text-brand-neon">{name}</span>!
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 leading-relaxed">
+            Espero que tenha feito uma boa viagem até aqui. 
+            <br className="hidden md:block" />
+            Seja bem-vindo ao novo portal oficial da <span className="text-white font-bold">UMADEMATS</span>.
+          </p>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            <button 
+              onClick={handleNext}
+              className="w-full md:w-auto px-10 py-5 bg-brand-neon text-black font-display uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(204,255,0,0.4)] flex items-center justify-center gap-3 group"
+            >
+              Iniciar Tour Guiado
+              <PlayCircle className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button 
+              onClick={handleSkip}
+              className="w-full md:w-auto px-10 py-5 bg-white/5 text-white font-display uppercase tracking-widest rounded-full hover:bg-white/10 transition-colors border border-white/10"
+            >
+              Pular e Ir para o Site
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const currentTourStep = tourSteps[currentStep];
 
   return (
-    <div className="fixed inset-0 z-[200] bg-brand-dark flex items-center justify-center p-4 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-neon/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-neon/5 rounded-full blur-[120px]" />
-        
-        {/* Geometric shapes */}
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/4 right-1/4 w-64 h-64 border border-white/5 rounded-full"
-        />
-        <motion.div 
-          animate={{ rotate: -360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-1/4 left-1/4 w-96 h-96 border border-white/5 rounded-lg rotate-45"
-        />
-      </div>
+    <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
+      {/* Dark Overlay with Spotlight */}
+      <div 
+        className="absolute inset-0 bg-black/80 transition-opacity duration-500 pointer-events-auto"
+        style={{
+          clipPath: spotlight 
+            ? `polygon(0% 0%, 0% 100%, ${spotlight.left}px 100%, ${spotlight.left}px ${spotlight.top}px, ${spotlight.left + spotlight.width}px ${spotlight.top}px, ${spotlight.left + spotlight.width}px ${spotlight.top + spotlight.height}px, ${spotlight.left}px ${spotlight.top + spotlight.height}px, ${spotlight.left}px 100%, 100% 100%, 100% 0%)`
+            : 'none'
+        }}
+      />
 
-      <div className="w-full max-w-2xl relative">
-        <AnimatePresence mode="wait">
+      {/* Tour Content Card */}
+      <AnimatePresence mode="wait">
+        {!isScrolling && (
           <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -20, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl relative overflow-hidden`}
+            key={currentTourStep.id}
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[90%] max-w-lg pointer-events-auto"
           >
-            {/* Step Gradient Background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-50 pointer-events-none transition-colors duration-700`} />
+            <div className={`relative overflow-hidden rounded-[2rem] p-8 shadow-2xl border-2 border-white/10 bg-gradient-to-br ${currentTourStep.color}`}>
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Zap size={100} className="text-white" />
+              </div>
 
-            <div className="relative z-10">
-              {currentStep === 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-8"
-                >
-                  <span className="inline-block px-4 py-1.5 bg-brand-neon/10 text-brand-neon rounded-full text-xs font-bold tracking-widest uppercase mb-4">
-                    Acesso Personalizado
-                  </span>
-                  <h1 className="text-2xl md:text-3xl font-display uppercase leading-tight">
-                    Paz do Senhor, <span className="text-brand-neon">{name}</span>!<br />
-                    Espero que tenha feito uma boa viagem até aqui.
-                  </h1>
-                </motion.div>
-              )}
-
-              <div className="flex flex-col items-center text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-                  className={`w-24 h-24 rounded-3xl bg-brand-dark border border-white/10 flex items-center justify-center mb-8 shadow-xl ${step.highlight ? 'ring-4 ring-brand-neon/20 shadow-brand-neon/10' : ''}`}
-                >
-                  {step.icon}
-                </motion.div>
-
-                <h2 className={`text-3xl md:text-4xl font-display uppercase mb-6 ${step.highlight ? 'text-brand-neon' : 'text-white'}`}>
-                  {step.title}
-                </h2>
-
-                <p className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-lg mb-12">
-                  {step.content}
-                </p>
-
-                {/* Progress Dots */}
-                <div className="flex gap-2 mb-12">
-                  {steps.map((_, idx) => (
-                    <div 
-                      key={idx}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-8 bg-brand-neon' : 'w-2 bg-white/20'}`}
-                    />
-                  ))}
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    {currentTourStep.icon}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60 mb-1 block">Passo {currentStep + 1} de {tourSteps.length}</span>
+                    <h2 className="text-2xl md:text-3xl font-display uppercase text-white leading-none">
+                      {currentTourStep.title}
+                    </h2>
+                  </div>
                 </div>
 
-                <button
-                  onClick={nextStep}
-                  className="group relative flex items-center gap-3 px-8 py-4 bg-brand-neon text-black font-display uppercase tracking-wider rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(204,255,0,0.3)]"
-                >
-                  {currentStep === steps.length - 1 ? 'IR PARA O SITE' : 'CONTINUAR'}
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                <p className="text-white/90 font-sans text-sm md:text-base leading-relaxed mb-8">
+                  {currentTourStep.description}
+                </p>
+
+                <div className="flex items-center justify-between gap-4">
+                  <button 
+                    onClick={handleSkip}
+                    className="text-white/60 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
+                  >
+                    Pular Tour
+                  </button>
+                  
+                  <button 
+                    onClick={handleNext}
+                    className="px-8 py-4 bg-white text-black font-display uppercase tracking-widest text-sm rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
+                  >
+                    {currentStep === tourSteps.length - 1 ? 'Finalizar' : 'Próximo'}
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
+                  className="h-full bg-white"
+                />
               </div>
             </div>
           </motion.div>
-        </AnimatePresence>
+        )}
+      </AnimatePresence>
 
-        {/* Decorative elements */}
-        <div className="absolute -top-4 -right-4 w-12 h-12 bg-brand-neon rounded-full blur-2xl opacity-20 animate-pulse" />
-        <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-brand-neon rounded-full blur-2xl opacity-20 animate-pulse" />
-      </div>
+      {/* Floating Skip Button (Top Right) */}
+      <button 
+        onClick={handleSkip}
+        className="fixed top-6 right-6 z-[10000] p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md border border-white/10 transition-all pointer-events-auto group"
+      >
+        <X size={24} className="group-rotate-90 transition-transform" />
+      </button>
     </div>
   );
-}
+};

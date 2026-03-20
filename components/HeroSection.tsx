@@ -62,7 +62,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   return (
-    <section className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
+    <section id="hero-section" className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
       <style>{`
         @media (min-width: 768px) {
           .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }

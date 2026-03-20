@@ -18,34 +18,56 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
     };
   }, []);
 
+  const isSpecialLink = name.includes('Sulamita') || name.includes('Gilmar Fiuza');
+
   const userImage = name.includes('Sulamita') 
-    ? 'https://raw.githubusercontent.com/mblarson/imagens/main/sulamita.jpg'
-    : 'https://raw.githubusercontent.com/mblarson/imagens/main/gilmarfiuza.jpg';
+    ? 'https://raw.githubusercontent.com/mblarson/imagens/main/Portal%20Umademats/sulamita.jpg'
+    : 'https://raw.githubusercontent.com/mblarson/imagens/main/Portal%20Umademats/gilmarfiuza.jpg';
 
   const features = [
     {
-      id: 'games',
-      title: 'Jogo do Penteca',
-      description: 'A maior novidade! Uma aventura épica com o nosso mascote. Junte pontos e divirta-se!',
-      icon: <Gamepad2 className="text-brand-pink" />,
-      highlight: true
-    },
-    {
-      id: 'lidera',
-      title: 'Lidera Umademats',
-      description: 'Portal exclusivo para líderes com materiais e gestão.',
-      icon: <Users className="text-brand-green" />
+      id: 'congress',
+      title: 'Congresso 2026',
+      description: 'Fique por dentro de tudo o que vai rolar no nosso grande encontro! Programação, preletores e muito mais.',
+      icon: <Sparkles className="text-brand-blue" />
     },
     {
       id: 'bible',
       title: 'Leitura Bíblica',
-      description: 'Acompanhe seu plano de leitura diária de forma simples.',
-      icon: <Book className="text-brand-neon" />
+      description: 'O seu progresso é sagrado! Acompanhe sua leitura diária e veja seu avanço salvo automaticamente. Rumo ao topo!',
+      icon: <Book className="text-brand-neon" />,
+      highlight: true,
+      emphasis: 'Destaque: Progresso Salvo!'
+    },
+    {
+      id: 'games',
+      title: 'Games do Penteca',
+      description: 'O nosso mascote Penteca te espera para aventuras épicas! Jogue, divirta-se e mostre que você é fera nos games.',
+      icon: <Gamepad2 className="text-brand-pink" />,
+      highlight: true,
+      emphasis: 'Diversão Garantida!'
+    },
+    {
+      id: 'lidera',
+      title: 'Lidera Umademats',
+      description: 'Um espaço exclusivo para quem bota a mão na massa! Materiais e gestão para a liderança oficial.',
+      icon: <Users className="text-brand-green" />
+    },
+    {
+      id: 'mascot',
+      title: 'Nosso Mascote',
+      description: 'O Penteca é a cara da nossa juventude! Ele está em todo lugar no portal para te guiar.',
+      icon: <Zap className="text-brand-blue" />
     }
   ];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-brand-dark overflow-hidden">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.8 } }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-brand-dark overflow-hidden"
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-blue/20 rounded-full blur-[120px]" />
@@ -63,7 +85,8 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
             key="welcome"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, x: -50 }}
+            exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+            transition={{ duration: 0.5 }}
             className="relative z-10 max-w-2xl w-full px-6 text-center"
           >
             <div className="mb-8 flex justify-center">
@@ -95,43 +118,48 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
                 Conhecer o Portal
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button 
-                onClick={onFinish}
-                className="w-full md:w-auto px-10 py-5 bg-white/5 text-white font-display uppercase tracking-widest rounded-full hover:bg-white/10 transition-colors border border-white/10"
-              >
-                Ir para o Site
-              </button>
+              {!isSpecialLink && (
+                <button 
+                  onClick={onFinish}
+                  className="w-full md:w-auto px-10 py-5 bg-white/5 text-white font-display uppercase tracking-widest rounded-full hover:bg-white/10 transition-colors border border-white/10"
+                >
+                  Ir para o Site
+                </button>
+              )}
             </div>
           </motion.div>
         ) : (
           <motion.div 
             key="features"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="relative z-10 max-w-4xl w-full px-6"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+            transition={{ duration: 0.5 }}
+            className="relative z-10 max-w-5xl w-full px-6 py-10"
           >
             <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-5xl font-display uppercase text-white mb-2">O que você vai encontrar</h2>
-              <p className="text-gray-400 font-sans">Recursos pensados para a nossa juventude</p>
+              <h2 className="text-3xl md:text-5xl font-display uppercase text-white mb-2">O Portal tá ON! 🚀</h2>
+              <p className="text-gray-400 font-sans text-lg">Dá uma olhada em tudo o que preparamos com muito carinho:</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-12">
-              {features.map((f) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {features.map((f, idx) => (
                 <motion.div 
                   key={f.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`relative p-6 rounded-3xl border-2 ${f.highlight ? 'border-brand-pink bg-brand-pink/5' : 'border-white/10 bg-white/5'} flex flex-col items-center text-center`}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`relative p-6 rounded-3xl border-2 transition-all hover:scale-[1.02] ${f.highlight ? 'border-brand-neon bg-brand-neon/5' : 'border-white/10 bg-white/5'} flex flex-col items-center text-center`}
                 >
-                  {f.highlight && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-pink text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                      Destaque Especial
+                  {f.emphasis && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-neon text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                      {f.emphasis}
                     </div>
                   )}
-                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
+                  <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
                     {f.icon}
                   </div>
-                  <h3 className={`text-xl font-display uppercase mb-2 ${f.highlight ? 'text-brand-pink' : 'text-white'}`}>{f.title}</h3>
+                  <h3 className={`text-xl font-display uppercase mb-2 ${f.highlight ? 'text-brand-neon' : 'text-white'}`}>{f.title}</h3>
                   <p className="text-gray-400 text-sm font-sans leading-relaxed">{f.description}</p>
                 </motion.div>
               ))}
@@ -140,7 +168,7 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
               <button 
                 onClick={onFinish}
-                className="w-full md:w-auto px-12 py-5 bg-brand-neon text-black font-display uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(204,255,0,0.4)] flex items-center justify-center gap-3"
+                className="w-full md:w-auto px-12 py-5 bg-brand-neon text-black font-display uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(204,255,0,0.5)] flex items-center justify-center gap-3 font-bold"
               >
                 Ir para o Site
                 <ArrowRight />
@@ -156,6 +184,6 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
       >
         <X size={24} />
       </button>
-    </div>
+    </motion.div>
   );
 };

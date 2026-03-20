@@ -143,13 +143,14 @@ export default function App() {
       <ActionSection onNavigate={handleNavigate} />
       <AboutSection />
       
-      {tourUser && (
-        <WelcomeExperience 
-          name={tourUser} 
-          customImage={tourUser === 'Sulamita' ? 'https://raw.githubusercontent.com/mblarson/imagens/main/sulamita.png' : undefined}
-          onFinish={() => setTourUser(null)} 
-        />
-      )}
+      <AnimatePresence>
+        {tourUser && (
+          <WelcomeExperience 
+            name={tourUser} 
+            onFinish={() => setTourUser(null)} 
+          />
+        )}
+      </AnimatePresence>
 
       <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
         <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>

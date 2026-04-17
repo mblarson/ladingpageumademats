@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Zap, User, MousePointer2, X, Instagram, ExternalLink } from 'lucide-react';
+import { SubtleWaveDivider } from './SubtleWaveDivider';
+import { DividerCreative } from './DividerCreative';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 
 interface LeaderCardProps {
@@ -128,13 +130,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
       {/* Background Patterns */}
       <div className="absolute inset-0 bg-halftone-blue opacity-20 pointer-events-none" />
       
-      {/* TOP DIVIDER (Transition from Indigo to Navy) */}
-      <div className="absolute top-0 left-0 right-0 leading-none z-10">
-        <svg className="w-full h-16 md:h-24 fill-[#4F46E5]" viewBox="0 0 1440 100" preserveAspectRatio="none">
-           <path d="M0,0 C240,90 480,90 720,50 C960,10 1200,10 1440,50 L1440,0 L0,0 Z" />
-        </svg>
-      </div>
-
       <div className="max-container max-w-7xl mx-auto px-4 relative z-10">
         
         {/* Section Header */}
@@ -164,6 +159,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
              <p className="mt-6 text-white/70 font-sans text-sm md:text-lg max-w-2xl text-center uppercase tracking-wider font-bold">
                 Conheça quem faz a obra acontecer
              </p>
+             <SubtleWaveDivider className="mt-8 opacity-30" width="180px" height="10px" color="#CCFF00" />
         </div>
 
         {/* IEADMS Banner Image & Text */}
@@ -239,10 +235,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
       </div>
 
       {/* BOTTOM DIVIDER (Transition to Footer/Black) */}
-      <div className="absolute bottom-0 left-0 right-0 leading-none z-10 translate-y-1">
-         <svg className="w-full h-16 md:h-24 fill-black" viewBox="0 0 1440 120" preserveAspectRatio="none">
-            <path d="M0,60 C320,140 640,0 960,60 C1280,120 1440,60 1440,60 V120 H0 V60 Z"></path>
-         </svg>
+      <div className="absolute bottom-0 left-0 right-0 w-full z-10">
+        <DividerCreative variant="particles" color="text-brand-purple" lineColor="bg-brand-purple" opacity={0.3} />
       </div>
 
       {/* --- MODAL DE SELEÇÃO DE INSTAGRAM --- */}

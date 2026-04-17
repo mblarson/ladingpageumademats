@@ -6,7 +6,6 @@ import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
 import { HeroSection } from './HeroSection';
-import { EventSection } from './EventSection';
 import { ActionSection } from './ActionSection';
 import { AboutSection } from './AboutSection';
 import { PresenceCounter } from './PresenceCounter';
@@ -1039,7 +1038,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
           )}
           {activeTab === 'builder' && (
              <div className="w-full h-full rounded-2xl border-4 border-white/5 overflow-hidden shadow-2xl relative">
-                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white shadow-inner"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><EventSection previewConfig={draftConfig} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
+                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white shadow-inner"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
              </div>
           )}
         </main>

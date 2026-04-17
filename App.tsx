@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { HeroSection } from './components/HeroSection';
-import { EventSection } from './components/EventSection';
 import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { BibleReadingPage } from './components/BibleReadingPage';
@@ -139,7 +138,6 @@ export default function App() {
           <motion.div style={{ top: yPath }} className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"><Zap size={12} className="fill-black text-black" /></motion.div>
       </div>
       <HeroSection onNavigate={handleNavigate} />
-      <EventSection />
       <ActionSection onNavigate={handleNavigate} />
       <AboutSection />
       

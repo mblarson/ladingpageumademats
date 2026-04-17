@@ -1,7 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star, Music } from 'lucide-react';
+import { DividerCreative } from './DividerCreative';
+import { MarqueeBanner } from './MarqueeBanner';
+import { SubtleWaveDivider } from './SubtleWaveDivider';
+import { CreativeDivider } from './CreativeDivider';
+import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star, Music, Camera } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
 
@@ -18,16 +22,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showPhotosInfoModal, setShowPhotosInfoModal] = useState(false);
 
-  // Lógica de Intervalo do Slider - 6 slides agora
+  // Lógica de Intervalo do Slider - Fotos Primeiro (10s)
   useEffect(() => {
+    // O slide 0 (Fotos) fica por 10 segundos
     const initialTimeout = setTimeout(() => {
       setCurrentIndex(1);
       const interval = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % 5);
       }, 4500);
       return () => clearInterval(interval);
-    }, 1000);
+    }, 10000);
     return () => clearTimeout(initialTimeout);
   }, []);
 
@@ -38,7 +44,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   const menuItems = [
-    { label: activeConfig.hero_button1, icon: Calendar, action: () => scrollToSection('congress-timer-anchor') },
     { label: activeConfig.hero_button2, icon: Gamepad2, action: () => scrollToSection('action-section') },
     { label: "LEIA A BÍBLIA", icon: Book, action: () => onNavigate('bible') },
     { label: "LIDERA UMADEMATS", icon: GraduationCap, action: () => onNavigate('lidera') },
@@ -52,13 +57,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   const getSlideBg = (index: number) => {
-    if (index === 1 || index === 4) return '#000000';
-    if (index === 5) return '#000000';
+    if (index === 0 || index === 2) return '#000000'; // 0: Fotos, 2: Lidera
     return activeConfig.hero_bgColor;
   };
 
   const handleSlideClick = () => {
-      if (currentIndex === 1) onNavigate('lidera');
+      if (currentIndex === 2) onNavigate('lidera');
+      if (currentIndex === 0) {
+        setShowPhotosInfoModal(true);
+        setTimeout(() => {
+          setShowPhotosInfoModal(false);
+          window.open('https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', '_blank');
+        }, 3000);
+      }
   };
 
   return (
@@ -119,42 +130,98 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
               {currentIndex === 0 && (
-                <motion.div className="flex items-center justify-center w-full" {...dragProps}>
-                  <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                <motion.div 
+                  className="flex flex-col items-center justify-center px-4 w-full h-full relative" 
+                  {...dragProps}
+                >
+                  <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
+                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center">
+                    <SubtleWaveDivider className="opacity-50" width="250px" height="15px" color="#FFD700" />
+                  </div>
+                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-2 transform relative flex items-center gap-4 group hover:scale-105 transition-transform" style={{ backgroundColor: '#FFD700' }}>
+                    <Camera className="text-black w-8 h-8 md:w-12 md:h-12" />
+                    <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
+                  </div>
                 </motion.div>
               )}
               {currentIndex === 1 && (
+                <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
+                  <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center">
+                    <SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} />
+                  </div>
+                </motion.div>
+              )}
+              {currentIndex === 2 && (
                 <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
                   <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}><h3 className="hero-box-title text-[12vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3></div>
                 </motion.div>
               )}
-              {currentIndex === 2 && (
+              {currentIndex === 3 && (
                 <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
                   <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
                   <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}><h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3></div>
                 </motion.div>
               )}
-              {currentIndex === 3 && (
+              {currentIndex === 4 && (
                 <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
                   <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
                   <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}><h3 className="hero-box-title text-[10vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3></div>
                 </motion.div>
               )}
-              {currentIndex === 4 && (
-                <motion.div className="absolute inset-0 w-full h-full" {...dragProps}>
-                  <img 
-                    src="https://raw.githubusercontent.com/mblarson/imagens/main/Portal%20Umademats/bannercongresso.png" 
-                    alt="Banner Congresso" 
-                    className="w-full h-full object-cover object-center"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/20" />
-                </motion.div>
-              )}
             </div>
           </div>
         </motion.div>
+      </AnimatePresence>
+
+      {/* Divider Transition to ActionSection */}
+      <div className="absolute bottom-0 left-0 right-0 w-full z-20">
+        <DividerCreative variant="particles" color="text-brand-neon" lineColor="bg-brand-neon" opacity={0.4} />
+      </div>
+
+      <MarqueeBanner 
+        items={[
+          { text: "Aqui Jesus Reina", icon: Zap },
+          { text: "Aqui Jesus Reina", icon: Star }
+        ]}
+        bgColor="bg-brand-green"
+        textColor="text-white"
+        rotate={1}
+        zIndex={60}
+      />
+
+      <AnimatePresence>
+        {showPhotosInfoModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[300] bg-black/90 flex flex-col items-center justify-center p-6 text-center backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="max-w-md bg-[#1a1a1a] border-2 border-brand-neon p-8 rounded-3xl shadow-[0_0_50px_rgba(204,255,0,0.2)]"
+            >
+              <div className="w-16 h-16 bg-brand-neon rounded-full flex items-center justify-center mx-auto mb-6">
+                <Camera className="text-black w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-display uppercase text-white mb-4">Avisos de Galeria</h3>
+              <p className="text-white/80 font-sans text-sm leading-relaxed mb-6">
+                Devido a quantidade de fotos, pode ser algumas estejam deslocadas de seus respectivos períodos
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                 <motion.div 
+                   animate={{ rotate: 360 }} 
+                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                   className="w-5 h-5 border-2 border-brand-neon border-t-transparent rounded-full"
+                 />
+                 <span className="text-brand-neon font-display text-sm tracking-widest animate-pulse">REDIRECIONANDO...</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <AnimatePresence>

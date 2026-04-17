@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus, Lock, X, Users } from 'lucide-react';
+import { SubtleWaveDivider } from './SubtleWaveDivider';
+import { DividerCreative } from './DividerCreative';
+import { MarqueeBanner } from './MarqueeBanner';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
 
@@ -37,14 +40,8 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   };
 
   return (
-    <section className="relative w-full py-24 md:py-20 bg-[#4F46E5] overflow-hidden z-20">
+    <section id="action-section" className="relative w-full py-24 md:py-20 bg-[#4F46E5] overflow-hidden z-20">
       
-      <div className="absolute top-0 left-0 right-0 leading-none z-10">
-        <svg className="w-full h-16 md:h-24 fill-black" viewBox="0 0 1440 100" preserveAspectRatio="none">
-           <path d="M0,0 C240,90 480,90 720,50 C960,10 1200,10 1440,50 L1440,0 L0,0 Z" />
-        </svg>
-      </div>
-
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div 
           initial={{ y: 0 }}
@@ -114,6 +111,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
              <br />
              <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-5xl block mt-2">{activeConfig.action_title2}</span>
            </h2>
+           <SubtleWaveDivider className="mt-4 opacity-50" width="120px" height="8px" color="#CCFF00" />
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:gap-8 w-full">
@@ -273,31 +271,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none">
-        <motion.div 
-          className="bg-brand-pink py-2 md:py-3 border-y-2 border-black -rotate-1 scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1.1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div 
-            className="flex whitespace-nowrap items-center font-display uppercase text-lg md:text-2xl text-black italic tracking-tighter"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-            style={{ willChange: 'transform' }}
-          >
-            {[...Array(6)].map((_, i) => (
-              <span key={i} className="flex items-center gap-6 md:gap-10 mr-10">
-                <span>CONGRESSO 2026</span>
-                <Zap className="fill-black" size={24} />
-                <span>EXPERIÊNCIA ÚNICA</span>
-                <Star className="fill-black" size={24} />
-              </span>
-            ))}
-          </motion.div>
-        </motion.div>
-      </div>
+      <MarqueeBanner 
+        items={[
+          { text: "CONGRESSO 2026", icon: Zap },
+          { text: "EXPERIÊNCIA ÚNICA", icon: Star }
+        ]}
+        bgColor="bg-brand-pink"
+        textColor="text-black"
+        rotate={-1}
+      />
 
       {/* MODAL DE BLOQUEIO DE ACESSO */}
       <AnimatePresence>

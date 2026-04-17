@@ -67,7 +67,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         setShowPhotosInfoModal(true);
         setTimeout(() => {
           setShowPhotosInfoModal(false);
-          window.open('https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', '_blank');
+          window.location.href = 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing';
         }, 3000);
       }
   };
@@ -209,7 +209,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               </div>
               <h3 className="text-2xl font-display uppercase text-white mb-4">Avisos de Galeria</h3>
               <p className="text-white/80 font-sans text-sm leading-relaxed mb-6">
-                Devido a quantidade de fotos, pode ser algumas estejam deslocadas de seus respectivos períodos
+                Devido a quantidade de fotos, pode ser que algumas estejam duplicadas ou fora da pasta do seu período.
               </p>
               <div className="flex items-center justify-center gap-3">
                  <motion.div 

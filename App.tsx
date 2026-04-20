@@ -8,6 +8,7 @@ import { LideraPortal } from './components/LideraPortal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { OrganizationPortal } from './components/OrganizationPortal';
 import { ShirtRequestPage } from './components/ShirtRequestPage';
+import { TshirtOrderPage } from './components/TshirtOrderPage';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight } from 'lucide-react';
@@ -15,7 +16,7 @@ import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
 import { WelcomeExperience } from './components/WelcomeExperience';
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'sulamita' | 'gilmarfiuza';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza';
 
 export default function App() {
   useSiteAnalytics();
@@ -33,6 +34,7 @@ export default function App() {
         }
 
         if (path === '/pedircamiseta') return 'shirt_request';
+        if (path === '/camisetas') return 'tshirt_order';
         if (path === '/admin') return 'admin';
         if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
@@ -96,6 +98,7 @@ export default function App() {
       lidera: '/lideraumademats',
       organization: '/admin/organizacao',
       shirt_request: '/pedircamiseta',
+      tshirt_order: '/camisetas',
       sulamita: '/sulamita',
       gilmarfiuza: '/gilmarfiuza'
     };
@@ -105,6 +108,10 @@ export default function App() {
 
   if (currentPage === 'shirt_request') {
     return <ShirtRequestPage onBack={() => handleNavigate('home')} />;
+  }
+
+  if (currentPage === 'tshirt_order') {
+    return <TshirtOrderPage onBack={() => handleNavigate('home')} />;
   }
 
   if (currentPage === 'admin') {

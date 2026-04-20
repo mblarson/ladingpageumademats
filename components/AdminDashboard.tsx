@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter, ShoppingBag } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -648,9 +648,9 @@ const ShirtRequestsAdmin: React.FC = () => {
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'todos' | 'pendente' | 'coletado'>('todos');
     const [requestToDelete, setRequestToDelete] = useState<any | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showClearAllModal, setShowClearAllModal] = useState(false);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -672,20 +672,6 @@ const ShirtRequestsAdmin: React.FC = () => {
         fetchRequests();
     }, []);
 
-    const toggleStatus = async (id: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'pendente' ? 'coletado' : 'pendente';
-        try {
-            const { error } = await supabase
-                .from('pedidos_camisetas')
-                .update({ status: newStatus })
-                .eq('id', id);
-            if (error) throw error;
-            setRequests(requests.map(r => r.id === id ? { ...r, status: newStatus } : r));
-        } catch (e) {
-            alert("Erro ao atualizar status.");
-        }
-    };
-
     const handleDelete = async () => {
         if (!requestToDelete) return;
         setIsDeleting(true);
@@ -704,20 +690,32 @@ const ShirtRequestsAdmin: React.FC = () => {
         }
     };
 
+    const handleClearAll = async () => {
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('pedidos_camisetas')
+                .delete()
+                .not('id', 'is', null); // Deleta tudo
+            if (error) throw error;
+            setRequests([]);
+            setShowClearAllModal(false);
+        } catch (e) {
+            alert("Erro ao limpar pedidos.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const filteredRequests = useMemo(() => {
         return requests.filter(req => {
-            const matchesSearch = req.nome_completo.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = filterStatus === 'todos' || req.status === filterStatus;
-            return matchesSearch && matchesStatus;
+            const matchesSearch = (req.nome_completo || '').toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesSearch;
         });
-    }, [requests, searchTerm, filterStatus]);
+    }, [requests, searchTerm]);
 
-    const stats = useMemo(() => {
-        return {
-            total: requests.length,
-            sequenciados: requests.filter(r => r.status === 'coletado').length,
-            pendentes: requests.filter(r => r.status === 'pendente').length
-        };
+    const totalShirts = useMemo(() => {
+        return requests.reduce((acc, curr) => acc + (curr.quantidade || 0), 0);
     }, [requests]);
 
     if (loading) return (
@@ -727,177 +725,148 @@ const ShirtRequestsAdmin: React.FC = () => {
         </div>
     );
 
+    const getWhatsAppLink = (phone: string) => {
+        const cleanPhone = phone.replace(/\D/g, '');
+        const message = encodeURIComponent("Paz do Senhor, tudo bem? Você sinalizou que tem interesse em fazer o pedido da camiseta do Congresso?");
+        return `https://wa.me/${cleanPhone}?text=${message}`;
+    };
+
     return (
-        <div className="space-y-6 fluid-container">
-            <div className="flex items-center justify-between mb-8">
+        <div className="max-container py-10 space-y-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-white/5">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-brand-neon/10 rounded-2xl flex items-center justify-center border border-brand-neon/20">
+                        <ClipboardList className="text-brand-neon" size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-display uppercase tracking-tight text-white leading-none">Gestão de Camisetas</h2>
+                        <p className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mt-1">Controle de Pedidos Congresso 2026</p>
+                    </div>
+                </div>
                 <div className="flex items-center gap-3">
-                    <ClipboardList className="text-brand-neon" />
-                    <h2 className="text-2xl font-display uppercase tracking-wider">Pedidos de Camisetas</h2>
-                </div>
-                <button onClick={fetchRequests} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-brand-neon transition-all">
-                    <RefreshCw size={20} />
-                </button>
-            </div>
-
-            {/* Contadores */}
-            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
-                <div className="bg-[#1a1a1a] p-3 md:p-6 rounded-2xl border border-white/5 relative overflow-hidden group text-center md:text-left">
-                    <div className="hidden md:block absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Users size={60} className="text-white" />
-                    </div>
-                    <span className="text-[8px] md:text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 truncate">Total</span>
-                    <span className="text-2xl md:text-4xl font-display text-white">{stats.total}</span>
-                </div>
-                <div className="bg-[#1a1a1a] p-3 md:p-6 rounded-2xl border border-white/5 relative overflow-hidden group text-center md:text-left">
-                    <div className="hidden md:block absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <CheckCircle2 size={60} className="text-green-500" />
-                    </div>
-                    <span className="text-[8px] md:text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 truncate">Sequenciados</span>
-                    <span className="text-2xl md:text-4xl font-display text-green-500">{stats.sequenciados}</span>
-                </div>
-                <div className="bg-[#1a1a1a] p-3 md:p-6 rounded-2xl border border-white/5 relative overflow-hidden group text-center md:text-left">
-                    <div className="hidden md:block absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Clock size={60} className="text-brand-pink" />
-                    </div>
-                    <span className="text-[8px] md:text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 truncate">Pendentes</span>
-                    <span className="text-2xl md:text-4xl font-display text-brand-pink">{stats.pendentes}</span>
+                    <button 
+                        onClick={() => setShowClearAllModal(true)}
+                        className="px-6 py-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest active:scale-95"
+                    >
+                        Limpar Base
+                    </button>
+                    <button onClick={fetchRequests} className="p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-brand-neon transition-all active:rotate-180 duration-500">
+                        <RefreshCw size={22} />
+                    </button>
                 </div>
             </div>
 
-            {/* Filtros e Busca */}
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Buscar por nome..."
-                        className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-brand-neon transition-all"
-                    />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-[#0a0a0a] p-8 rounded-[2rem] border border-white/5 flex flex-col gap-4 relative overflow-hidden group">
+                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Users size={80} />
+                    </div>
+                    <span className="text-[10px] uppercase font-black text-white/20 tracking-[0.3em]">Total Pedidos</span>
+                    <span className="text-5xl font-display text-white leading-none">{requests.length}</span>
                 </div>
-                <div className="flex bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
-                    <button 
-                        onClick={() => setFilterStatus('todos')}
-                        className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${filterStatus === 'todos' ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white'}`}
-                    >
-                        Todos
-                    </button>
-                    <button 
-                        onClick={() => setFilterStatus('pendente')}
-                        className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${filterStatus === 'pendente' ? 'bg-brand-pink/20 text-brand-pink' : 'text-white/30 hover:text-white'}`}
-                    >
-                        Pendentes
-                    </button>
-                    <button 
-                        onClick={() => setFilterStatus('coletado')}
-                        className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${filterStatus === 'coletado' ? 'bg-green-500/20 text-green-500' : 'text-white/30 hover:text-white'}`}
-                    >
-                        Sequenciados
-                    </button>
+                <div className="bg-[#0a0a0a] p-8 rounded-[2rem] border border-white/5 flex flex-col gap-4 relative overflow-hidden group">
+                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <ShoppingBag size={80} />
+                    </div>
+                    <span className="text-[10px] uppercase font-black text-white/20 tracking-[0.3em]">Itens Solicitados</span>
+                    <span className="text-5xl font-display text-brand-neon leading-none">{totalShirts}</span>
                 </div>
+            </div>
+
+            <div className="relative">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
+                <input 
+                    type="text" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Filtrar por nome do participante..."
+                    className="w-full bg-[#0a0a0a] border-2 border-white/5 rounded-[2.5rem] pl-16 pr-8 py-5 text-white focus:outline-none focus:border-brand-neon focus:bg-black transition-all text-sm font-medium shadow-2xl"
+                />
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-                {filteredRequests.length > 0 ? filteredRequests.map((req) => (
+                {filteredRequests.map((req) => (
                     <motion.div 
                         layout
                         key={req.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`bg-[#1a1a1a] p-6 rounded-2xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                            req.status === 'coletado' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-white/5'
-                        }`}
+                        className="bg-[#0d0d0d] border border-white/5 p-6 md:p-8 rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:border-white/10 hover:bg-[#111] transition-all relative overflow-hidden"
                     >
-                        <div className="flex flex-col">
-                            <h3 className="text-lg font-bold uppercase tracking-wide text-white">{req.nome_completo}</h3>
-                            <div className="flex items-center gap-3 mt-1">
-                                <span className="text-xs font-mono text-white/40">{req.telefone}</span>
-                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white/5 text-white/30">
-                                    Origem: {req.origem}
-                                </span>
+                        <div className="flex flex-col gap-2">
+                            <h3 className="text-xl font-bold uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors">{req.nome_completo}</h3>
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Phone size={12} className="text-white/20" />
+                                    <span className="text-xs font-mono text-white/40 tracking-wider">{req.telefone}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${req.cor === 'TERRACOTA' ? 'bg-orange-500' : 'bg-green-500'}`} />
+                                    <span className="text-[10px] font-black uppercase text-white/60 tracking-widest">{req.cor}</span>
+                                </div>
+                                <div className="px-3 py-1 rounded-full bg-white/5 border border-white/5">
+                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">TAM: </span>
+                                    <span className="text-[10px] font-black text-white uppercase">{req.tamanho}</span>
+                                </div>
+                                <div className="px-3 py-1 rounded-full bg-brand-neon/10 border border-brand-neon/20">
+                                    <span className="text-[10px] font-bold text-brand-neon/60 uppercase tracking-tighter">QTD: </span>
+                                    <span className="text-[10px] font-black text-brand-neon uppercase">{req.quantidade}</span>
+                                </div>
                             </div>
-                            <span className="text-[9px] text-white/20 uppercase mt-2">
-                                Solicitado em: {new Date(req.created_at).toLocaleString()}
-                            </span>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 pt-4 md:pt-0 border-t md:border-0 border-white/5">
                             <a 
-                                href={`https://wa.me/${req.telefone.replace(/\D/g, '')}`} 
+                                href={getWhatsAppLink(req.telefone)}
                                 target="_blank" 
                                 rel="noreferrer"
-                                className="flex-1 md:flex-none bg-green-500/10 text-green-500 border border-green-500/20 px-6 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                                className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-3 border border-green-500/20 font-black uppercase text-[10px] tracking-[0.2em] active:scale-95"
+                                title="Falar no WhatsApp"
                             >
-                                <Phone size={14} /> WhatsApp
+                                <Phone size={16} /> WhatsApp
                             </a>
-                            <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={() => toggleStatus(req.id, req.status)}
-                                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                                        req.status === 'coletado' 
-                                            ? 'bg-green-500 text-white' 
-                                            : 'bg-white/5 text-white/20 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                    title={req.status === 'coletado' ? "Marcar como Pendente" : "Marcar como Coletado"}
-                                >
-                                    <CheckCircle2 size={24} />
-                                </button>
-                                <button 
-                                    onClick={() => setRequestToDelete(req)}
-                                    className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
-                                    title="Excluir Pedido"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
-                            </div>
+                            <button 
+                                onClick={() => setRequestToDelete(req)}
+                                className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-500/20 active:scale-95"
+                                title="Excluir Pedido"
+                            >
+                                <Trash2 size={20} />
+                            </button>
                         </div>
                     </motion.div>
-                )) : (
-                    <div className="p-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-20 uppercase font-bold tracking-widest text-xs">
-                        {searchTerm ? "Nenhum resultado para sua busca." : "Nenhum pedido encontrado."}
+                ))}
+                {filteredRequests.length === 0 && (
+                    <div className="py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
+                        <ClipboardList className="mx-auto text-white/10 mb-4" size={48} />
+                        <span className="uppercase font-black tracking-[0.4em] text-[10px] text-white/20">Sem registros para exibir</span>
                     </div>
                 )}
             </div>
 
-            {/* Modal de Confirmação de Exclusão */}
+            {/* Modals */}
             <AnimatePresence>
                 {requestToDelete && (
                     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            exit={{ opacity: 0 }} 
-                            onClick={() => setRequestToDelete(null)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
-                        />
-                        <motion.div 
-                            initial={{ scale: 0.9, opacity: 0 }} 
-                            animate={{ scale: 1, opacity: 1 }} 
-                            exit={{ scale: 0.9, opacity: 0 }} 
-                            className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-8 text-center"
-                        >
-                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
-                                <Trash2 size={32} />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRequestToDelete(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-sm rounded-3xl p-8 text-center">
+                            <Trash2 size={40} className="mx-auto text-red-500 mb-4" />
+                            <h3 className="text-xl font-display uppercase mb-2">Excluir Pedido?</h3>
+                            <p className="text-white/40 text-sm mb-8">Confirmar exclusão do pedido de <b className="text-white">{requestToDelete.nome_completo}</b>?</p>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={handleDelete} className="w-full bg-red-500 py-4 rounded-xl font-bold uppercase">Confirmar</button>
+                                <button onClick={() => setRequestToDelete(null)} className="w-full py-4 text-white/50 uppercase font-bold text-xs">Cancelar</button>
                             </div>
-                            <h3 className="text-xl font-display uppercase text-white mb-2">Excluir Pedido?</h3>
-                            <p className="text-white/40 text-sm mb-8">
-                                Você está prestes a excluir o pedido de <b className="text-white">{requestToDelete.nome_completo}</b>. Esta ação não pode ser desfeita.
-                            </p>
-                            <div className="flex flex-col gap-3">
-                                <button 
-                                    onClick={handleDelete}
-                                    disabled={isDeleting}
-                                    className="w-full bg-red-500 text-white font-bold uppercase py-4 rounded-xl hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {isDeleting ? <RefreshCw className="animate-spin" size={18} /> : "Confirmar Exclusão"}
-                                </button>
-                                <button 
-                                    onClick={() => setRequestToDelete(null)}
-                                    className="w-full bg-white/5 text-white/50 font-bold uppercase py-4 rounded-xl hover:bg-white/10 hover:text-white transition-all"
-                                >
-                                    Cancelar
-                                </button>
+                        </motion.div>
+                    </div>
+                )}
+                {showClearAllModal && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowClearAllModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-red-500/50 w-full max-w-sm rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+                            <AlertCircle size={40} className="mx-auto text-red-500 mb-4" />
+                            <h3 className="text-xl font-display uppercase mb-2">Limpar TUDO?</h3>
+                            <p className="text-white/40 text-sm mb-8">Esta ação irá apagar TODOS os pedidos de camisetas permanentemente.</p>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={handleClearAll} className="w-full bg-red-500 py-4 rounded-xl font-bold uppercase">Sim, Excluir Tudo</button>
+                                <button onClick={() => setShowClearAllModal(false)} className="w-full py-4 text-white/50 uppercase font-bold text-xs">Cancelar</button>
                             </div>
                         </motion.div>
                     </div>
@@ -906,6 +875,7 @@ const ShirtRequestsAdmin: React.FC = () => {
         </div>
     );
 };
+
 
 interface AdminDashboardProps { onBack: () => void; onNavigateOrg?: () => void; }
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNavigateOrg }) => {

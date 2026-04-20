@@ -732,111 +732,111 @@ const ShirtRequestsAdmin: React.FC = () => {
     };
 
     return (
-        <div className="max-container py-10 space-y-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-white/5">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-brand-neon/10 rounded-2xl flex items-center justify-center border border-brand-neon/20">
-                        <ClipboardList className="text-brand-neon" size={24} />
+        <div className="max-container py-6 md:py-10 space-y-6 md:space-y-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-brand-neon/10 rounded-xl md:rounded-2xl flex items-center justify-center border border-brand-neon/20">
+                        <ClipboardList className="text-brand-neon" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-display uppercase tracking-tight text-white leading-none">Gestão de Camisetas</h2>
-                        <p className="text-[10px] uppercase font-bold text-white/30 tracking-[0.2em] mt-1">Controle de Pedidos Congresso 2026</p>
+                        <h2 className="text-xl md:text-3xl font-display uppercase tracking-tight text-white leading-none">Gestão de Camisetas</h2>
+                        <p className="text-[9px] uppercase font-bold text-white/30 tracking-[0.1em] mt-1">Pedidos Congresso 2026</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setShowClearAllModal(true)}
-                        className="px-6 py-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest active:scale-95"
+                        className="px-4 py-2.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest active:scale-95"
                     >
                         Limpar Base
                     </button>
-                    <button onClick={fetchRequests} className="p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-brand-neon transition-all active:rotate-180 duration-500">
-                        <RefreshCw size={22} />
+                    <button onClick={fetchRequests} className="p-2.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-brand-neon transition-all active:rotate-180 duration-500">
+                        <RefreshCw size={18} />
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-[#0a0a0a] p-8 rounded-[2rem] border border-white/5 flex flex-col gap-4 relative overflow-hidden group">
-                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Users size={80} />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#0a0a0a] p-5 md:p-8 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col gap-2 md:gap-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Users size={60} className="md:w-20 md:h-20" />
                     </div>
-                    <span className="text-[10px] uppercase font-black text-white/20 tracking-[0.3em]">Total Pedidos</span>
-                    <span className="text-5xl font-display text-white leading-none">{requests.length}</span>
+                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Total Pedidos</span>
+                    <span className="text-3xl md:text-5xl font-display text-white leading-none">{requests.length}</span>
                 </div>
-                <div className="bg-[#0a0a0a] p-8 rounded-[2rem] border border-white/5 flex flex-col gap-4 relative overflow-hidden group">
-                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <ShoppingBag size={80} />
+                <div className="bg-[#0a0a0a] p-5 md:p-8 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col gap-2 md:gap-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <ShoppingBag size={60} className="md:w-20 md:h-20" />
                     </div>
-                    <span className="text-[10px] uppercase font-black text-white/20 tracking-[0.3em]">Itens Solicitados</span>
-                    <span className="text-5xl font-display text-brand-neon leading-none">{totalShirts}</span>
+                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Solicitados</span>
+                    <span className="text-3xl md:text-5xl font-display text-brand-neon leading-none">{totalShirts}</span>
                 </div>
             </div>
 
             <div className="relative">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                 <input 
                     type="text" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Filtrar por nome do participante..."
-                    className="w-full bg-[#0a0a0a] border-2 border-white/5 rounded-[2.5rem] pl-16 pr-8 py-5 text-white focus:outline-none focus:border-brand-neon focus:bg-black transition-all text-sm font-medium shadow-2xl"
+                    placeholder="Filtrar por nome..."
+                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-2xl md:rounded-[2rem] pl-14 pr-6 py-4 text-white focus:outline-none focus:border-brand-neon transition-all text-xs font-medium shadow-xl"
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3">
                 {filteredRequests.map((req) => (
                     <motion.div 
                         layout
                         key={req.id} 
-                        className="bg-[#0d0d0d] border border-white/5 p-6 md:p-8 rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:border-white/10 hover:bg-[#111] transition-all relative overflow-hidden"
+                        className="bg-[#0d0d0d] border border-white/5 p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-white/10 hover:bg-[#111] transition-all relative overflow-hidden"
                     >
-                        <div className="flex flex-col gap-2">
-                            <h3 className="text-xl font-bold uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors">{req.nome_completo}</h3>
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Phone size={12} className="text-white/20" />
-                                    <span className="text-xs font-mono text-white/40 tracking-wider">{req.telefone}</span>
+                        <div className="flex flex-col gap-1.5">
+                            <h3 className="text-base md:text-xl font-bold uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors">{req.nome_completo}</h3>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                                <div className="flex items-center gap-1.5">
+                                    <Phone size={10} className="text-white/20" />
+                                    <span className="text-[10px] font-mono text-white/40 tracking-wider">{req.telefone}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${req.cor === 'TERRACOTA' ? 'bg-orange-500' : 'bg-green-500'}`} />
-                                    <span className="text-[10px] font-black uppercase text-white/60 tracking-widest">{req.cor}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${req.cor === 'TERRACOTA' ? 'bg-orange-500' : 'bg-green-500'}`} />
+                                    <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">{req.cor}</span>
                                 </div>
-                                <div className="px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">TAM: </span>
-                                    <span className="text-[10px] font-black text-white uppercase">{req.tamanho}</span>
+                                <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 flex items-center gap-1">
+                                    <span className="text-[8px] font-bold text-white/40 uppercase">TAM:</span>
+                                    <span className="text-[9px] font-black text-white uppercase">{req.tamanho}</span>
                                 </div>
-                                <div className="px-3 py-1 rounded-full bg-brand-neon/10 border border-brand-neon/20">
-                                    <span className="text-[10px] font-bold text-brand-neon/60 uppercase tracking-tighter">QTD: </span>
-                                    <span className="text-[10px] font-black text-brand-neon uppercase">{req.quantidade}</span>
+                                <div className="px-2 py-0.5 rounded-full bg-brand-neon/10 border border-brand-neon/20 flex items-center gap-1">
+                                    <span className="text-[8px] font-bold text-brand-neon/60 uppercase">QTD:</span>
+                                    <span className="text-[9px] font-black text-brand-neon uppercase">{req.quantidade}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 pt-4 md:pt-0 border-t md:border-0 border-white/5">
+                        <div className="flex items-center gap-2 pt-3 md:pt-0 border-t md:border-0 border-white/5">
                             <a 
                                 href={getWhatsAppLink(req.telefone)}
                                 target="_blank" 
                                 rel="noreferrer"
-                                className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-3 border border-green-500/20 font-black uppercase text-[10px] tracking-[0.2em] active:scale-95"
-                                title="Falar no WhatsApp"
+                                className="flex-1 md:flex-none h-11 md:h-14 px-6 rounded-xl md:rounded-2xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-2 border border-green-500/20 font-black uppercase text-[9px] tracking-widest active:scale-95"
+                                title="WhatsApp"
                             >
-                                <Phone size={16} /> WhatsApp
+                                <Phone size={14} /> WhatsApp
                             </a>
                             <button 
                                 onClick={() => setRequestToDelete(req)}
-                                className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-500/20 active:scale-95"
-                                title="Excluir Pedido"
+                                className="w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-500/20 active:scale-95"
+                                title="Excluir"
                             >
-                                <Trash2 size={20} />
+                                <Trash2 size={16} />
                             </button>
                         </div>
                     </motion.div>
                 ))}
                 {filteredRequests.length === 0 && (
-                    <div className="py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
-                        <ClipboardList className="mx-auto text-white/10 mb-4" size={48} />
-                        <span className="uppercase font-black tracking-[0.4em] text-[10px] text-white/20">Sem registros para exibir</span>
+                    <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
+                        <ClipboardList className="mx-auto text-white/10 mb-2" size={32} />
+                        <span className="uppercase font-black tracking-widest text-[9px] text-white/20">Sem registros</span>
                     </div>
                 )}
             </div>

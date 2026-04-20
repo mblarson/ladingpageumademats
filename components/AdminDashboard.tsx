@@ -649,6 +649,7 @@ const ShirtRequestsAdmin: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [requestToDelete, setRequestToDelete] = useState<any | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showClearAllModal, setShowClearAllModal] = useState(false);
 
@@ -672,17 +673,24 @@ const ShirtRequestsAdmin: React.FC = () => {
         fetchRequests();
     }, []);
 
-    const handleDelete = async () => {
+    const handleDeleteGroup = async () => {
         if (!requestToDelete) return;
         setIsDeleting(true);
         try {
+            // Delete all records for this person (Name + Phone)
             const { error } = await supabase
                 .from('pedidos_camisetas')
                 .delete()
-                .eq('id', requestToDelete.id);
+                .eq('nome_completo', requestToDelete.nome_completo)
+                .eq('telefone', requestToDelete.telefone);
+            
             if (error) throw error;
-            setRequests(requests.filter(r => r.id !== requestToDelete.id));
+            setRequests(requests.filter(r => 
+                r.nome_completo !== requestToDelete.nome_completo || 
+                r.telefone !== requestToDelete.telefone
+            ));
             setRequestToDelete(null);
+            setSelectedGroup(null);
         } catch (e) {
             alert("Erro ao excluir pedido.");
         } finally {
@@ -707,12 +715,39 @@ const ShirtRequestsAdmin: React.FC = () => {
         }
     };
 
-    const filteredRequests = useMemo(() => {
-        return requests.filter(req => {
-            const matchesSearch = (req.nome_completo || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const groupedRequests = useMemo(() => {
+        const groups: Record<string, any> = {};
+        
+        requests.forEach(req => {
+            const key = `${req.nome_completo}-${req.telefone}`;
+            if (!groups[key]) {
+                groups[key] = {
+                    nome_completo: req.nome_completo,
+                    telefone: req.telefone,
+                    items: [],
+                    totalQuantity: 0,
+                    lastCreatedAt: req.created_at,
+                    id: req.id // representative ID for layout
+                };
+            }
+            groups[key].items.push(req);
+            groups[key].totalQuantity += (req.quantidade || 0);
+            if (new Date(req.created_at) > new Date(groups[key].lastCreatedAt)) {
+                groups[key].lastCreatedAt = req.created_at;
+            }
+        });
+
+        return Object.values(groups).sort((a, b) => 
+            new Date(b.lastCreatedAt).getTime() - new Date(a.lastCreatedAt).getTime()
+        );
+    }, [requests]);
+
+    const filteredGroups = useMemo(() => {
+        return groupedRequests.filter(group => {
+            const matchesSearch = (group.nome_completo || '').toLowerCase().includes(searchTerm.toLowerCase());
             return matchesSearch;
         });
-    }, [requests, searchTerm]);
+    }, [groupedRequests, searchTerm]);
 
     const totalShirts = useMemo(() => {
         return requests.reduce((acc, curr) => acc + (curr.quantidade || 0), 0);
@@ -761,14 +796,14 @@ const ShirtRequestsAdmin: React.FC = () => {
                     <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Users size={60} className="md:w-20 md:h-20" />
                     </div>
-                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Total Pedidos</span>
-                    <span className="text-3xl md:text-5xl font-display text-white leading-none">{requests.length}</span>
+                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Solicitantes</span>
+                    <span className="text-3xl md:text-5xl font-display text-white leading-none">{groupedRequests.length}</span>
                 </div>
                 <div className="bg-[#0a0a0a] p-5 md:p-8 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col gap-2 md:gap-4 relative overflow-hidden group">
                     <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
                         <ShoppingBag size={60} className="md:w-20 md:h-20" />
                     </div>
-                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Solicitados</span>
+                    <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.2em]">Total Camisetas</span>
                     <span className="text-3xl md:text-5xl font-display text-brand-neon leading-none">{totalShirts}</span>
                 </div>
             </div>
@@ -785,37 +820,30 @@ const ShirtRequestsAdmin: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-                {filteredRequests.map((req) => (
+                {filteredGroups.map((group) => (
                     <motion.div 
                         layout
-                        key={req.id} 
-                        className="bg-[#0d0d0d] border border-white/5 p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-white/10 hover:bg-[#111] transition-all relative overflow-hidden"
+                        key={`group-${group.nome_completo}-${group.telefone}`} 
+                        onClick={() => setSelectedGroup(group)}
+                        className="bg-[#0d0d0d] border border-white/5 p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer hover:border-brand-neon/30 hover:bg-[#111] transition-all relative overflow-hidden"
                     >
                         <div className="flex flex-col gap-1.5">
-                            <h3 className="text-base md:text-xl font-bold uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors">{req.nome_completo}</h3>
+                            <h3 className="text-xl md:text-2xl font-display uppercase tracking-wide text-white group-hover:text-brand-neon transition-colors">{group.nome_completo}</h3>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                                 <div className="flex items-center gap-1.5">
-                                    <Phone size={10} className="text-white/20" />
-                                    <span className="text-[10px] font-mono text-white/40 tracking-wider">{req.telefone}</span>
+                                    <Phone size={12} className="text-white/20" />
+                                    <span className="text-xs font-mono text-white/40 tracking-wider font-bold">{group.telefone}</span>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${req.cor === 'TERRACOTA' ? 'bg-orange-500' : 'bg-green-500'}`} />
-                                    <span className="text-[9px] font-black uppercase text-white/60 tracking-wider">{req.cor}</span>
-                                </div>
-                                <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 flex items-center gap-1">
-                                    <span className="text-[8px] font-bold text-white/40 uppercase">TAM:</span>
-                                    <span className="text-[9px] font-black text-white uppercase">{req.tamanho}</span>
-                                </div>
-                                <div className="px-2 py-0.5 rounded-full bg-brand-neon/10 border border-brand-neon/20 flex items-center gap-1">
-                                    <span className="text-[8px] font-bold text-brand-neon/60 uppercase">QTD:</span>
-                                    <span className="text-[9px] font-black text-brand-neon uppercase">{req.quantidade}</span>
+                                <div className="px-3 py-1 rounded-full bg-brand-neon/10 border border-brand-neon/20 flex items-center gap-2">
+                                    <ShoppingBag size={10} className="text-brand-neon" />
+                                    <span className="text-[10px] font-black text-brand-neon uppercase tracking-widest">Total: {group.totalQuantity}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 pt-3 md:pt-0 border-t md:border-0 border-white/5">
+                        <div className="flex items-center gap-2 pt-3 md:pt-0 border-t md:border-0 border-white/5" onClick={(e) => e.stopPropagation()}>
                             <a 
-                                href={getWhatsAppLink(req.telefone)}
+                                href={getWhatsAppLink(group.telefone)}
                                 target="_blank" 
                                 rel="noreferrer"
                                 className="flex-1 md:flex-none h-11 md:h-14 px-6 rounded-xl md:rounded-2xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all flex items-center justify-center gap-2 border border-green-500/20 font-black uppercase text-[9px] tracking-widest active:scale-95"
@@ -824,7 +852,7 @@ const ShirtRequestsAdmin: React.FC = () => {
                                 <Phone size={14} /> WhatsApp
                             </a>
                             <button 
-                                onClick={() => setRequestToDelete(req)}
+                                onClick={() => setRequestToDelete(group)}
                                 className="w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-500/20 active:scale-95"
                                 title="Excluir"
                             >
@@ -833,7 +861,7 @@ const ShirtRequestsAdmin: React.FC = () => {
                         </div>
                     </motion.div>
                 ))}
-                {filteredRequests.length === 0 && (
+                {filteredGroups.length === 0 && (
                     <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
                         <ClipboardList className="mx-auto text-white/10 mb-2" size={32} />
                         <span className="uppercase font-black tracking-widest text-[9px] text-white/20">Sem registros</span>
@@ -842,23 +870,90 @@ const ShirtRequestsAdmin: React.FC = () => {
             </div>
 
             {/* Modals */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
+                {selectedGroup && (
+                    <div key="details-modal" className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedGroup(null)} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+                        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="relative bg-[#0d0d0d] border border-white/10 w-full max-w-sm md:max-w-md rounded-[2rem] overflow-hidden shadow-2xl">
+                            <div className="p-6 md:p-8">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h2 className="text-xl md:text-2xl font-display uppercase text-white leading-tight mb-1">{selectedGroup.nome_completo}</h2>
+                                        <p className="text-brand-neon font-mono text-[10px] tracking-widest font-bold">{selectedGroup.telefone}</p>
+                                    </div>
+                                    <button onClick={() => setSelectedGroup(null)} className="p-2.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                                        <X size={16} />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[9px] uppercase font-black text-white/20 tracking-[0.3em] whitespace-nowrap">Itens do Pedido</span>
+                                        <div className="h-px w-full bg-white/5" />
+                                    </div>
+
+                                    <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
+                                        {selectedGroup.items.map((item: any, idx: number) => (
+                                            <div key={idx} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group hover:bg-white/[0.04] transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-1.5 h-8 rounded-full ${item.cor === 'TERRACOTA' ? 'bg-orange-600' : 'bg-green-600'}`} />
+                                                    <div>
+                                                        <p className="text-base font-display text-white uppercase leading-none mb-1">{item.cor}</p>
+                                                        <p className="text-[9px] text-white/40 uppercase font-black tracking-wider">{item.tamanho}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-xl font-display text-brand-neon">x{item.quantidade}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                                    <span className="text-[9px] uppercase font-black text-white/30 tracking-[0.3em]">Total Geral</span>
+                                    <span className="text-2xl font-display text-white">{selectedGroup.totalQuantity} Itens</span>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 bg-white/[0.02] border-t border-white/5">
+                                <a 
+                                    href={getWhatsAppLink(selectedGroup.telefone)}
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="h-16 flex items-center justify-center gap-3 text-green-500 font-black uppercase text-[10px] tracking-widest hover:bg-green-500/10 transition-all border-r border-white/5 active:bg-green-500/20"
+                                >
+                                    <Phone size={16} /> WhatsApp
+                                </a>
+                                <button 
+                                    onClick={() => {
+                                        setRequestToDelete(selectedGroup);
+                                    }}
+                                    className="h-16 flex items-center justify-center gap-3 text-red-500 font-black uppercase text-[10px] tracking-widest hover:bg-red-500/10 transition-all active:bg-red-500/20"
+                                >
+                                    <Trash2 size={16} /> Excluir
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
                 {requestToDelete && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div key="delete-modal" className="fixed inset-0 z-[210] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRequestToDelete(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-sm rounded-3xl p-8 text-center">
                             <Trash2 size={40} className="mx-auto text-red-500 mb-4" />
-                            <h3 className="text-xl font-display uppercase mb-2">Excluir Pedido?</h3>
-                            <p className="text-white/40 text-sm mb-8">Confirmar exclusão do pedido de <b className="text-white">{requestToDelete.nome_completo}</b>?</p>
+                            <h3 className="text-xl font-display uppercase mb-2">Excluir Tudo?</h3>
+                            <p className="text-white/40 text-sm mb-8">Confirmar exclusão de TODOS os pedidos de <b className="text-white">{requestToDelete.nome_completo}</b>?</p>
                             <div className="flex flex-col gap-2">
-                                <button onClick={handleDelete} className="w-full bg-red-500 py-4 rounded-xl font-bold uppercase">Confirmar</button>
+                                <button onClick={handleDeleteGroup} className="w-full bg-red-500 py-4 rounded-xl font-bold uppercase">Sim, Excluir</button>
                                 <button onClick={() => setRequestToDelete(null)} className="w-full py-4 text-white/50 uppercase font-bold text-xs">Cancelar</button>
                             </div>
                         </motion.div>
                     </div>
                 )}
                 {showClearAllModal && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div key="clear-modal" className="fixed inset-0 z-[200] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowClearAllModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-red-500/50 w-full max-w-sm rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(239,68,68,0.2)]">
                             <AlertCircle size={40} className="mx-auto text-red-500 mb-4" />

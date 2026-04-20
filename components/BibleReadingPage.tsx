@@ -69,25 +69,26 @@ const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
   }))
 }));
 
-// Mapeamento de Livros para API (Português -> Inglês)
+// Mapeamento de Livros para API (Português -> Identificador API)
+// Alguns livros na API bible-api.com com translation=almeida exigem o nome em PT ou respondem errado em EN (ex: Ezra -> Ezekiel)
 const BIBLE_BOOK_MAP: Record<string, string> = {
-  "Gênesis": "Genesis", "Êxodo": "Exodus", "Levítico": "Leviticus", "Números": "Numbers",
-  "Deuteronômio": "Deuteronomy", "Josué": "Joshua", "Juízes": "Judges", "Rute": "Ruth",
-  "1 Samuel": "1 Samuel", "2 Samuel": "2 Samuel", "1 Reis": "1 Kings", "2 Reis": "2 Kings",
-  "1 Crônicas": "1 Chronicles", "2 Crônicas": "2 Chronicles", "Esdras": "Ezra", "Neemias": "Nehemiah",
-  "Ester": "Esther", "Jó": "Job", "Salmos": "Psalms", "Provérbios": "Proverbs",
-  "Eclesiastes": "Ecclesiastes", "Cantares": "Song of Solomon", "Isaías": "Isaiah",
-  "Jeremias": "Jeremiah", "Lamentações": "Lamentations", "Ezequiel": "Ezekiel", "Daniel": "Daniel",
-  "Oséias": "Hosea", "Joel": "Joel", "Amós": "Amos", "Obadias": "Obadiah", "Jonas": "Jonah",
-  "Miquéias": "Micah", "Naum": "Nahum", "Habacuque": "Habakkuk", "Sofonias": "Zephaniah",
-  "Ageu": "Haggai", "Zacarias": "Zechariah", "Malaquias": "Malachi", "Mateus": "Matthew",
-  "Marcos": "Mark", "Lucas": "Luke", "João": "John", "Atos": "Acts", "Romanos": "Romans",
-  "1 Coríntios": "1 Corinthians", "2 Coríntios": "2 Corinthians", "Gálatas": "Galatians",
-  "Efésios": "Ephesians", "Filipenses": "Philippians", "Colossenses": "Colossians",
-  "1 Tessalonicenses": "1 Thessalonians", "2 Tessalonicenses": "2 Thessalonians",
-  "1 Timóteo": "1 Timothy", "2 Timóteo": "2 Timothy", "Tito": "Titus", "Filemom": "Philemon",
-  "Hebreus": "Hebrews", "Tiago": "James", "1 Pedro": "1 Peter", "2 Pedro": "2 Peter",
-  "1 João": "1 John", "2 João": "2 John", "3 João": "3 John", "Judas": "Jude", "Apocalipse": "Revelation"
+  "Gênesis": "Gênesis", "Êxodo": "Êxodo", "Levítico": "Levítico", "Números": "Números",
+  "Deuteronômio": "Deuteronômio", "Josué": "Josué", "Juízes": "Juízes", "Rute": "Rute",
+  "1 Samuel": "1 Samuel", "2 Samuel": "2 Samuel", "1 Reis": "1 Reis", "2 Reis": "2 Reis",
+  "1 Crônicas": "1 Crônicas", "2 Crônicas": "2 Crônicas", "Esdras": "Esdras", "Neemias": "Neemias",
+  "Ester": "Ester", "Jó": "Jó", "Salmos": "Salmos", "Provérbios": "Provérbios",
+  "Eclesiastes": "Eclesiastes", "Cantares": "Cantares", "Isaías": "Isaías",
+  "Jeremias": "Jeremias", "Lamentações": "Lamentações", "Ezequiel": "Ezequiel", "Daniel": "Daniel",
+  "Oséias": "Oséias", "Joel": "Joel", "Amós": "Amós", "Obadias": "Obadias", "Jonas": "Jonas",
+  "Miquéias": "Miquéias", "Naum": "Naum", "Habacuque": "Habacuque", "Sofonias": "Sofonias",
+  "Ageu": "Ageu", "Zacarias": "Zacarias", "Malaquias": "Malaquias", "Mateus": "Mateus",
+  "Marcos": "Marcos", "Lucas": "Lucas", "João": "João", "Atos": "Atos", "Romanos": "Romanos",
+  "1 Coríntios": "1 Coríntios", "2 Coríntios": "2 Coríntios", "Gálatas": "Gálatas",
+  "Efésios": "Efésios", "Filipenses": "Filipenses", "Colossenses": "Colossenses",
+  "1 Tessalonicenses": "1 Tessalonicenses", "2 Tessalonicenses": "2 Tessalonicenses",
+  "1 Timóteo": "1 Timóteo", "2 Timóteo": "2 Timóteo", "Tito": "Tito", "Filemom": "Filemom",
+  "Hebreus": "Hebreus", "Tiago": "Tiago", "1 Pedro": "1 Pedro", "2 Pedro": "2 Pedro",
+  "1 João": "1 João", "2 João": "2 João", "3 João": "3 João", "Judas": "Judas", "Apocalipse": "Apocalipse"
 };
 
 interface BibleReadingPageProps {
@@ -258,7 +259,7 @@ const ReadingReader: React.FC<{
 
         // Lógica aprimorada de parser para evitar o erro "too many chapters"
         // Formatos tratados: "Salmos 1-9", "Salmos 117-119:72", "Gênesis 1-3"
-        const rangeRegex = new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?\\s*(?:-\\s*(\\d+)(?::(\\d+))?)?`);
+        const rangeRegex = new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?\\s*(?:-|–|—)\\s*(\\d+)(?::(\\d+))?`);
         const rangeMatch = cleanRef.match(rangeRegex);
 
         let finalVerses: Verse[] = [];
@@ -298,9 +299,17 @@ const ReadingReader: React.FC<{
             }
           }
         } else {
-          // Fallback para referências que o Regex não capturou (simples)
-          const apiRef = cleanRef.replace(bookPt, bookEn);
-          finalVerses = await fetchPart(apiRef);
+          // Caso seja apenas um capítulo: "João 3" ou "João 3:16"
+          const singleMatch = cleanRef.match(new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?`));
+          if (singleMatch) {
+            const ch = singleMatch[1];
+            const vs = singleMatch[2] ? `:${singleMatch[2]}` : "";
+            finalVerses = await fetchPart(`${bookEn} ${ch}${vs}`);
+          } else {
+            // Fallback para referências que o Regex não capturou (simples)
+            const apiRef = cleanRef.replace(bookPt, bookEn);
+            finalVerses = await fetchPart(apiRef);
+          }
         }
 
         if (finalVerses.length === 0) throw new Error("Nenhum versículo encontrado.");
@@ -308,7 +317,11 @@ const ReadingReader: React.FC<{
         setContent({ reference: item.ref, text: "", verses: finalVerses });
       } catch (err: any) {
         console.error("🚨 [Bible API Error]:", err);
-        setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
+        if (err.message.includes("404")) {
+           setError("Texto não encontrado para esta referência na tradução escolhida.");
+        } else {
+           setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
+        }
       } finally {
         setLoading(false);
       }

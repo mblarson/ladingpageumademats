@@ -155,13 +155,13 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
     return (
         <motion.div 
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 overflow-hidden"
+            className="fixed inset-0 z-[100] bg-[#19244e] flex flex-col items-center justify-center p-6 overflow-hidden"
             initial={{ opacity: 1 }}
             exit={{ y: "-100%", transition: { duration: 0.8, ease: "easeInOut" } }}
         >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1a1a1a_0%,#000000_100%)] opacity-80" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#253c96_0%,#19244e_100%)] opacity-80" />
             <div className="absolute inset-0 opacity-10" style={{ 
-                backgroundImage: 'radial-gradient(#4F46E5 2px, transparent 2px)',
+                backgroundImage: 'radial-gradient(#c4e7e5 2px, transparent 2px)',
                 backgroundSize: '30px 30px'
             }} />
 
@@ -175,14 +175,14 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     className="relative"
                 >
-                     <div className="absolute inset-0 bg-brand-neon/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                     <div className="absolute inset-0 bg-[#f36b2e]/20 blur-3xl rounded-full scale-150 animate-pulse" />
                      <img 
                         src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
                         alt="Mascote Bíblia"
-                        className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(204,255,0,0.3)]"
+                        className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(243,107,46,0.3)]"
                      />
-                     <div className="absolute -top-4 -right-4 text-brand-pink animate-bounce"><Star fill="currentColor" /></div>
-                     <div className="absolute bottom-4 -left-8 text-brand-purple animate-pulse"><Zap fill="currentColor" size={32} /></div>
+                     <div className="absolute -top-4 -right-4 text-[#f59a1e] animate-bounce"><Star fill="currentColor" /></div>
+                     <div className="absolute bottom-4 -left-8 text-[#f36b2e] animate-pulse"><Zap fill="currentColor" size={32} /></div>
                 </motion.div>
             </div>
 
@@ -194,23 +194,23 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="text-white font-fun text-xl md:text-2xl uppercase tracking-wide text-center"
+                            className="text-[#c4e7e5] font-fun text-xl md:text-2xl uppercase tracking-wide text-center"
                         >
                             {funMessages[messageIndex]}
                         </motion.p>
                     </AnimatePresence>
                 </div>
 
-                <div className="w-full h-6 md:h-8 bg-[#1a1a1a] border-4 border-white rounded-full overflow-hidden relative shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(45deg, #ffffff 25%, transparent 25%, transparent 50%, #ffffff 50%, #ffffff 75%, transparent 75%, transparent)', backgroundSize: '20px 20px' }} />
+                <div className="w-full h-6 md:h-8 bg-[#19244e] border-4 border-[#c4e7e5] rounded-full overflow-hidden relative shadow-[0_0_20px_rgba(196,231,229,0.1)]">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(45deg, #c4e7e5 25%, transparent 25%, transparent 50%, #c4e7e5 50%, #c4e7e5 75%, transparent 75%, transparent)', backgroundSize: '20px 20px' }} />
                     <motion.div 
-                        className="h-full bg-brand-neon relative"
+                        className="h-full bg-[#f36b2e] relative"
                         style={{ width: `${progress}%` }}
                     >
                         <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 shadow-[0_0_10px_white]" />
                     </motion.div>
                 </div>
-                <p className="text-white/30 text-xs font-mono font-bold mt-2">CARREGANDO {Math.round(progress)}%</p>
+                <p className="text-[#c4e7e5]/30 text-xs font-mono font-bold mt-2">CARREGANDO {Math.round(progress)}%</p>
             </div>
         </motion.div>
     );
@@ -334,11 +334,11 @@ const ReadingReader: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-       <motion.div initial={{ scale: 0.9, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 50, opacity: 0 }} className="relative bg-[#1a1a1a] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#151515]">
+       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#19244e]/90 backdrop-blur-md" />
+       <motion.div initial={{ scale: 0.9, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 50, opacity: 0 }} className="relative bg-[#253c96] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#19244e]">
              <div>
-               <h3 className="text-brand-neon font-sans text-xs font-bold uppercase tracking-wider mb-1">Leitura de Hoje</h3>
+               <h3 className="text-[#f36b2e] font-sans text-xs font-bold uppercase tracking-wider mb-1">Leitura de Hoje</h3>
                <h2 className="text-2xl md:text-3xl font-display uppercase text-white">{item.ref}</h2>
              </div>
              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"><X size={24} /></button>
@@ -358,8 +358,8 @@ const ReadingReader: React.FC<{
              ) : (
                <div className="prose prose-invert max-w-none">
                   {content?.verses?.map((verse, idx) => (
-                    <span key={idx} className="text-gray-300 text-lg md:text-xl leading-relaxed font-serif">
-                       <span className="text-brand-neon/50 text-xs font-sans mr-1 align-top select-none">{verse.verse}</span>
+                    <span key={idx} className="text-[#c4e7e5] text-lg md:text-xl leading-relaxed font-serif">
+                       <span className="text-[#f36b2e]/50 text-xs font-sans mr-1 align-top select-none">{verse.verse}</span>
                        {verse.text}
                        {verse.text.endsWith('\n') ? <br/> : ' '}
                     </span>
@@ -368,8 +368,8 @@ const ReadingReader: React.FC<{
                </div>
              )}
           </div>
-          <div className="p-4 border-t border-white/10 bg-[#151515] flex justify-center">
-             <button onClick={() => { onComplete(item.id, item.ref); onClose(); }} disabled={loading || !!error} className="w-full md:w-auto px-8 py-4 bg-brand-neon hover:bg-brand-neon/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"><CheckCircle2 size={20} /> Concluir Leitura</button>
+          <div className="p-4 border-t border-white/10 bg-[#19244e] flex justify-center">
+             <button onClick={() => { onComplete(item.id, item.ref); onClose(); }} disabled={loading || !!error} className="w-full md:w-auto px-8 py-4 bg-[#f36b2e] hover:bg-[#f36b2e]/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"><CheckCircle2 size={20} /> Concluir Leitura</button>
           </div>
        </motion.div>
     </div>
@@ -413,9 +413,9 @@ const CelebrationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         initial={{ scale: 0.8, y: 100, opacity: 0 }} 
         animate={{ scale: 1, y: 0, opacity: 1 }} 
         exit={{ scale: 0.8, y: 100, opacity: 0 }} 
-        className="relative bg-gradient-to-b from-[#1a1a1a] to-black border-2 border-brand-neon/30 w-full max-w-sm rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(204,255,0,0.2)] p-6 text-center max-h-[90vh] flex flex-col"
+        className="relative bg-gradient-to-b from-[#253c96] to-[#19244e] border-2 border-[#f36b2e]/30 w-full max-w-sm rounded-[32px] overflow-hidden shadow-[0_0_50px_rgba(243,107,46,0.2)] p-6 text-center max-h-[90vh] flex flex-col"
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-neon to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#f36b2e] to-transparent" />
         
         <div className="overflow-y-auto no-scrollbar flex-1 flex flex-col items-center">
           <div className="mb-4 shrink-0 relative">
@@ -443,12 +443,12 @@ const CelebrationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <p className="text-white/80 text-base leading-relaxed font-medium">
               Você tem se demonstrado dedicado à Palavra de Deus.
             </p>
-            <p className="text-brand-neon text-lg font-bold uppercase tracking-wide">
+            <p className="text-[#f36b2e] text-lg font-bold uppercase tracking-wide">
               Reconhecendo esse comprometimento, a Umademats te dará um brinde SURPRESA.
             </p>
             <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-full bg-brand-pink/20 flex items-center justify-center shrink-0">
-                <Camera className="text-brand-pink" size={16} />
+              <div className="w-8 h-8 rounded-full bg-[#f59a1e]/20 flex items-center justify-center shrink-0">
+                <Camera className="text-[#f59a1e]" size={16} />
               </div>
               <p className="text-white/60 text-[11px] italic leading-tight">
                 Tire um print dessa tela e poste nos stories marcando <span className="text-white font-bold not-italic">@umademats</span>!
@@ -462,7 +462,7 @@ const CelebrationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         <button 
           onClick={onClose}
-          className="w-full bg-brand-neon text-black font-black uppercase py-4 rounded-2xl hover:bg-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 group shrink-0 mt-2"
+          className="w-full bg-[#f36b2e] text-black font-black uppercase py-4 rounded-2xl hover:bg-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 group shrink-0 mt-2"
         >
           Continuar Lendo <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
         </button>
@@ -523,7 +523,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   if (showIntro) return <BibleIntro onFinish={() => { setShowIntro(false); if (onIntroComplete) onIntroComplete(); }} />;
 
   return (
-    <div className="min-h-screen w-full bg-[#0f0f0f] text-gray-200 flex flex-col font-sans">
+    <div className="min-h-screen w-full bg-[#19244e] text-[#c4e7e5] flex flex-col font-sans">
       <AnimatePresence>
         {readingItem && (
           <ReadingReader 
@@ -536,13 +536,13 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
       <AnimatePresence>
         {showCelebration && <CelebrationModal onClose={() => setShowCelebration(false)} />}
       </AnimatePresence>
-      <header className="sticky top-0 z-40 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5">
+      <header className="sticky top-0 z-40 bg-[#19244e]/95 backdrop-blur-md border-b border-white/5">
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
             <button onClick={handleBackNavigation} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white group"><ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" /></button>
             <div className="flex flex-col justify-center h-full pt-1">
-              <h1 className="font-display italic uppercase text-2xl tracking-tight text-white leading-[0.8]">UMADE<span className="text-brand-neon">MATS</span></h1>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-brand-pink font-bold opacity-80 mt-1">Leitura Bíblica 2026</span>
+              <h1 className="font-display italic uppercase text-2xl tracking-tight text-white leading-[0.8]">UMADE<span className="text-[#f36b2e]">MATS</span></h1>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#f59a1e] font-bold opacity-80 mt-1">Leitura Bíblica 2026</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -570,11 +570,11 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                </div>
                <div className="flex flex-col w-full">
                  <div className="px-4 mb-6">
-                   <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex items-center gap-4">
-                      <div className="bg-brand-neon/10 p-3 rounded-full"><BarChart3 className="text-brand-neon" size={24} /></div>
+                   <div className="bg-[#253c96] rounded-xl p-4 border border-white/10 flex items-center gap-4">
+                      <div className="bg-[#f36b2e]/10 p-3 rounded-full"><BarChart3 className="text-[#f36b2e]" size={24} /></div>
                       <div className="flex-1">
-                         <div className="flex justify-between text-xs font-bold uppercase mb-2"><span className="text-white">Progresso Anual</span><span className="text-brand-neon">{totalAnnualProgress}%</span></div>
-                         <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${totalAnnualProgress}%` }} className="h-full bg-gradient-to-r from-brand-pink to-brand-neon rounded-full" /></div>
+                         <div className="flex justify-between text-xs font-bold uppercase mb-2"><span className="text-white">Progresso Anual</span><span className="text-[#f36b2e]">{totalAnnualProgress}%</span></div>
+                         <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${totalAnnualProgress}%` }} className="h-full bg-gradient-to-r from-[#f59a1e] to-[#f36b2e] rounded-full" /></div>
                       </div>
                    </div>
                  </div>
@@ -583,10 +583,10 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                      const stats = getMonthStats(month.id);
                      const isComplete = stats.percentage === 100;
                      return (
-                       <motion.button key={month.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02, translateY: -2 }} whileTap={{ scale: 0.98 }} onClick={() => handleMonthSelect(month.id)} className={`relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left border transition-all duration-300 group ${isComplete ? 'bg-brand-neon/10 border-brand-neon text-white' : 'bg-[#1a1a1a] border-white/5 hover:border-white/20 text-gray-300'}`}>
-                         {isComplete && <div className="absolute top-0 right-0 p-3"><div className="bg-brand-neon rounded-full p-1 shadow-lg"><Check size={12} className="text-black" strokeWidth={3} /></div></div>}
-                         <div><span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">Mês {(month.id + 1).toString().padStart(2,'0')}</span><h3 className={`text-2xl font-display uppercase tracking-wide group-hover:text-brand-neon transition-colors ${isComplete ? 'text-brand-neon' : 'text-white'}`}>{month.name}</h3></div>
-                         <div className="w-full"><div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-70"><span>Progresso</span><span>{stats.percentage}%</span></div><div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${stats.percentage}%` }} className={`h-full rounded-full ${isComplete ? 'bg-brand-neon' : 'bg-brand-pink'}`} /></div></div>
+                       <motion.button key={month.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02, translateY: -2 }} whileTap={{ scale: 0.98 }} onClick={() => handleMonthSelect(month.id)} className={`relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left border transition-all duration-300 group ${isComplete ? 'bg-[#f36b2e]/10 border-[#f36b2e] text-white' : 'bg-[#253c96] border-white/5 hover:border-white/20 text-[#c4e7e5]'}`}>
+                         {isComplete && <div className="absolute top-0 right-0 p-3"><div className="bg-[#f36b2e] rounded-full p-1 shadow-lg"><Check size={12} className="text-black" strokeWidth={3} /></div></div>}
+                         <div><span className="text-xs font-sans font-bold uppercase tracking-widest opacity-50 block mb-1">Mês {(month.id + 1).toString().padStart(2,'0')}</span><h3 className={`text-2xl font-display uppercase tracking-wide group-hover:text-[#f36b2e] transition-colors ${isComplete ? 'text-[#f36b2e]' : 'text-white'}`}>{month.name}</h3></div>
+                         <div className="w-full"><div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-70"><span>Progresso</span><span>{stats.percentage}%</span></div><div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${stats.percentage}%` }} className={`h-full rounded-full ${isComplete ? 'bg-[#f36b2e]' : 'bg-[#f59a1e]'}`} /></div></div>
                        </motion.button>
                      );
                    })}
@@ -604,25 +604,25 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
             <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-full">
                <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
                  <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div><h2 className="text-brand-pink font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2><h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{ANNUAL_PLAN[selectedMonthId].name}</h1></div>
+                    <div><h2 className="text-[#f59a1e] font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2><h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{ANNUAL_PLAN[selectedMonthId].name}</h1></div>
                     {getMonthStats(selectedMonthId).percentage === 100 && <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none"><CheckCircle2 size={18} /> Mês Concluído</div>}
                  </div>
                  <div className="mb-8">
                      <div className="flex justify-between text-xs text-white/50 mb-1 font-mono"><span>{getMonthStats(selectedMonthId).completed} / {getMonthStats(selectedMonthId).total} leituras</span><span>{getMonthStats(selectedMonthId).percentage}%</span></div>
-                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${getMonthStats(selectedMonthId).percentage}%` }} className="h-full bg-brand-neon" /></div>
+                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${getMonthStats(selectedMonthId).percentage}%` }} className="h-full bg-[#f36b2e]" /></div>
                  </div>
                  <div className="flex flex-col gap-2">
                     {ANNUAL_PLAN[selectedMonthId].items.map((item, index) => {
                       const isRead = isItemComplete(item.id);
                       return (
-                        <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }} onClick={() => openReading(item)} className={`group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none ${isRead ? 'bg-[#1a1a1a] border-brand-neon/30 opacity-60 hover:opacity-100' : 'bg-[#151515] border-white/5 hover:bg-[#202020] hover:border-white/20'}`}>
-                           <div className="flex items-center gap-4"><div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${isRead ? 'bg-brand-neon border-brand-neon' : 'bg-transparent border-white/20 group-hover:border-white/50'}`}>{isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}</div><span className={`font-serif text-lg md:text-xl transition-colors ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}`}>{item.ref}</span></div>
-                           <div className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-neon text-xs font-bold uppercase tracking-wider flex items-center gap-1">Ler Agora <ChevronRight size={14} /></div>
+                        <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }} onClick={() => openReading(item)} className={`group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none ${isRead ? 'bg-[#253c96] border-[#f36b2e]/30 opacity-60 hover:opacity-100' : 'bg-[#253c96]/40 border-white/5 hover:bg-[#253c96]/60 hover:border-white/20'}`}>
+                           <div className="flex items-center gap-4"><div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${isRead ? 'bg-[#f36b2e] border-[#f36b2e]' : 'bg-transparent border-white/20 group-hover:border-white/50'}`}>{isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}</div><span className={`font-serif text-lg md:text-xl transition-colors ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}`}>{item.ref}</span></div>
+                           <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[#f36b2e] text-xs font-bold uppercase tracking-wider flex items-center gap-1">Ler Agora <ChevronRight size={14} /></div>
                         </motion.div>
                       );
                     })}
                  </div>
-                 <div className="mt-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-3 text-blue-200"><ShieldCheck className="shrink-0" /><p className="text-xs leading-relaxed">Este sistema apenas organiza o seu progresso. Lembre-se de ler a Bíblia Sagrada em seu momento devocional para edificação espiritual.</p></div>
+                 <div className="mt-8 p-4 rounded-xl bg-[#c4e7e5]/10 border border-[#c4e7e5]/20 flex gap-3 text-[#c4e7e5]"><ShieldCheck className="shrink-0" /><p className="text-xs leading-relaxed">Este sistema apenas organiza o seu progresso. Lembre-se de ler a Bíblia Sagrada em seu momento devocional para edificação espiritual.</p></div>
                </div>
             </motion.div>
           )}

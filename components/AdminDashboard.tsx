@@ -6,6 +6,7 @@ import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
 import { HeroSection } from './HeroSection';
+import { HeroCMS } from './HeroCMS';
 import { ActionSection } from './ActionSection';
 import { AboutSection } from './AboutSection';
 import { PresenceCounter } from './PresenceCounter';
@@ -89,7 +90,7 @@ const BibleAdmin: React.FC = () => {
         <div className="space-y-6 fluid-container">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                    <BookOpen className="text-brand-purple" />
+                    <BookOpen className="text-[#f59a1e]" />
                     <h2 className="text-2xl font-display uppercase tracking-wider">Engajamento na Leitura</h2>
                 </div>
 
@@ -101,14 +102,14 @@ const BibleAdmin: React.FC = () => {
                     </div>
                     <button 
                         onClick={handleToggleCampaign}
-                        className={`w-14 h-7 rounded-full relative p-1 transition-all duration-300 ${config.bible_campaign_active ? 'bg-brand-neon shadow-[0_0_15px_rgba(204,255,0,0.3)]' : 'bg-white/10'}`}
+                        className={`w-14 h-7 rounded-full relative p-1 transition-all duration-300 ${config.bible_campaign_active ? 'bg-[#f36b2e] shadow-[0_0_15px_rgba(243,107,46,0.3)]' : 'bg-white/10'}`}
                     >
                         <motion.div 
                             animate={{ x: config.bible_campaign_active ? 28 : 0 }}
                             className={`w-5 h-5 rounded-full shadow-md transition-colors ${config.bible_campaign_active ? 'bg-black' : 'bg-white/40'}`}
                         />
                     </button>
-                    <span className={`text-[10px] font-black uppercase tracking-tighter w-8 ${config.bible_campaign_active ? 'text-brand-neon' : 'text-white/20'}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-tighter w-8 ${config.bible_campaign_active ? 'text-[#f36b2e]' : 'text-white/20'}`}>
                         {config.bible_campaign_active ? 'ON' : 'OFF'}
                     </span>
                 </div>
@@ -118,11 +119,11 @@ const BibleAdmin: React.FC = () => {
                     <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1">Total de Leituras</span>
                     <span className="text-4xl font-display text-white">{progressData.length}</span>
                 </div>
-                <button onClick={() => setShowReadersModal(true)} className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 text-left hover:border-brand-neon transition-colors group">
-                    <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 group-hover:text-brand-neon">Leitores</span>
+                <button onClick={() => setShowReadersModal(true)} className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 text-left hover:border-[#f36b2e] transition-colors group">
+                    <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 group-hover:text-[#f36b2e]">Leitores</span>
                     <div className="flex items-center justify-between">
                         <span className="text-4xl font-display text-white">{userStats.length}</span>
-                        <ChevronRight size={20} className="text-white/10 group-hover:text-brand-neon transition-colors" />
+                        <ChevronRight size={20} className="text-white/10 group-hover:text-[#f36b2e] transition-colors" />
                     </div>
                 </button>
                 <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 relative overflow-hidden group">
@@ -139,13 +140,13 @@ const BibleAdmin: React.FC = () => {
             <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-lg">
                 <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
                     <h3 className="text-sm font-bold uppercase tracking-widest">Top 3 Leitores</h3>
-                    <Trophy size={18} className="text-brand-neon" />
+                    <Trophy size={18} className="text-[#f36b2e]" />
                 </div>
                 <div className="divide-y divide-white/5">
                     {userStats.length > 0 ? userStats.slice(0, 3).map(([name, data], idx) => (
                         <div key={idx} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
                             <div className="flex items-center gap-4">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-brand-neon text-black' : 'bg-white/10 text-white'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-[#f36b2e] text-black' : 'bg-white/10 text-white'}`}>
                                     {idx + 1}
                                 </div>
                                 <div>
@@ -893,20 +894,27 @@ const ShirtRequestsAdmin: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
-                                        {selectedGroup.items.map((item: any, idx: number) => (
-                                            <div key={idx} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group hover:bg-white/[0.04] transition-all">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-1.5 h-8 rounded-full ${item.cor === 'TERRACOTA' ? 'bg-orange-600' : 'bg-green-600'}`} />
-                                                    <div>
-                                                        <p className="text-base font-display text-white uppercase leading-none mb-1">{item.cor}</p>
-                                                        <p className="text-[9px] text-white/40 uppercase font-black tracking-wider">{item.tamanho}</p>
+                                        {selectedGroup.items.map((item: any, idx: number) => {
+                                            // Fix for legacy items affected by the hyphen splitting bug
+                                            const isVerdeOlivaBug = item.cor === 'VERDE' && item.tamanho?.startsWith('OLIVA');
+                                            const displayColor = isVerdeOlivaBug ? 'VERDE-OLIVA' : item.cor;
+                                            const displayTamanho = isVerdeOlivaBug ? item.tamanho.replace('OLIVA', '').trim() : item.tamanho;
+
+                                            return (
+                                                <div key={idx} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group hover:bg-white/[0.04] transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-1.5 h-8 rounded-full ${displayColor === 'TERRACOTA' ? 'bg-orange-600' : 'bg-green-600'}`} />
+                                                        <div>
+                                                            <p className="text-base font-display text-white uppercase leading-none mb-1">{displayColor}</p>
+                                                            <p className="text-[9px] text-white/40 uppercase font-black tracking-wider">{displayTamanho}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-xl font-display text-brand-neon">x{item.quantidade}</span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className="text-xl font-display text-brand-neon">x{item.quantidade}</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -982,6 +990,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [builderSubTab, setBuilderSubTab] = useState<'hero'>('hero');
+  const [heroDimensions, setHeroDimensions] = useState({ width: 0, height: 0 });
+
+  const handleDimensionsDetected = React.useCallback((width: number, height: number) => {
+    setHeroDimensions(prev => {
+      if (Math.round(prev.width) === Math.round(width) && Math.round(prev.height) === Math.round(height)) return prev;
+      return { width, height };
+    });
+  }, []);
+
   useEffect(() => { if (config) setDraftConfig({ ...DEFAULT_SITE_CONFIG, ...config }); }, [config]);
   const handleLogin = (e: React.FormEvent) => { e.preventDefault(); if (password === 'umademats2026' || password === 'admin' || password === 'macuxi') setIsAuthenticated(true); else alert('Senha incorreta'); };
   if (!isAuthenticated) return (
@@ -1055,33 +1073,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
             {/* BUILDER SIDEBAR CONTROLS */}
             {activeTab === 'builder' && (
               <div className="mt-8 pt-6 border-t border-white/5 space-y-6 overflow-y-auto no-scrollbar pb-10">
-                 <div className="px-2">
-                    <h4 className="text-[10px] uppercase font-bold text-white/40 tracking-widest mb-4 flex items-center gap-2">
-                       <Type size={12} /> Tipografia Desktop
-                    </h4>
-                    <div className="space-y-4">
-                       <div className="flex flex-col gap-2">
-                          <div className="flex justify-between items-center">
-                             <span className="text-xs font-bold text-white/60">Tamanho texto 1ª seção</span>
-                             <span className="text-[10px] bg-brand-neon text-black px-2 py-0.5 rounded font-bold">
-                                {Math.round(draftConfig.hero_desktopFontSizeFactor * 100)}%
-                             </span>
-                          </div>
-                          <input 
-                             type="range" 
-                             min="0.8" 
-                             max="1.5" 
-                             step="0.05"
-                             value={draftConfig.hero_desktopFontSizeFactor}
-                             onChange={(e) => setDraftConfig({...draftConfig, hero_desktopFontSizeFactor: parseFloat(e.target.value)})}
-                             className="w-full accent-brand-neon cursor-pointer h-1.5 bg-white/10 rounded-lg appearance-none"
-                          />
-                          <p className="text-[9px] text-white/30 italic">Ajusta apenas os títulos principais no computador.</p>
-                       </div>
+                 <div className="px-2 space-y-2">
+                    <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-brand-neon text-black">
+                      <div className="flex items-center gap-2">
+                         <span className="text-xs font-bold uppercase tracking-widest">Seção HERO</span>
+                         <span className="bg-black/10 px-1.5 py-0.5 rounded text-[8px] font-black">CMS</span>
+                      </div>
+                      <ChevronRight size={14} />
                     </div>
                  </div>
 
-                 <button onClick={() => saveConfig(draftConfig)} className="w-full bg-brand-neon text-black font-bold uppercase py-3 rounded-xl flex items-center justify-center gap-2"><Save size={18} /> Publicar Alterações</button>
+                 <div className="h-px w-full bg-white/5 mx-2" />
+
+                 <div className="px-2 space-y-4">
+                    <div className="p-4 bg-brand-neon/10 border border-brand-neon/20 rounded-2xl">
+                       <p className="text-[9px] text-brand-neon font-black uppercase tracking-widest mb-1">Status CMS</p>
+                       <p className="text-xs text-white/80 uppercase font-bold">Gerenciamento de Slides Ativado</p>
+                    </div>
+                    <p className="text-[9px] text-white/20 uppercase font-bold tracking-widest px-2">As alterações nos slides são aplicadas instantaneamente.</p>
+                 </div>
               </div>
             )}
         </aside>
@@ -1102,8 +1112,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
             </div>
           )}
           {activeTab === 'builder' && (
-             <div className="w-full h-full rounded-2xl border-4 border-white/5 overflow-hidden shadow-2xl relative">
-                <div className="w-full h-full origin-top scale-[0.6] md:scale-[0.8] lg:scale-100 bg-white shadow-inner"><div className="h-full overflow-y-auto overflow-x-hidden no-scrollbar"><HeroSection previewConfig={draftConfig} onNavigate={()=>{}} /><ActionSection previewConfig={draftConfig} onNavigate={()=>{}} /><AboutSection previewConfig={draftConfig} /></div></div>
+             <div className="w-full h-full flex flex-col md:flex-row gap-6 relative">
+                {activeTab === 'builder' && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 20 }} 
+                     animate={{ opacity: 1, y: 0 }} 
+                     className={`flex-1 ${typeof window !== 'undefined' && window.innerWidth < 768 ? 'fixed inset-0 z-[100] bg-black p-4' : 'max-w-5xl mx-auto'}`}
+                   >
+                      <div className="md:hidden flex items-center gap-4 mb-6 pt-2">
+                        <button onClick={() => setAdminView('menu')} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft size={20} /></button>
+                        <h2 className="text-xl font-display uppercase text-white">Seção HERO CMS</h2>
+                      </div>
+                      <div className="h-full overflow-y-auto no-scrollbar pb-20">
+                        <HeroCMS heroDimensions={heroDimensions} />
+                      </div>
+                   </motion.div>
+                )}
              </div>
           )}
         </main>

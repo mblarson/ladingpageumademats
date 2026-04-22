@@ -1,41 +1,103 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DividerCreative } from './DividerCreative';
 import { MarqueeBanner } from './MarqueeBanner';
 import { SubtleWaveDivider } from './SubtleWaveDivider';
 import { CreativeDivider } from './CreativeDivider';
-import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star, Music, Camera } from 'lucide-react';
+import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star, Music, Camera, ExternalLink } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
+import { supabase } from '../lib/supabaseClient';
+import { HeroSlide } from '../types';
+import { getDirectDriveUrl } from '../lib/heroUtils';
 
 interface HeroSectionProps {
   previewConfig?: SiteConfig; 
   onNavigate: (page: PageType) => void;
+  onDimensionsDetected?: (width: number, height: number) => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate }) => {
-  const { config: storedConfig, loading } = useSiteConfig();
-  const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
+export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate, onDimensionsDetected }) => {
+  const { config: storedConfig, loading: configLoading } = useSiteConfig();
+  const activeConfig = previewConfig || (configLoading ? DEFAULT_SITE_CONFIG : storedConfig);
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -50, left: -50, right: 50, bottom: 50 }, dragElastic: 0.1 } : {};
   const dragFreeProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -200, left: -200, right: 200, bottom: 200 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 100 } } : {};
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPhotosInfoModal, setShowPhotosInfoModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Lógica de Intervalo do Slider - Fotos Primeiro (10s)
+  // Detecção de Dimensões
+  const lastDimensions = useRef({ width: 0, height: 0 });
   useEffect(() => {
-    // O slide 0 (Fotos) fica por 10 segundos
-    const initialTimeout = setTimeout(() => {
-      setCurrentIndex(1);
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % 5);
-      }, 4500);
-      return () => clearInterval(interval);
-    }, 10000);
-    return () => clearTimeout(initialTimeout);
+    if (!onDimensionsDetected) return;
+
+    const detect = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        if (Math.round(lastDimensions.current.width) !== Math.round(width) || Math.round(lastDimensions.current.height) !== Math.round(height)) {
+          lastDimensions.current = { width, height };
+          onDimensionsDetected(width, height);
+        }
+      }
+    };
+    
+    detect();
+    window.addEventListener('resize', detect);
+    const observer = new ResizeObserver(detect);
+    if (containerRef.current) observer.observe(containerRef.current);
+    
+    return () => {
+      window.removeEventListener('resize', detect);
+      observer.disconnect();
+    };
+  }, [onDimensionsDetected]);
+
+  // Busca Slides
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('hero_slides')
+          .select('*')
+          .eq('is_active', true)
+          .order('order', { ascending: true });
+        
+        if (!error && data && data.length > 0) {
+          setSlides(data);
+        } else {
+          // Fallback slides if none found
+          setSlides([
+            { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
+            { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
+            { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
+            { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
+            { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
+          ]);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar slides:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSlides();
   }, []);
+
+  // Timer do Slider
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, currentIndex === 0 ? 10000 : 5000); // 10s para o primeiro, 5s para os outros
+    
+    return () => clearInterval(interval);
+  }, [slides.length, currentIndex]);
 
   const scrollToSection = (id: string) => {
     setIsMenuOpen(false);
@@ -56,24 +118,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     exit: { x: "-100%", opacity: 1 }
   };
 
-  const getSlideBg = (index: number) => {
-    if (index === 0 || index === 2) return '#000000'; // 0: Fotos, 2: Lidera
-    return activeConfig.hero_bgColor;
-  };
-
-  const handleSlideClick = () => {
-      if (currentIndex === 2) onNavigate('lidera');
-      if (currentIndex === 0) {
+  const handleSlideClick = (slide: HeroSlide) => {
+      if (slide.link === '/lidera') onNavigate('lidera');
+      else if (slide.link === '/bible') onNavigate('bible');
+      else if (slide.link.includes('drive.google.com')) {
         setShowPhotosInfoModal(true);
         setTimeout(() => {
           setShowPhotosInfoModal(false);
-          window.location.href = 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing';
+          window.open(slide.link, '_blank');
         }, 3000);
+      } else if (slide.link) {
+        window.open(slide.link, '_blank');
       }
   };
 
+  const currentSlide = slides[currentIndex];
+
+  if (!currentSlide) return null;
+
   return (
-    <section className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
+    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
       <style>{`
         @media (min-width: 768px) {
           .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }
@@ -86,6 +150,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           .hero-box-title { font-size: 4.5rem !important; }
         }
       `}</style>
+
+      {/* Background Image / Color */}
+      <AnimatePresence initial={false} mode="wait">
+        <motion.div
+           key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           transition={{ duration: 0.8 }}
+           className="absolute inset-0 z-0"
+        >
+          {currentSlide.image_desktop_url ? (
+            <>
+              {/* Desktop Image */}
+              <picture className="w-full h-full">
+                {currentSlide.use_mobile_image && currentSlide.image_mobile_url && (
+                   <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
+                )}
+                <img 
+                  src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
+                  alt={currentSlide.title} 
+                  className="w-full h-full object-cover"
+                />
+              </picture>
+            </>
+          ) : (
+            <div 
+              className="w-full h-full" 
+              style={{ backgroundColor: (currentIndex === 0 || currentIndex === 2) ? '#000000' : activeConfig.hero_bgColor }} 
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Marquee Superior */}
       <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
@@ -110,7 +207,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
       </div>
 
-      {/* Slider */}
+      {/* Content Slider */}
       <AnimatePresence initial={false} mode="popLayout">
         <motion.div
           key={currentIndex}
@@ -119,61 +216,67 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           animate="center"
           exit="exit"
           transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer"
-          style={{ backgroundColor: getSlideBg(currentIndex) }}
-          onClick={handleSlideClick}
+          className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10"
+          onClick={() => handleSlideClick(currentSlide)}
         >
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
-          </div>
+          {/* Grid Background Effect (only if no image) */}
+          {!currentSlide.image_desktop_url && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
+            </div>
+          )}
 
           <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
             <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
-              {currentIndex === 0 && (
-                <motion.div 
-                  className="flex flex-col items-center justify-center px-4 w-full h-full relative" 
-                  {...dragProps}
-                >
+              {/* Dynamic Content Mapping */}
+              {currentSlide.id === '1' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                // Original Photos Slide
+                <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
                   <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
-                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center">
-                    <SubtleWaveDivider className="opacity-50" width="250px" height="15px" color="#FFD700" />
-                  </div>
+                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-50" width="250px" height="15px" color="#FFD700" /></div>
                   <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-2 transform relative flex items-center gap-4 group hover:scale-105 transition-transform" style={{ backgroundColor: '#FFD700' }}>
                     <Camera className="text-black w-8 h-8 md:w-12 md:h-12" />
                     <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
                   </div>
                 </motion.div>
-              )}
-              {currentIndex === 1 && (
-                <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
-                  <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
-                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center">
-                    <SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} />
-                  </div>
-                </motion.div>
-              )}
-              {currentIndex === 2 && (
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LIDERA</h2>
-                  <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 -rotate-2 transform" style={{ backgroundColor: activeConfig.hero_accentColor }}><h3 className="hero-box-title text-[12vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">UMADEMATS</h3></div>
-                </motion.div>
-              )}
-              {currentIndex === 3 && (
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">JOGUE AGORA</h2>
-                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 -rotate-2 transform relative" style={{ backgroundColor: activeConfig.hero_accentColor }}><h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">"AS AVENTURAS DE PENTECA"</h3></div>
-                </motion.div>
-              )}
-              {currentIndex === 4 && (
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[22vw] md:text-[6vw] xl:text-[6.5vw] leading-[0.85] font-display italic uppercase text-white text-center">LEIA A BÍBLIA</h2>
-                  <div className="mt-4 md:mt-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-4 md:px-10 md:py-4 rotate-2 transform" style={{ backgroundColor: activeConfig.hero_secondaryColor }}><h3 className="hero-box-title text-[10vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-white uppercase text-center tracking-tight">JUNTO COM A UMADEMATS</h3></div>
+              ) : currentSlide.id === '2' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                 // Original Main Slide
+                 <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
+                   <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                   <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} /></div>
+                 </motion.div>
+              ) : (
+                // CMS Component Style
+                <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
+                  <h2 className="hero-secondary-title text-[15vw] md:text-[5vw] xl:text-[6vw] leading-[0.85] font-display italic uppercase text-white text-center drop-shadow-2xl">{currentSlide.title}</h2>
+                  {currentSlide.subtitle && (
+                    <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-[-1deg] transform relative flex items-center gap-4 group hover:scale-105 transition-all" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                      <h3 className="hero-box-title text-[9vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">{currentSlide.subtitle}</h3>
+                      {currentSlide.link && <ExternalLink size={24} className="text-black" />}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
+
+      {/* Progress Bars */}
+      <div className="absolute bottom-[120px] left-1/2 -translate-x-1/2 z-[100] flex gap-2 w-full max-w-[200px] px-4">
+        {slides.map((_, i) => (
+          <div key={i} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+            {i === currentIndex && (
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: currentIndex === 0 ? 10 : 5, ease: "linear" }}
+                className="h-full bg-brand-neon"
+              />
+            )}
+          </div>
+        ))}
+      </div>
 
       {/* Divider Transition to ActionSection */}
       <div className="absolute bottom-0 left-0 right-0 w-full z-20">

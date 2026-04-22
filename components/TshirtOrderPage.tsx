@@ -49,7 +49,7 @@ export const TshirtOrderPage: React.FC<TshirtOrderPageProps> = ({ onBack }) => {
   };
 
   const updateQuantity = (color: string, type: string, size: string, delta: number) => {
-    const key = `${color}-${type}-${size}`;
+    const key = `${color}:${type}:${size}`;
     const current = quantities[key] || 0;
     const next = Math.max(0, current + delta);
     setQuantities({ ...quantities, [key]: next });
@@ -60,7 +60,7 @@ export const TshirtOrderPage: React.FC<TshirtOrderPageProps> = ({ onBack }) => {
     Object.entries(quantities).forEach(([key, qty]) => {
       const quantityValue = qty as number;
       if (quantityValue > 0) {
-        const [color, type, size] = key.split('-');
+        const [color, type, size] = key.split(':');
         items.push({ 
           color: color as any, 
           type: type as any, 
@@ -134,7 +134,7 @@ export const TshirtOrderPage: React.FC<TshirtOrderPageProps> = ({ onBack }) => {
           
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
             {SIZES[type].map(size => {
-              const key = `${color}-${type}-${size}`;
+              const key = `${color}:${type}:${size}`;
               const qty = quantities[key] || 0;
               return (
                 <div key={key} className={`relative bg-[#0d0d0d] border rounded-2xl p-4 flex flex-col items-center justify-between gap-3 transition-all duration-300 ${qty > 0 ? 'border-brand-neon shadow-[0_0_15px_rgba(204,255,0,0.1)]' : 'border-white/5 hover:border-white/10'}`}>

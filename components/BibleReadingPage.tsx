@@ -112,7 +112,7 @@ interface BibleTextResponse {
 
 // --- COMPONENTS ---
 
-const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
+const PRIMEIROCARREGAMENTO: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
     const [progress, setProgress] = useState(0);
     const [messageIndex, setMessageIndex] = useState(0);
 
@@ -212,6 +212,68 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                 </div>
                 <p className="text-[#c4e7e5]/30 text-xs font-mono font-bold mt-2">CARREGANDO {Math.round(progress)}%</p>
             </div>
+        </motion.div>
+    );
+};
+
+const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
+    const [isMobile, setIsMobile] = useState(false);
+    const [videoError, setVideoError] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        // Safety timeout: if video doesn't trigger onEnded within 5s, finish anyway to preserve UX
+        const timer = setTimeout(() => {
+            if (window.innerWidth < 768) {
+                onFinish();
+            }
+        }, 5000);
+
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            clearTimeout(timer);
+        };
+    }, [onFinish]);
+
+    // If it's desktop or there was a video error, use original loading
+    if (!isMobile || videoError) {
+        return <PRIMEIROCARREGAMENTO onFinish={onFinish} />;
+    }
+
+    return (
+        <motion.div 
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+        >
+            <video
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-cover"
+                onEnded={onFinish}
+                onError={() => {
+                    console.error("Cloudinary video failed, falling back...");
+                    setVideoError(true);
+                }}
+            >
+                {/* Cloudinary Optimized Streaming */}
+                <source 
+                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/q_auto,f_auto/v1776882503/leiturabiblica_wqle8r.mp4" 
+                    type="video/mp4" 
+                />
+                <source 
+                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/v1776882503/leiturabiblica_wqle8r.mov" 
+                    type="video/quicktime" 
+                />
+            </video>
         </motion.div>
     );
 };

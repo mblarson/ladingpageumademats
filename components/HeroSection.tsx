@@ -133,9 +133,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   const currentSlide = slides[currentIndex];
+  const HERO_PRELOAD_URL = "https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776888819/SLIDEEMP%C3%89_faxad2.webp";
 
   return (
     <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
+      {/* Background Pre-render for the very first load/preload match */}
+      <div 
+        className="absolute inset-0 z-[1] pointer-events-none transition-opacity duration-1000"
+        style={{ 
+          backgroundImage: `url(${HERO_PRELOAD_URL})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: (currentIndex === 0 && slides.length > 0) ? 0 : 1 // Hide when slide takes over
+        }}
+      />
+
       {/* Container fix: always render the section to prevent layout jumping */}
       {!currentSlide ? (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -177,6 +189,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                       src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
                       alt={currentSlide.title} 
                       className="w-full h-full object-cover"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
                     />
                   </picture>
                 </>

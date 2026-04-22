@@ -40,7 +40,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   };
 
   return (
-    <section id="action-section" className="relative w-full py-24 md:py-20 bg-[#4F46E5] overflow-hidden z-20">
+    <section id="action-section" className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 bg-[#4F46E5] overflow-hidden z-20">
       
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div 

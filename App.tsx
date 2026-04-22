@@ -79,6 +79,14 @@ export default function App() {
   const yPath = useTransform(scrollYProgress, [0, 1], ["0%", "92%"]);
 
   useEffect(() => {
+    // Disable automatic browser scroll restoration to prevent jumping
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
 

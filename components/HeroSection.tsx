@@ -134,149 +134,156 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   const currentSlide = slides[currentIndex];
 
-  if (!currentSlide) return null;
-
   return (
     <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
-      <style>{`
-        @media (min-width: 768px) {
-          .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }
-          .hero-secondary-title { font-size: clamp(3rem, calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}), 7rem) !important; }
-          .hero-box-title { font-size: clamp(2rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
-        }
-        @media (min-width: 1601px) {
-          .hero-main-title { font-size: 9rem !important; }
-          .hero-secondary-title { font-size: 6.5rem !important; }
-          .hero-box-title { font-size: 4.5rem !important; }
-        }
-      `}</style>
+      {/* Container fix: always render the section to prevent layout jumping */}
+      {!currentSlide ? (
+        <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-brand-neon border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <>
+          <style>{`
+            @media (min-width: 768px) {
+              .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }
+              .hero-secondary-title { font-size: clamp(3rem, calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}), 7rem) !important; }
+              .hero-box-title { font-size: clamp(2rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
+            }
+            @media (min-width: 1601px) {
+              .hero-main-title { font-size: 9rem !important; }
+              .hero-secondary-title { font-size: 6.5rem !important; }
+              .hero-box-title { font-size: 4.5rem !important; }
+            }
+          `}</style>
 
-      {/* Background Image / Color */}
-      <AnimatePresence initial={false} mode="wait">
-        <motion.div
-           key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           exit={{ opacity: 0 }}
-           transition={{ duration: 0.8 }}
-           className="absolute inset-0 z-0"
-        >
-          {currentSlide.image_desktop_url ? (
-            <>
-              {/* Desktop Image */}
-              <picture className="w-full h-full">
-                {currentSlide.use_mobile_image && currentSlide.image_mobile_url && (
-                   <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
-                )}
-                <img 
-                  src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
-                  alt={currentSlide.title} 
-                  className="w-full h-full object-cover"
-                />
-              </picture>
-            </>
-          ) : (
-            <div 
-              className="w-full h-full" 
-              style={{ backgroundColor: (currentIndex === 0 || currentIndex === 2) ? '#000000' : activeConfig.hero_bgColor }} 
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Marquee Superior */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
-            {[...Array(10)].map((_, i) => (
-              <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
-            ))}
-         </motion.div>
-      </div>
-
-      {/* Nav Menu */}
-      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
-        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
-             <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
-        </button>
-      </motion.nav>
-
-      {/* Mascot */}
-      <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
-        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
-      </div>
-
-      {/* Content Slider */}
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.div
-          key={currentIndex}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10"
-          onClick={() => handleSlideClick(currentSlide)}
-        >
-          {/* Grid Background Effect (only if no image) */}
-          {!currentSlide.image_desktop_url && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
-            </div>
-          )}
-
-          <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
-            <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
-              {/* Dynamic Content Mapping */}
-              {currentSlide.id === '1' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
-                // Original Photos Slide
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
-                  <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-50" width="250px" height="15px" color="#FFD700" /></div>
-                  <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-2 transform relative flex items-center gap-4 group hover:scale-105 transition-transform" style={{ backgroundColor: '#FFD700' }}>
-                    <Camera className="text-black w-8 h-8 md:w-12 md:h-12" />
-                    <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
-                  </div>
-                </motion.div>
-              ) : currentSlide.id === '2' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
-                 // Original Main Slide
-                 <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
-                   <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
-                   <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} /></div>
-                 </motion.div>
+          {/* Background Image / Color */}
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+               key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               transition={{ duration: 0.8 }}
+               className="absolute inset-0 z-0"
+            >
+              {currentSlide.image_desktop_url ? (
+                <>
+                  {/* Desktop Image */}
+                  <picture className="w-full h-full">
+                    {currentSlide.use_mobile_image && currentSlide.image_mobile_url && (
+                       <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
+                    )}
+                    <img 
+                      src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
+                      alt={currentSlide.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </picture>
+                </>
               ) : (
-                // CMS Component Style
-                <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
-                  <h2 className="hero-secondary-title text-[15vw] md:text-[5vw] xl:text-[6vw] leading-[0.85] font-display italic uppercase text-white text-center drop-shadow-2xl">{currentSlide.title}</h2>
-                  {currentSlide.subtitle && (
-                    <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-[-1deg] transform relative flex items-center gap-4 group hover:scale-105 transition-all" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                      <h3 className="hero-box-title text-[9vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">{currentSlide.subtitle}</h3>
-                      {currentSlide.link && <ExternalLink size={24} className="text-black" />}
-                    </div>
-                  )}
-                </motion.div>
+                <div 
+                  className="w-full h-full" 
+                  style={{ backgroundColor: (currentIndex === 0 || currentIndex === 2) ? '#000000' : activeConfig.hero_bgColor }} 
+                />
               )}
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
 
-      {/* Progress Bars */}
-      <div className="absolute bottom-[120px] left-1/2 -translate-x-1/2 z-[100] flex gap-2 w-full max-w-[200px] px-4">
-        {slides.map((_, i) => (
-          <div key={i} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-            {i === currentIndex && (
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: currentIndex === 0 ? 10 : 5, ease: "linear" }}
-                className="h-full bg-brand-neon"
-              />
-            )}
+          {/* Marquee Superior */}
+          <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+             <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
+                {[...Array(10)].map((_, i) => (
+                  <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
+                ))}
+             </motion.div>
           </div>
-        ))}
-      </div>
+
+          {/* Nav Menu */}
+          <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
+            <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                 <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+                 <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
+            </button>
+          </motion.nav>
+
+          {/* Mascot */}
+          <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
+            <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+            <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
+          </div>
+
+          {/* Content Slider */}
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.div
+              key={currentIndex}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+              className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10"
+              onClick={() => handleSlideClick(currentSlide)}
+            >
+              {/* Grid Background Effect (only if no image) */}
+              {!currentSlide.image_desktop_url && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+                  <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
+                </div>
+              )}
+
+              <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
+                <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
+                  {/* Dynamic Content Mapping */}
+                  {currentSlide.id === '1' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                    // Original Photos Slide
+                    <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
+                      <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
+                      <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-50" width="250px" height="15px" color="#FFD700" /></div>
+                      <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-2 transform relative flex items-center gap-4 group hover:scale-105 transition-transform" style={{ backgroundColor: '#FFD700' }}>
+                        <Camera className="text-black w-8 h-8 md:w-12 md:h-12" />
+                        <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
+                      </div>
+                    </motion.div>
+                  ) : currentSlide.id === '2' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                     // Original Main Slide
+                     <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
+                       <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
+                       <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} /></div>
+                     </motion.div>
+                  ) : (
+                    // CMS Component Style
+                    <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
+                      <h2 className="hero-secondary-title text-[15vw] md:text-[5vw] xl:text-[6vw] leading-[0.85] font-display italic uppercase text-white text-center drop-shadow-2xl">{currentSlide.title}</h2>
+                      {currentSlide.subtitle && (
+                        <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-[-1deg] transform relative flex items-center gap-4 group hover:scale-105 transition-all" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                          <h3 className="hero-box-title text-[9vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">{currentSlide.subtitle}</h3>
+                          {currentSlide.link && <ExternalLink size={24} className="text-black" />}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Progress Bars */}
+          <div className="absolute bottom-[120px] left-1/2 -translate-x-1/2 z-[100] flex gap-2 w-full max-w-[200px] px-4">
+            {slides.map((_, i) => (
+              <div key={i} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                {i === currentIndex && (
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: currentIndex === 0 ? 10 : 5, ease: "linear" }}
+                    className="h-full bg-brand-neon"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Divider Transition to ActionSection */}
       <div className="absolute bottom-0 left-0 right-0 w-full z-20">

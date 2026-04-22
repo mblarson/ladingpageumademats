@@ -278,8 +278,8 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
             >
                 {/* Cloudinary Optimized Streaming - Using f_auto for best performance/format selection */}
                 <source 
-                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/f_auto,q_auto/v1776882503/leiturabiblica_wqle8r.mov" 
-                    type="video/mov" 
+                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/f_auto,q_auto/v1776882503/leiturabiblica_wqle8r.mp4" 
+                    type="video/mp4" 
                 />
             </video>
         </motion.div>

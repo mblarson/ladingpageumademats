@@ -333,43 +333,76 @@ const ReadingReader: React.FC<{
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-[#19244e]/90 backdrop-blur-md" />
-       <motion.div initial={{ scale: 0.9, y: 50, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 50, opacity: 0 }} className="relative bg-[#253c96] w-full max-w-2xl max-h-[85vh] rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#19244e]">
-             <div>
-               <h3 className="text-[#f36b2e] font-sans text-xs font-bold uppercase tracking-wider mb-1">Leitura de Hoje</h3>
-               <h2 className="text-2xl md:text-3xl font-display uppercase text-white">{item.ref}</h2>
-             </div>
-             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"><X size={24} /></button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-             {loading ? (
-               <div className="flex flex-col items-center justify-center py-20 text-white/30">
-                  <Loader2 size={40} className="animate-spin mb-4" />
-                  <p className="uppercase tracking-widest text-xs">Carregando as Escrituras...</p>
-               </div>
-             ) : error ? (
-               <div className="flex flex-col items-center justify-center py-20 text-red-400 text-center">
-                  <AlertCircle size={40} className="mb-4" />
-                  <p className="font-bold mb-2">{error}</p>
-                  <button onClick={onClose} className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white font-bold uppercase text-[10px] tracking-widest border border-white/10 transition-all">Voltar</button>
-               </div>
-             ) : (
-               <div className="prose prose-invert max-w-none">
-                  {content?.verses?.map((verse, idx) => (
-                    <span key={idx} className="text-[#c4e7e5] text-lg md:text-xl leading-relaxed font-serif">
-                       <span className="text-[#f36b2e]/50 text-xs font-sans mr-1 align-top select-none">{verse.verse}</span>
-                       {verse.text}
-                       {verse.text.endsWith('\n') ? <br/> : ' '}
-                    </span>
-                  ))}
-                  <div className="mt-12 text-center text-white/20 text-xs uppercase tracking-widest">Texto: João Ferreira de Almeida</div>
-               </div>
-             )}
-          </div>
-          <div className="p-4 border-t border-white/10 bg-[#19244e] flex justify-center">
-             <button onClick={() => { onComplete(item.id, item.ref); onClose(); }} disabled={loading || !!error} className="w-full md:w-auto px-8 py-4 bg-[#f36b2e] hover:bg-[#f36b2e]/90 text-black font-bold uppercase tracking-wide rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 active:scale-95"><CheckCircle2 size={20} /> Concluir Leitura</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+       {/* Backdrop */}
+       <motion.div 
+         initial={{ opacity: 0 }} 
+         animate={{ opacity: 1 }} 
+         exit={{ opacity: 0 }} 
+         onClick={onClose} 
+         className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+       />
+       
+       <motion.div 
+         initial={{ scale: 0.9, y: 30, opacity: 0, rotate: -1 }} 
+         animate={{ scale: 1, y: 0, opacity: 1, rotate: 0 }} 
+         exit={{ scale: 0.9, y: 30, opacity: 0, rotate: 1 }} 
+         transition={{ type: "spring", stiffness: 200, damping: 25 }}
+         className="relative bg-[#f5f3ef] w-full max-w-2xl max-h-[90vh] rounded-[4px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden"
+       >
+          {/* Subtle paper texture/gradient overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-40 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_0%,transparent_5%,transparent_95%,rgba(0,0,0,0.03)_100%)]" />
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '4px 4px' }} />
+
+          {/* Paper Edge Decor */}
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-black/5" />
+
+          <div className="relative z-10 flex flex-col h-full overflow-hidden">
+            {/* Header style "Página de Bíblia" */}
+            <div className="p-8 pb-4 text-center border-b border-[#e5e0d5]">
+               <h3 className="text-[#c4a484] font-serif italic text-sm mb-1">Sagrada Escritura</h3>
+               <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#2c2c2c] tracking-tight">{item.ref}</h2>
+               <button onClick={onClose} className="absolute top-6 right-6 p-2 text-[#2c2c2c]/30 hover:text-[#2c2c2c] transition-colors"><X size={20} /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 md:px-16 md:py-12 no-scrollbar scroll-smooth">
+               {loading ? (
+                 <div className="flex flex-col items-center justify-center py-20 text-[#c4a484]">
+                    <Loader2 size={40} className="animate-spin mb-4" />
+                    <p className="font-serif italic text-sm">Preparando a página...</p>
+                 </div>
+               ) : error ? (
+                 <div className="flex flex-col items-center justify-center py-20 text-red-800 text-center">
+                    <AlertCircle size={40} className="mb-4 opacity-50" />
+                    <p className="font-serif font-bold mb-4">{error}</p>
+                    <button onClick={onClose} className="px-8 py-3 bg-[#2c2c2c] text-white rounded-lg font-bold uppercase text-[10px] tracking-widest transition-all">Voltar</button>
+                 </div>
+               ) : (
+                 <div className="font-serif text-[#2c2c2c] whitespace-normal leading-[1.8] text-justify md:text-lg">
+                    {content?.verses?.map((verse, idx) => (
+                      <span key={idx} className="relative transition-colors duration-500 hover:bg-[#efece5]">
+                         <sup className="text-[#c4a484] font-bold text-[10px] mr-1.5 align-top inline-block mt-1 select-none font-sans">{verse.verse}</sup>
+                         <span className="mr-1">{verse.text.trim()}</span>
+                         {verse.text.endsWith('\n') ? <span className="block h-4" /> : ' '}
+                      </span>
+                    ))}
+                    <div className="mt-16 pt-8 border-t border-[#e5e0d5] text-center text-[#c4a484] text-[10px] uppercase tracking-[0.2em] italic font-serif">Almeida Revista e Corrigida</div>
+                 </div>
+               )}
+            </div>
+
+            {/* Footer / Action */}
+            <div className="p-8 pt-4 bg-[#f1eee8] border-t border-[#e5e0d5] flex justify-center">
+               <button 
+                 onClick={() => { onComplete(item.id, item.ref); onClose(); }} 
+                 disabled={loading || !!error} 
+                 className="group relative w-full md:w-auto overflow-hidden px-10 py-4 bg-[#2c2c2c] text-[#f5f3ef] font-bold uppercase tracking-[0.2em] text-xs rounded-sm shadow-xl transition-all hover:bg-[#1a1a1a] disabled:opacity-30 flex items-center justify-center gap-3"
+               >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  <CheckCircle2 size={18} className="text-[#c4a484]" /> 
+                  Concluir Leitura
+               </button>
+            </div>
           </div>
        </motion.div>
     </div>

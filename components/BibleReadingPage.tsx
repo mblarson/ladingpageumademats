@@ -219,6 +219,7 @@ const PRIMEIROCARREGAMENTO: React.FC<{ onFinish: () => void }> = ({ onFinish }) 
 const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [videoError, setVideoError] = useState(false);
+    const [isVideoReady, setIsVideoReady] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -227,18 +228,20 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
         checkMobile();
         window.addEventListener('resize', checkMobile);
         
-        // Safety timeout: if video doesn't trigger onEnded within 5s, finish anyway to preserve UX
+        // Safety timeout: if video doesn't trigger onEnded within 12s, finish anyway
+        // This is increased because mobile networks can be slow
         const timer = setTimeout(() => {
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 768 && !isVideoReady) {
+                console.log("Video loading timed out, finishing intro...");
                 onFinish();
             }
-        }, 5000);
+        }, 12000);
 
         return () => {
             window.removeEventListener('resize', checkMobile);
             clearTimeout(timer);
         };
-    }, [onFinish]);
+    }, [onFinish, isVideoReady]);
 
     // If it's desktop or there was a video error, use original loading
     if (!isMobile || videoError) {
@@ -247,31 +250,36 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
     return (
         <motion.div 
-            className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-[100] bg-[#19244e] flex items-center justify-center overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
+            {!isVideoReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#19244e] z-10">
+                    <Loader2 className="w-10 h-10 text-white animate-spin" />
+                </div>
+            )}
+            
             <video
                 autoPlay
                 muted
                 playsInline
+                webkit-playsinline="true"
                 preload="auto"
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
                 onEnded={onFinish}
-                onError={() => {
-                    console.error("Cloudinary video failed, falling back...");
+                onCanPlay={() => setIsVideoReady(true)}
+                onPlaying={() => setIsVideoReady(true)} // Double check to show as soon as it plays
+                onError={(e) => {
+                    console.error("Cloudinary video failed:", e);
                     setVideoError(true);
                 }}
             >
-                {/* Cloudinary Optimized Streaming */}
+                {/* Cloudinary Optimized Streaming - Using f_auto for best performance/format selection */}
                 <source 
-                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/q_auto,f_auto/v1776882503/leiturabiblica_wqle8r.mp4" 
+                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/f_auto,q_auto/v1776882503/leiturabiblica_wqle8r.mp4" 
                     type="video/mp4" 
-                />
-                <source 
-                    src="https://res.cloudinary.com/dcmi2z6xp/video/upload/v1776882503/leiturabiblica_wqle8r.mov" 
-                    type="video/quicktime" 
                 />
             </video>
         </motion.div>

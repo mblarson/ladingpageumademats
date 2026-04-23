@@ -181,11 +181,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         </button>
       </motion.nav>
 
-      {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE (CORREÇÃO DE CARREGAMENTO TARDIO) */}
-      {/* Causa Original: O Marquee estava encapsulado na condicional `!currentSlide`, aguardando a requisição do Supabase. */}
-      {/* Correção: Mover para o nível da raiz. Ele usará o `activeConfig` que possui cache ou `DEFAULT_SITE_CONFIG`. */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
+      {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE */}
+      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ willChange: 'transform' }}>
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
             ))}
@@ -194,8 +192,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
       {/* Mascot - RENDERIZADO IMEDIATAMENTE */}
       <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
-        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
+        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'height' }} />
+        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
       </div>
 
       {/* Container fix: always render the section to prevent layout jumping */}

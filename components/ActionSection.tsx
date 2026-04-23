@@ -43,63 +43,35 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
     <section id="action-section" className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 bg-[#4F46E5] overflow-hidden z-20">
       
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <motion.div 
-          initial={{ y: 0 }}
-          animate={{ y: [0, -40] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        {/* Static grid background (performance optimized from continuous scroll) */}
+        <div 
           className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"
-          style={{ willChange: 'transform' }}
         />
 
         {bgElements.map((el) => (
-          <motion.div
+          <div
             key={el.id}
-            initial={{ opacity: 0, x: `${el.x}%`, y: `${el.y}%` }}
-            animate={{ 
-              y: [`${el.y}%`, `${el.y - 10}%`, `${el.y}%`],
-              opacity: [0, 0.2, 0],
-              rotate: [0, 180, 360]
+            className="absolute text-brand-neon opacity-10"
+            style={{ 
+              left: `${el.x}%`, 
+              top: `${el.y}%`, 
+              width: el.size, 
+              height: el.size,
+              transform: `rotate(${el.delay * 20}deg)`
             }}
-            transition={{ 
-              duration: el.duration, 
-              repeat: Infinity, 
-              delay: el.delay,
-              ease: "easeInOut"
-            }}
-            className="absolute text-brand-neon"
-            style={{ width: el.size, height: el.size, willChange: 'transform, opacity' }}
           >
             {el.id % 2 === 0 ? <Star size={el.size} fill="currentColor" /> : <Plus size={el.size} />}
-          </motion.div>
+          </div>
         ))}
 
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.4, 0.3],
-            x: [0, 50, 0],
-            y: [0, 30, 0]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/4 -left-20 w-96 h-96 rounded-full"
-          style={{ 
-            background: 'radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, rgba(0,0,0,0) 70%)',
-            willChange: 'transform'
-          }}
+        {/* Static massive radial gradients instead of continuously scaling/translating */}
+        <div 
+          className="absolute top-1/4 -left-20 w-96 h-96 rounded-full opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, rgba(0,0,0,0) 70%)' }}
         />
-        <motion.div 
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.3, 0.2],
-            x: [0, -60, 0],
-            y: [0, -40, 0]
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] rounded-full"
-          style={{ 
-            background: 'radial-gradient(circle, rgba(91, 33, 182, 0.8) 0%, rgba(0,0,0,0) 70%)',
-            willChange: 'transform'
-          }}
+        <div 
+          className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, rgba(91, 33, 182, 0.8) 0%, rgba(0,0,0,0) 70%)' }}
         />
       </div>
 

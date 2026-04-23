@@ -148,10 +148,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 </h2>
                 
                 {/* Decorative Elements around Title */}
-                <div className="absolute -top-4 -right-4 md:-right-12 text-brand-pink animate-[spin_10s_linear_infinite]">
+                <div className="absolute -top-4 -right-4 md:-right-12 text-brand-pink">
                     <Zap size={40} className="md:w-16 md:h-16 fill-current" />
                 </div>
-                <div className="absolute -bottom-2 -left-2 md:-left-12 text-brand-purple animate-bounce">
+                <div className="absolute -bottom-2 -left-2 md:-left-12 text-brand-purple">
                     <Star size={30} className="md:w-12 md:h-12 fill-current" />
                 </div>
              </motion.div>

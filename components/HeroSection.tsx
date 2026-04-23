@@ -173,13 +173,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         }}
       />
 
-      {/* Nav Menu renderizado imediatamente, FORA do if do slide */}
+      {/* Nav Menu renderizado imediatamente */}
       <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
         <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
              <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
+
+      {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE (CORREÇÃO DE CARREGAMENTO TARDIO) */}
+      {/* Causa Original: O Marquee estava encapsulado na condicional `!currentSlide`, aguardando a requisição do Supabase. */}
+      {/* Correção: Mover para o nível da raiz. Ele usará o `activeConfig` que possui cache ou `DEFAULT_SITE_CONFIG`. */}
+      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
+            {[...Array(10)].map((_, i) => (
+              <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
+            ))}
+         </motion.div>
+      </div>
+
+      {/* Mascot - RENDERIZADO IMEDIATAMENTE */}
+      <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
+        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
+      </div>
 
       {/* Container fix: always render the section to prevent layout jumping */}
       {!currentSlide ? (
@@ -236,21 +253,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               )}
             </motion.div>
           </AnimatePresence>
-
-          {/* Marquee Superior */}
-          <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-xl" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-             <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }}>
-                {[...Array(10)].map((_, i) => (
-                  <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
-                ))}
-             </motion.div>
-          </div>
-
-          {/* Mascot */}
-          <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-            <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
-            <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} {...dragFreeProps} />
-          </div>
 
           {/* Content Slider */}
           <AnimatePresence initial={false}>

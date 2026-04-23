@@ -256,8 +256,13 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
+            {/* 
+                AJUSTE DE POSIÇÃO DA BARRA DE CARREGAMENTO:
+                Para subir a barra: aumente o valor de 'bottom-[X%]' (ex: bottom-[35%])
+                Para descer a barra: diminua o valor de 'bottom-[X%]' (ex: bottom-[15%])
+            */}
             {/* Overlay Progress Bar On Top Of Video */}
-            <div className="absolute bottom-[15%] w-full max-w-[280px] z-50 flex flex-col items-center justify-center bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
+            <div className="absolute bottom-[25%] w-full max-w-[280px] z-50 flex flex-col items-center justify-center bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
                {!isVideoReady ? (
                    <Loader2 className="w-8 h-8 text-[#f36b2e] animate-spin mb-4" />
                ) : (

@@ -56,7 +56,7 @@ export const CreativeDivider: React.FC<CreativeDividerProps> = ({
             scale: [1, 1.2, 1]
           }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute right-[15%] top-4 text-brand-pink opacity-30"
+          className="absolute right-[15%] top-4 text-brand-neon opacity-30"
         >
           <Star size={24} fill="currentColor" />
         </motion.div>

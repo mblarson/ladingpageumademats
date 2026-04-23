@@ -208,7 +208,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 role="Presidentes Executivos"
                 name="Pr. Felipe e Hyanna"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/felipehyanna.jpg" 
-                color="bg-brand-pink text-white"
+                color="bg-brand-neon text-black"
                 rotate="rotate-[2deg]"
                 imageAspect="aspect-[4/5]"
                 enableDrag={activeConfig.ui_allowDrag}
@@ -259,7 +259,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="relative bg-[#1a1a1a] border-4 border-brand-purple p-6 md:p-8 rounded-3xl w-full max-w-sm shadow-[0_0_50px_rgba(91,33,182,0.5)] overflow-hidden"
              >
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-neon via-brand-purple to-brand-neon" />
 
                 <button 
                   onClick={() => setShowLeadersModal(false)}

@@ -274,14 +274,14 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                      <span className="text-white/80 text-[10px] uppercase font-bold tracking-[0.2em] font-sans">
                        Carregando Bíblia...
                      </span>
-                     <span className="text-[#f59a1e] text-[10px] font-black font-sans">
+                     <span className="text-brand-neon text-[10px] font-black font-sans">
                        {Math.round(Math.max(videoProgress, 0))}%
                      </span>
                    </motion.div>
                )}
                <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-inner">
                    <motion.div 
-                       className="h-full bg-gradient-to-r from-[#f59a1e] to-[#f36b2e] shadow-[0_0_10px_rgba(243,107,46,0.5)]"
+                       className="h-full bg-brand-neon shadow-[0_0_10px_rgba(204,255,0,0.5)]"
                        initial={{ width: "0%" }}
                        animate={{ width: isVideoReady ? `${Math.max(videoProgress, 5)}%` : "5%" }}
                        transition={{ ease: "linear", duration: 0.2 }}

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Plus, Lock, X, Users } from 'lucide-react';
+import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Lock, X, Users } from 'lucide-react';
 import { SubtleWaveDivider } from './SubtleWaveDivider';
 import { DividerCreative } from './DividerCreative';
 import { MarqueeBanner } from './MarqueeBanner';
@@ -21,15 +21,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
 
-  const bgElements = [...Array(6)].map((_, i) => ({
-    id: i,
-    size: Math.random() * 20 + 10,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5,
-  }));
-
   const handleCardClick = (url: string) => {
     if (url.startsWith('http')) {
       window.open(url, '_blank');
@@ -40,50 +31,39 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   };
 
   return (
-    <section id="action-section" className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 bg-[#4F46E5] overflow-hidden z-20">
+    <section 
+      id="action-section" 
+      className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 overflow-hidden z-20"
+      style={{
+        backgroundColor: '#fceed1',
+        backgroundImage: 'conic-gradient(#00376b 90deg, #fceed1 90deg 180deg, #00376b 180deg 270deg, #fceed1 270deg)',
+        backgroundSize: '100px 100px'
+      }}
+    >
       
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Static grid background (performance optimized from continuous scroll) */}
+        {/* Subtle halftone overlay to add texture to the checkerboard without using images */}
         <div 
-          className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"
-        />
-
-        {bgElements.map((el) => (
-          <div
-            key={el.id}
-            className="absolute text-brand-neon opacity-10"
-            style={{ 
-              left: `${el.x}%`, 
-              top: `${el.y}%`, 
-              width: el.size, 
-              height: el.size,
-              transform: `rotate(${el.delay * 20}deg)`
-            }}
-          >
-            {el.id % 2 === 0 ? <Star size={el.size} fill="currentColor" /> : <Plus size={el.size} />}
-          </div>
-        ))}
-
-        {/* Static massive radial gradients instead of continuously scaling/translating */}
-        <div 
-          className="absolute top-1/4 -left-20 w-96 h-96 rounded-full opacity-30"
-          style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, rgba(0,0,0,0) 70%)' }}
-        />
-        <div 
-          className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, rgba(91, 33, 182, 0.8) 0%, rgba(0,0,0,0) 70%)' }}
+          className="absolute inset-0 opacity-[0.05]"
+          style={{ 
+            backgroundImage: 'radial-gradient(#000 1px, transparent 0)', 
+            backgroundSize: '20px 20px' 
+          }}
         />
       </div>
 
       <div className="max-container max-w-6xl mx-auto px-4 relative z-10">
         
         <div className="flex flex-col items-center justify-center mb-12 md:mb-16 text-center">
-             <h2 className="text-[14vw] md:text-6xl font-display uppercase text-white mb-2 leading-[0.85] tracking-tighter drop-shadow-lg">
-             {activeConfig.action_title1}
-             <br />
-             <span className="italic font-serif font-light text-brand-neon text-[11vw] md:text-5xl block mt-2">{activeConfig.action_title2}</span>
-           </h2>
-           <SubtleWaveDivider className="mt-4 opacity-50" width="120px" height="8px" color="#CCFF00" />
+            <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 mb-4">
+              <div className="absolute inset-0 bg-[#00376b] border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] -rotate-1" />
+              <h2 className="relative z-10 text-[12vw] md:text-6xl font-display uppercase text-white leading-[0.85] tracking-tighter drop-shadow-lg">
+                {activeConfig.action_title1}
+                <br />
+                <span className="italic font-serif font-light text-brand-neon text-[10vw] md:text-5xl block mt-2">{activeConfig.action_title2}</span>
+              </h2>
+            </div>
+            <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color="#CCFF00" />
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:gap-8 w-full">
@@ -98,7 +78,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-pink/50 group shadow-2xl transition-all"
+            className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-neon/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
               <div className="absolute inset-0 z-0 pointer-events-none">
@@ -122,7 +102,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                   <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
                       Games
                       <br/>
-                      <span className="text-brand-pink">Umademats</span>
+                      <span className="text-brand-neon">Umademats</span>
                   </h3>
                   <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed drop-shadow-md">
                       Participe das competições e divirta-se.
@@ -132,7 +112,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
               <div className="relative z-10 h-full flex items-end pb-2">
                   <motion.div 
                     animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
-                    className="bg-brand-pink p-2 md:p-4 rounded-full text-white shadow-lg"
+                    className="bg-brand-neon p-2 md:p-4 rounded-full text-black shadow-lg"
                   >
                       <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
                   </motion.div>
@@ -248,7 +228,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           { text: "CONGRESSO 2026", icon: Zap },
           { text: "EXPERIÊNCIA ÚNICA", icon: Star }
         ]}
-        bgColor="bg-brand-pink"
+        bgColor="bg-brand-neon"
         textColor="text-black"
         rotate={-1}
       />
@@ -273,7 +253,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="relative bg-[#1a1a1a] border-2 border-white/10 p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl overflow-hidden"
              >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-pink via-brand-purple to-brand-neon" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-neon via-brand-purple to-brand-neon" />
                 
                 <button
                     onClick={() => setShowBlockedModal(false)}

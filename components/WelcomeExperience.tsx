@@ -100,11 +100,11 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-display uppercase text-white mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-4xl font-display uppercase text-white mb-6 leading-tight">
               Paz do Senhor, <span className="text-brand-neon">{name}</span>!
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 leading-relaxed">
+            <p className="text-xl md:text-2xl lg:text-lg text-gray-300 font-sans mb-12 leading-relaxed">
               Seja bem-vindo ao novo portal oficial da <span className="text-white font-bold">UMADEMATS</span>.
               <br className="hidden md:block" />
               Preparamos um espaço moderno e interativo para você.
@@ -135,11 +135,11 @@ export const WelcomeExperience: React.FC<WelcomeExperienceProps> = ({ name, onFi
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
             transition={{ duration: 0.5 }}
-            className="relative z-10 max-w-5xl w-full px-6 py-10"
+            className="relative z-10 max-w-5xl w-full px-6 py-10 lg:py-6"
           >
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-5xl font-display uppercase text-white mb-2">O Portal tá ON! 🚀</h2>
-              <p className="text-gray-400 font-sans text-lg">Dá uma olhada em tudo o que preparamos com muito carinho:</p>
+            <div className="text-center mb-10 lg:mb-6">
+              <h2 className="text-3xl md:text-5xl lg:text-3xl font-display uppercase text-white mb-2">O Portal tá ON! 🚀</h2>
+              <p className="text-gray-400 font-sans text-lg lg:text-base">Dá uma olhada em tudo o que preparamos com muito carinho:</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">

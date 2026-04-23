@@ -161,7 +161,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const HERO_PRELOAD_URL = "https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776888819/SLIDEEMP%C3%89_faxad2.webp";
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen overflow-hidden bg-black">
+    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[85vh] overflow-hidden bg-black">
       {/* Background Pre-render for the very first load/preload match */}
       <div 
         className="absolute inset-0 z-[1] pointer-events-none transition-opacity duration-1000"
@@ -174,9 +174,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       />
 
       {/* Nav Menu renderizado imediatamente */}
-      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
+      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[110px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
         <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
@@ -193,7 +193,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       {/* Mascot - RENDERIZADO IMEDIATAMENTE */}
       <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
         <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'height' }} />
-        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
+        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 lg:w-56 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
       </div>
 
       {/* Container fix: always render the section to prevent layout jumping */}
@@ -205,14 +205,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         <>
           <style>{`
             @media (min-width: 768px) {
-              .hero-main-title { font-size: clamp(4rem, calc(8vw * ${activeConfig.hero_desktopFontSizeFactor}), 10rem) !important; }
-              .hero-secondary-title { font-size: clamp(3rem, calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}), 7rem) !important; }
-              .hero-box-title { font-size: clamp(2rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
+              .hero-main-title { font-size: clamp(3rem, calc(6vw * ${activeConfig.hero_desktopFontSizeFactor}), 7rem) !important; }
+              .hero-secondary-title { font-size: clamp(2.5rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
+              .hero-box-title { font-size: clamp(1.5rem, calc(2.5vw * ${activeConfig.hero_desktopFontSizeFactor}), 3.5rem) !important; }
             }
             @media (min-width: 1601px) {
-              .hero-main-title { font-size: 9rem !important; }
-              .hero-secondary-title { font-size: 6.5rem !important; }
-              .hero-box-title { font-size: 4.5rem !important; }
+              .hero-main-title { font-size: 8rem !important; }
+              .hero-secondary-title { font-size: 5.5rem !important; }
+              .hero-box-title { font-size: 3.5rem !important; }
             }
           `}</style>
 

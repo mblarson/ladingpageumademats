@@ -42,19 +42,19 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
     {...(enableDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 } } : {})}
     onClick={onClick}
     className={`
-        relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
+        relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 lg:p-3 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
         ${onClick ? 'cursor-pointer' : ''}
         ${showHighlight 
             ? 'bg-white border-4 border-brand-neon shadow-[0_0_30px_rgba(204,255,0,0.5)] hover:shadow-[0_0_50px_rgba(204,255,0,0.8)]' 
-            : 'bg-white border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+            : 'bg-white border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
         }
     `}
   >
     {/* Decorative Tape/Sticker */}
-    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 ${color} border-2 border-black rotate-[-2deg] opacity-100 z-20`} />
+    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 md:w-24 lg:w-16 h-5 md:h-6 lg:h-4 ${color} border-2 border-black rotate-[-2deg] opacity-100 z-20`} />
 
     {/* Image Container */}
-    <div className={`relative w-full ${imageAspect} rounded-[1.2rem] md:rounded-[2rem] overflow-hidden border-2 border-black mb-3 md:mb-4 bg-gray-100`}>
+    <div className={`relative w-full ${imageAspect} rounded-[1.2rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-2 border-black mb-3 md:mb-4 lg:mb-2 bg-gray-100`}>
       {image ? (
         <img 
             src={image} 
@@ -77,7 +77,7 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
       <span className={`inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full ${color} border border-black text-[8px] md:text-xs font-bold font-sans uppercase tracking-widest shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap`}>
         {role}
       </span>
-      <h3 className="text-base md:text-2xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
+      <h3 className="text-base md:text-2xl lg:text-xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
         {name}
       </h3>
     </div>
@@ -113,7 +113,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
   };
 
   return (
-    <section id="about-section" className="relative w-full bg-[#0a0a2a] pt-24 pb-32 overflow-hidden z-20">
+    <section id="about-section" className="relative w-full bg-[#0a0a2a] pt-24 pb-32 lg:pt-14 lg:pb-16 overflow-hidden z-20">
       
       {/* CSS Styles Localizados */}
       <style>{`
@@ -133,7 +133,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
       <div className="max-container max-w-7xl mx-auto px-4 relative z-10">
         
         {/* Section Header */}
-        <div className="flex flex-col items-center mb-8 md:mb-12 relative">
+        <div className="flex flex-col items-center mb-8 md:mb-12 lg:mb-6 relative">
              {/* Decorative Background for Title */}
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-white/5 blur-3xl rounded-full z-0" />
              
@@ -143,7 +143,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                viewport={{ once: true }}
                className="relative z-10"
              >
-                <h2 className="text-[15vw] md:text-7xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
+                <h2 className="text-[15vw] md:text-7xl lg:text-5xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
                     {activeConfig.about_title}
                 </h2>
                 
@@ -163,12 +163,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
         </div>
 
         {/* IEADMS Banner Image & Text */}
-        <div className="w-full flex flex-col items-center mb-10 md:mb-16">
+        <div className="w-full flex flex-col items-center mb-10 md:mb-16 lg:mb-8">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="w-full md:max-w-4xl aspect-video rounded-[1rem] md:rounded-[2rem] overflow-hidden border-[3px] md:border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white relative z-10"
+                className="w-full md:max-w-4xl lg:max-w-3xl aspect-video rounded-[1rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] md:shadow-[8px_8px_0_0_rgba(0,0,0,1)] bg-white relative z-10"
             >
                 <img 
                     src={activeConfig.about_bannerUrl} 
@@ -190,7 +190,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
         </div>
 
         {/* Cards Grid - Adicionado ID para navegação */}
-        <div id="leaders-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 px-2 md:px-0">
+        <div id="leaders-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 lg:gap-6 px-2 md:px-0 max-w-5xl mx-auto">
             
             {/* Card 1 */}
             <LeaderCard 

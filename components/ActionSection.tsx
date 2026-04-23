@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Shirt, ArrowRight, Star, Zap, Book, Lock, X, Users } from 'lucide-react';
+import { Star, Zap, Lock, X } from 'lucide-react';
 import { SubtleWaveDivider } from './SubtleWaveDivider';
 import { DividerCreative } from './DividerCreative';
 import { MarqueeBanner } from './MarqueeBanner';
@@ -78,45 +78,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => handleCardClick(activeConfig.action_gameLink)}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[3/1] flex flex-row items-center justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-neon/50 group shadow-2xl transition-all"
+            className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-neon/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                 <img 
-                   src="https://raw.githubusercontent.com/mblarson/imagens/main/aventuraspenteca.png" 
-                   alt="Aventuras Penteca Background"
-                   className="w-full h-full object-cover object-[center_20%] opacity-60 transition-transform duration-700 ease-out group-hover:scale-105"
-                   loading="lazy"
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-              </div>
-
-              <div className="absolute top-0 right-0 p-0 overflow-hidden opacity-10 transition-opacity group-hover:opacity-20">
-                 <Gamepad2 size={100} strokeWidth={0.5} className="md:size-[140px] transform translate-x-4 -translate-y-4 md:translate-x-8 md:-translate-y-8 text-white" />
-              </div>
-
-              <div className="relative z-10 flex flex-col justify-center h-full max-w-[60%]">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                      <Gamepad2 className="text-black w-4 h-4 md:w-6 md:h-6" />
-                  </div>
-                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
-                      Games
-                      <br/>
-                      <span className="text-brand-neon">Umademats</span>
-                  </h3>
-                  <p className="text-gray-200 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed drop-shadow-md">
-                      Participe das competições e divirta-se.
-                  </p>
-              </div>
-
-              <div className="relative z-10 h-full flex items-end pb-2">
-                  <motion.div 
-                    animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
-                    className="bg-brand-neon p-2 md:p-4 rounded-full text-black shadow-lg"
-                  >
-                      <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
-                  </motion.div>
-              </div>
+              <img 
+                src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_57_03_wltyjr.png" 
+                alt="Games Umademats"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                loading="lazy"
+              />
           </motion.div>
 
           <motion.div
@@ -129,48 +99,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('lidera')}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[1.5/1] flex flex-col justify-between overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-green/50 group shadow-2xl transition-all"
+            className="col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] overflow-hidden cursor-pointer border-2 border-white/5 hover:border-brand-green/50 group shadow-2xl transition-all"
             style={{ willChange: 'transform' }}
           >
-              {/* Zebra X Overlay */}
-              <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center overflow-hidden">
-                  <div className="absolute w-[150%] h-8 md:h-10 bg-brand-neon rotate-45 flex items-center justify-center shadow-2xl border-y-2 border-black overflow-hidden">
-                      <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_20px)]" />
-                      <span className="relative text-black font-display text-lg md:text-xl font-black tracking-[0.2em] drop-shadow-sm">EM BREVE</span>
-                  </div>
-                  <div className="absolute w-[150%] h-8 md:h-10 bg-brand-neon -rotate-45 flex items-center justify-center shadow-2xl border-y-2 border-black overflow-hidden">
-                      <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(-45deg,transparent,transparent_10px,#000_10px,#000_20px)]" />
-                      <span className="relative text-black font-display text-lg md:text-xl font-black tracking-[0.2em] drop-shadow-sm">EM BREVE</span>
-                  </div>
-              </div>
-
-              <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity">
-                  <Users size={200} className="absolute -right-10 -bottom-10 text-white" />
-              </div>
-
-              <div className="relative z-10">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-brand-green rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                      <Users className="text-black w-4 h-4 md:w-6 md:h-6" />
-                  </div>
-                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
-                      Lidera
-                      <br/>
-                      <span className="text-brand-green">Umademats</span>
-                  </h3>
-                  <p className="text-gray-400 font-sans text-[10px] md:text-sm max-w-xs leading-tight md:leading-relaxed">
-                      Portal exclusivo para líderes e oficiais.
-                  </p>
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between mt-4">
-                  <span className="text-brand-green font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">ACESSAR PORTAL</span>
-                  <motion.div 
-                    animate={{ x: hoveredCard === 'lidera' ? 5 : 0 }}
-                    className="bg-brand-green p-2 md:p-3 rounded-full text-black shadow-lg"
-                  >
-                      <ArrowRight className="w-3 h-3 md:w-5 md:h-5" />
-                  </motion.div>
-              </div>
+              <img 
+                src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_57_10_py3coi.png" 
+                alt="Lidera Umademats"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                loading="lazy"
+              />
           </motion.div>
 
           <motion.div
@@ -183,41 +120,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 0.98 }}
             {...dragProps}
-            className="col-span-2 md:col-span-1 order-1 md:order-3 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 aspect-[2.5/1] md:aspect-[1.5/1] flex flex-col justify-between overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
+            className="col-span-2 md:col-span-1 order-1 md:order-3 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/5 hover:border-brand-neon/50 transition-all"
             style={{ willChange: 'transform' }}
           >
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                  <img 
-                    src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
-                    alt="Mascote Bíblia"
-                    className="w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-all duration-700 ease-out"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-purple via-brand-purple/40 to-transparent opacity-80" />
-              </div>
-              
-              <div className="relative z-10">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-6 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                      <Book className="text-brand-purple w-4 h-4 md:w-6 md:h-6" />
-                  </div>
-                  <h3 className="text-xl md:text-3xl font-display uppercase text-white mb-1 md:mb-2 leading-[0.9] drop-shadow-md">
-                      Plano de
-                      <br/>
-                      <span className="text-brand-neon">Leitura</span>
-                  </h3>
-                  <p className="text-white/80 font-sans text-[10px] md:text-sm max-w-md leading-tight md:leading-relaxed font-medium">
-                      Acompanhe o devocional diário.
-                  </p>
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between mt-4">
-                  <span className="text-brand-neon font-bold font-sans tracking-widest text-[8px] md:text-xs uppercase">LER AGORA</span>
-                  <motion.div 
-                    animate={{ x: hoveredCard === 'devocional' ? 5 : 0 }}
-                    className="bg-brand-neon p-2 md:p-3 rounded-full text-black shadow-lg"
-                  >
-                      <ArrowRight className="w-3 h-3 md:w-5 md:h-5" />
-                  </motion.div>
-              </div>
+              <img 
+                src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_56_52_jr56qo.png" 
+                alt="Plano de Leitura"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                loading="lazy"
+              />
           </motion.div>
 
         </div>

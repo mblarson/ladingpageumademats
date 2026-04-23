@@ -32,6 +32,7 @@ interface HeroCMSProps {
 
 interface SortableSlideCardProps {
   slide: HeroSlide;
+  index: number;
   onEdit: (slide: HeroSlide) => void;
   onDelete: (id: string) => void;
   onDuplicate: (slide: HeroSlide) => void;
@@ -40,6 +41,7 @@ interface SortableSlideCardProps {
 
 const SortableSlideCard: React.FC<SortableSlideCardProps> = ({ 
   slide, 
+  index,
   onEdit, 
   onDelete, 
   onDuplicate, 
@@ -80,7 +82,12 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-white truncate uppercase tracking-tight">{slide.title || 'Sem Título'}</h4>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-brand-neon/20 text-brand-neon px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
+               Slide #{index}
+            </span>
+            <h4 className="text-sm font-bold text-white truncate uppercase tracking-tight leading-none">{slide.title || 'Sem Título'}</h4>
+          </div>
           <p className="text-[10px] text-white/40 truncate uppercase tracking-widest">{slide.subtitle || 'Sem Subtítulo'}</p>
         </div>
       </div>
@@ -209,6 +216,7 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       title: '',
       subtitle: '',
       link: '',
+      redirect_url: '',
       image_desktop_url: '',
       image_mobile_url: '',
       use_mobile_image: false,
@@ -336,10 +344,11 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-3">
-                {slides.map(slide => (
+                {slides.map((slide, index) => (
                   <SortableSlideCard 
                     key={slide.id} 
                     slide={slide} 
+                    index={index}
                     onEdit={setEditingSlide}
                     onDelete={handleDelete}
                     onDuplicate={handleDuplicate}
@@ -398,13 +407,23 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">Link (URL completa)</label>
+                      <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">Link de Ação do Botão (Opcional)</label>
                       <input 
                         type="url" 
                         value={editingSlide.link} 
                         onChange={(e) => setEditingSlide({...editingSlide, link: e.target.value})}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-brand-neon transition-all"
-                        placeholder="https://google.com/..."
+                        placeholder="Ex: /lidera ou https://google.com/..."
+                      />
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-bold text-brand-neon tracking-widest ml-2 block">URL Redirecionamento (Clique no Slide Inteiro)</label>
+                      <input 
+                        type="text" 
+                        value={editingSlide.redirect_url || ''} 
+                        onChange={(e) => setEditingSlide({...editingSlide, redirect_url: e.target.value})}
+                        className="w-full bg-white/5 border border-brand-neon/30 focus:border-brand-neon rounded-2xl px-5 py-4 text-white focus:outline-none transition-all placeholder-white/20"
+                        placeholder="Ex: /biblia ou https://..."
                       />
                    </div>
 

@@ -1,22 +1,29 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { StoreSection } from './components/StoreSection';
 import { JesusReinaBanner } from './components/JesusReinaBanner';
-import { BibleReadingPage } from './components/BibleReadingPage';
-import { LideraPortal } from './components/LideraPortal';
-import { AdminDashboard } from './components/AdminDashboard';
-import { OrganizationPortal } from './components/OrganizationPortal';
-import { ShirtRequestPage } from './components/ShirtRequestPage';
-import { TshirtOrderPage } from './components/TshirtOrderPage';
+import { WelcomeExperience } from './components/WelcomeExperience';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
-import { WelcomeExperience } from './components/WelcomeExperience';
+// Lazy Load Secondary Pages
+const BibleReadingPage = lazy(() => import('./components/BibleReadingPage').then(m => ({ default: m.BibleReadingPage })));
+const LideraPortal = lazy(() => import('./components/LideraPortal').then(m => ({ default: m.LideraPortal })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const OrganizationPortal = lazy(() => import('./components/OrganizationPortal').then(m => ({ default: m.OrganizationPortal })));
+const ShirtRequestPage = lazy(() => import('./components/ShirtRequestPage').then(m => ({ default: m.ShirtRequestPage })));
+const TshirtOrderPage = lazy(() => import('./components/TshirtOrderPage').then(m => ({ default: m.TshirtOrderPage })));
+
+const LoadingFallback = () => (
+  <div className="flex bg-black min-h-screen w-full items-center justify-center">
+    <div className="w-10 h-10 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza';
 
@@ -117,25 +124,25 @@ export default function App() {
   };
 
   if (currentPage === 'shirt_request') {
-    return <ShirtRequestPage onBack={() => handleNavigate('home')} />;
+    return <Suspense fallback={<LoadingFallback />}><ShirtRequestPage onBack={() => handleNavigate('home')} /></Suspense>;
   }
 
   if (currentPage === 'tshirt_order') {
-    return <TshirtOrderPage onBack={() => handleNavigate('home')} />;
+    return <Suspense fallback={<LoadingFallback />}><TshirtOrderPage onBack={() => handleNavigate('home')} /></Suspense>;
   }
 
   if (currentPage === 'admin') {
-    return <AdminDashboard onBack={() => handleNavigate('home')} onNavigateOrg={() => handleNavigate('organization')} />;
+    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} onNavigateOrg={() => handleNavigate('organization')} /></Suspense>;
   }
 
   if (currentPage === 'organization') {
-    return <OrganizationPortal onBack={() => handleNavigate('admin')} />;
+    return <Suspense fallback={<LoadingFallback />}><OrganizationPortal onBack={() => handleNavigate('admin')} /></Suspense>;
   }
 
   if (currentPage === 'bible') {
     return (
       <main className="w-full bg-brand-dark min-h-screen text-white relative">
-          <BibleReadingPage onBack={() => handleNavigate('home')} />
+          <Suspense fallback={<LoadingFallback />}><BibleReadingPage onBack={() => handleNavigate('home')} /></Suspense>
       </main>
     );
   }
@@ -143,7 +150,7 @@ export default function App() {
   if (currentPage === 'lidera') {
     return (
       <main className="w-full bg-brand-dark min-h-screen text-white relative">
-          <LideraPortal onBack={() => handleNavigate('home')} />
+          <Suspense fallback={<LoadingFallback />}><LideraPortal onBack={() => handleNavigate('home')} /></Suspense>
       </main>
     );
   }

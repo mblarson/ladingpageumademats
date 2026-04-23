@@ -70,16 +70,19 @@ export const StoreSection: React.FC = () => {
         </motion.div>
       </div>
 
-      <div className="relative flex w-full z-10" style={{ perspective: '1200px' }}>
+      <div className="relative flex w-full z-10 py-4 cursor-grab active:cursor-grabbing overflow-hidden" style={{ perspective: '1200px' }}>
         <motion.div 
           className="flex gap-8 md:gap-12 px-6"
+          drag="x"
+          dragConstraints={{ left: -2000, right: 0 }}
           initial={{ x: 0 }}
           animate={{ x: "-50%" }}
           transition={{ 
-            duration: 35, 
+            duration: 40, 
             repeat: Infinity, 
             ease: "linear" 
           }}
+          whileHover={{ animationPlayState: 'paused' }} // Helps pause animation on some implementations
         >
           {DUPLICATED_PRODUCTS.map((product, idx) => (
             <motion.div 

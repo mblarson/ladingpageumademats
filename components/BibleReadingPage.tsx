@@ -220,6 +220,7 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [videoError, setVideoError] = useState(false);
     const [isVideoReady, setIsVideoReady] = useState(false);
+    const [videoProgress, setVideoProgress] = useState(0);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -255,10 +256,36 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
+            {/* Overlay Progress Bar On Top Of Video */}
+            <div className="absolute bottom-[15%] w-full max-w-[280px] z-50 flex flex-col items-center justify-center bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
+               {!isVideoReady ? (
+                   <Loader2 className="w-8 h-8 text-[#f36b2e] animate-spin mb-4" />
+               ) : (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }} 
+                     animate={{ opacity: 1, y: 0 }} 
+                     className="flex items-center justify-between w-full mb-3"
+                   >
+                     <span className="text-white/80 text-[10px] uppercase font-bold tracking-[0.2em] font-sans">
+                       Carregando Bíblia...
+                     </span>
+                     <span className="text-[#f59a1e] text-[10px] font-black font-sans">
+                       {Math.round(Math.max(videoProgress, 0))}%
+                     </span>
+                   </motion.div>
+               )}
+               <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                   <motion.div 
+                       className="h-full bg-gradient-to-r from-[#f59a1e] to-[#f36b2e] shadow-[0_0_10px_rgba(243,107,46,0.5)]"
+                       initial={{ width: "0%" }}
+                       animate={{ width: isVideoReady ? `${Math.max(videoProgress, 5)}%` : "5%" }}
+                       transition={{ ease: "linear", duration: 0.2 }}
+                   />
+               </div>
+            </div>
+
             {!isVideoReady && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#19244e] z-10">
-                    <Loader2 className="w-10 h-10 text-white animate-spin" />
-                </div>
+                <div className="absolute inset-0 bg-[#19244e] z-10" />
             )}
             
             <video
@@ -271,6 +298,12 @@ const BibleIntro: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
                 onEnded={onFinish}
                 onCanPlay={() => setIsVideoReady(true)}
                 onPlaying={() => setIsVideoReady(true)} // Double check to show as soon as it plays
+                onTimeUpdate={(e) => {
+                    const vid = e.target as HTMLVideoElement;
+                    if (vid.duration) {
+                        setVideoProgress((vid.currentTime / vid.duration) * 100);
+                    }
+                }}
                 onError={(e) => {
                     console.error("Cloudinary video failed:", e);
                     setVideoError(true);

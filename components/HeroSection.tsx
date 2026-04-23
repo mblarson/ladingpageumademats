@@ -94,10 +94,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, currentIndex === 0 ? 10000 : 5000); // 10s para o primeiro, 5s para os outros
+    }, 5000); // Exacto 5 segundos por slide
     
     return () => clearInterval(interval);
-  }, [slides.length, currentIndex]);
+  }, [slides.length]); // Removido currentIndex para não reiniciar o timer atoa
 
   const scrollToSection = (id: string) => {
     setIsMenuOpen(false);
@@ -113,12 +113,36 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   ];
 
   const slideVariants = {
-    enter: { x: "100%", opacity: 1 },
-    center: { x: 0, opacity: 1 },
-    exit: { x: "-100%", opacity: 1 }
+    enter: { x: "100%" },
+    center: { x: 0 },
+    exit: { x: "-100%" }
   };
 
+  const handleDragEndContent = (e: any, info: any) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    } else if (info.offset.x > swipeThreshold) {
+      setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    }
+  };
+
+  const [isDraggingSlider, setIsDraggingSlider] = useState(false);
+
   const handleSlideClick = (slide: HeroSlide) => {
+      if (isDraggingSlider) return;
+
+      // Prioridade 1: Novo campo redirect_url (clique no slide inteiro)
+      if (slide.redirect_url) {
+        if (slide.redirect_url.startsWith('/')) {
+          onNavigate(slide.redirect_url.substring(1) as PageType);
+        } else {
+          window.open(slide.redirect_url, '_blank');
+        }
+        return;
+      }
+
+      // Prioridade 2: Fallback para o comportamento original (baseado no link do botão)
       if (slide.link === '/lidera') onNavigate('lidera');
       else if (slide.link === '/bible') onNavigate('bible');
       else if (slide.link.includes('drive.google.com')) {
@@ -133,6 +157,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   const currentSlide = slides[currentIndex];
+  // Usa uma flag ou um item vazio pro TS não reclamar, mas o loading trata isso
   const HERO_PRELOAD_URL = "https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776888819/SLIDEEMP%C3%89_faxad2.webp";
 
   return (
@@ -144,13 +169,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           backgroundImage: `url(${HERO_PRELOAD_URL})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: (currentIndex === 0 && slides.length > 0) ? 0 : 1 // Hide when slide takes over
+          opacity: slides.length > 0 ? 0 : 1 // Sempre escondido assim que os slides carregam (causa do bug de repetição)
         }}
       />
 
+      {/* Nav Menu renderizado imediatamente, FORA do if do slide */}
+      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
+        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+             <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
+        </button>
+      </motion.nav>
+
       {/* Container fix: always render the section to prevent layout jumping */}
       {!currentSlide ? (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="w-10 h-10 border-4 border-brand-neon border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
@@ -169,13 +202,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           `}</style>
 
           {/* Background Image / Color */}
-          <AnimatePresence initial={false} mode="wait">
+          <AnimatePresence initial={false}>
             <motion.div
                key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               transition={{ duration: 0.8 }}
+               initial={{ x: "100%" }}
+               animate={{ x: 0 }}
+               exit={{ x: "-100%" }}
+               transition={{ type: "spring", stiffness: 300, damping: 30 }}
                className="absolute inset-0 z-0"
             >
               {currentSlide.image_desktop_url ? (
@@ -213,14 +246,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
              </motion.div>
           </div>
 
-          {/* Nav Menu */}
-          <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[80px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
-            <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
-                 <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-3xl text-black tracking-tight uppercase">UMADEMATS</span></div>
-                 <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
-            </button>
-          </motion.nav>
-
           {/* Mascot */}
           <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
             <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
@@ -228,15 +253,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           </div>
 
           {/* Content Slider */}
-          <AnimatePresence initial={false} mode="popLayout">
+          <AnimatePresence initial={false}>
             <motion.div
               key={currentIndex}
               variants={slideVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-              className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10"
+              transition={{ x: { type: "spring", stiffness: 300, damping: 30 } }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragStart={() => setIsDraggingSlider(true)}
+              onDragEnd={(e, info) => {
+                 setTimeout(() => setIsDraggingSlider(false), 100);
+                 handleDragEndContent(e, info);
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10 active:cursor-grabbing"
               onClick={() => handleSlideClick(currentSlide)}
             >
               {/* Grid Background Effect (only if no image) */}
@@ -290,7 +323,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
-                    transition={{ duration: currentIndex === 0 ? 10 : 5, ease: "linear" }}
+                    transition={{ duration: 5, ease: "linear" }}
                     className="h-full bg-brand-neon"
                   />
                 )}

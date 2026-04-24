@@ -161,7 +161,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const HERO_PRELOAD_URL = "https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776888819/SLIDEEMP%C3%89_faxad2.webp";
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[85vh] overflow-hidden bg-black">
+    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-screen overflow-hidden bg-black">
       {/* Background Pre-render for the very first load/preload match */}
       <div 
         className="absolute inset-0 z-[1] pointer-events-none transition-opacity duration-1000"

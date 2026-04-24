@@ -65,28 +65,24 @@ export const StoreSection: React.FC = () => {
         </motion.div>
       </div>
 
-      <div className="relative flex w-full z-10 py-4 lg:py-2 cursor-grab active:cursor-grabbing overflow-hidden" style={{ perspective: '800px' }}>
+      <div className="relative flex w-full z-10 py-4 lg:py-2 overflow-hidden">
         <motion.div 
           className="flex gap-8 md:gap-12 lg:gap-8 px-6"
-          drag="x"
-          dragConstraints={{ left: -2000, right: 0 }}
           initial={{ x: 0 }}
-          animate={{ x: "-50%" }}
+          animate={{ x: [0, "-50%"] }}
           transition={{ 
-            duration: 40, 
+            duration: 35, 
             repeat: Infinity, 
             ease: "linear" 
           }}
           style={{ willChange: "transform" }}
-          whileHover={{ animationPlayState: 'paused' }} // Helps pause animation on some implementations
         >
           {DUPLICATED_PRODUCTS.map((product, idx) => (
             <motion.div 
               key={`${product.id}-${idx}`}
-              style={{ transformStyle: 'preserve-3d', willChange: "transform" }}
-              initial={{ rotateY: 15, scale: 0.95 }}
-              whileHover={{ rotateY: 0, scale: 1.05, z: 20 }}
+              whileHover={{ scale: 1.05 }}
               className="flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] bg-gradient-to-br from-indigo-800 to-black rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-transform duration-500 ease-out"
+              style={{ willChange: "transform" }}
             >
               <div className="relative w-full h-full">
                 <img 
@@ -96,7 +92,7 @@ export const StoreSection: React.FC = () => {
                   loading="lazy"
                 />
                 
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 transform translate-z-10">
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#ccff00] opacity-80" />
                     <span className="text-xs md:text-sm font-fun font-bold uppercase tracking-widest text-[#ccff00] block" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.8)" }}>

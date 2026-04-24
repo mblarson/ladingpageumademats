@@ -54,19 +54,19 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
       <div className="max-container max-w-6xl mx-auto px-4 relative z-10">
         
-        <div className="flex flex-col items-center justify-center mb-12 md:mb-16 lg:mb-12 text-center">
-            <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 lg:px-10 lg:py-6 mb-4">
+        <div className="flex flex-col items-center justify-center mb-12 md:mb-16 lg:mb-8 text-center">
+            <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 lg:px-8 lg:py-5 mb-4">
               <div className="absolute inset-0 bg-[#00376b] border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] -rotate-1" />
-              <h2 className="relative z-10 text-[12vw] md:text-6xl lg:text-4xl font-display uppercase text-white leading-[0.85] tracking-tighter drop-shadow-lg">
+              <h2 className="relative z-10 text-[12vw] md:text-6xl lg:text-3xl font-display uppercase text-white leading-[0.85] tracking-tighter drop-shadow-lg">
                 {activeConfig.action_title1}
                 <br />
-                <span className="italic font-serif font-light text-brand-neon text-[10vw] md:text-5xl lg:text-3xl block mt-2">{activeConfig.action_title2}</span>
+                <span className="italic font-serif font-light text-brand-neon text-[10vw] md:text-5xl lg:text-2xl block mt-2">{activeConfig.action_title2}</span>
               </h2>
             </div>
             <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color="#CCFF00" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-6 w-full max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-6 w-full lg:max-w-4xl mx-auto">
           
           <motion.div
             initial={{ opacity: 0, y: 10 }}

@@ -11,6 +11,7 @@ import { ActionSection } from './ActionSection';
 import { AboutSection } from './AboutSection';
 import { PresenceCounter } from './PresenceCounter';
 import { supabase } from '../lib/supabaseClient';
+import { EstoqueUmadematsAdmin } from './EstoqueUmadematsAdmin';
 
 const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "M", "N", "VISITANTE"];
 
@@ -986,7 +987,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
   const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible' | 'lidera' | 'shirt_requests'>('analytics');
-  const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence'>('menu');
+  const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence' | 'estoque'>('menu');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1020,6 +1021,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
         <h2 className="text-3xl font-display uppercase text-white tracking-widest">Controle Administrativo</h2>
         <div className="flex flex-col gap-3 w-full max-w-sm">
           <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Gestão Umademats</button>
+          <button onClick={() => setAdminView('estoque')} className="w-full bg-[#ccff00] hover:bg-[#b5e000] text-black border-2 border-transparent p-6 rounded-lg text-lg font-bold uppercase transition-all text-center flex items-center justify-center gap-2"><ShoppingBag size={22} strokeWidth={2.5} /> Estoque Umademats</button>
           <button onClick={() => onNavigateOrg?.()} className="w-full bg-brand-purple border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center flex items-center justify-center gap-3"><LayoutGrid size={24} /> ORGANIZAÇÃO UMADEMATS</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
@@ -1027,6 +1029,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
       </div>
   );
   if (adminView === 'presence') return <PresenceCounter onBack={() => setAdminView('menu')} />;
+  if (adminView === 'estoque') return (
+    <div className="min-h-screen bg-black text-white p-4 md:p-8 overflow-y-auto">
+      <div className="max-w-6xl mx-auto">
+        <EstoqueUmadematsAdmin onBack={() => setAdminView('menu')} />
+      </div>
+    </div>
+  );
   const TABS = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'bg-white', textColor: 'text-black' },
     { id: 'lidera', label: 'Lidera UMADEMATS', icon: GraduationCap, color: 'bg-brand-neon', textColor: 'text-black' },

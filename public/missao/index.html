@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Missão Bíblica: 30 Segundos - UMADEMATS</title>
+    
+    <!-- Open Graph for sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Missão Bíblica: 30 Segundos ⏱️" />
+    <meta property="og:description" content="Complete desafios bíblicos rápidos em 30 segundos! Quantos pontos você consegue fazer?" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/mblarson/imagens/main/iconezapumademats.png" />
+    <meta property="og:url" content="https://umademats.com.br/missao" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Anton', 'sans-serif'],
+              fun: ['Bangers', 'cursive'],
+            },
+            colors: {
+              'brand-purple': '#5b21b6',
+              'brand-neon': '#ccff00',
+              'brand-pink': '#ec4899',
+              'brand-dark': '#0f0f0f',
+              'brand-green': '#00D166',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        /* Desabilitar seleção e comportamentos padrão de scroll no mobile */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0b1e;
+        }
+
+        /* Forçar formato 9:16 vertical no Mobile */
+        .mobile-container {
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 769px) {
+            /* Modo desktop: Esconder container e exibir tela de bloqueio */
+            #desktop-block {
+                display: flex !important;
+            }
+            #game-viewport {
+                display: none !important;
+            }
+        }
+
+        /* Animações e Keyframes */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-10%); }
+            100% { transform: translateX(110%); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-cloud-slow {
+            animation: drift 45s linear infinite;
+        }
+
+        .animate-cloud-fast {
+            animation: drift 25s linear infinite;
+        }
+
+        .shake-screen {
+            animation: shake 0.35s ease-in-out;
+        }
+
+        .pop-animation {
+            animation: successPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(204, 255, 0, 0.3);
+            border-radius: 99px;
+        }
+
+        /* Botão Estilo Cartoon com Sombra e Borda Espessa */
+        .btn-cartoon {
+            box-shadow: 0px 6px 0px 0px #000000;
+            border: 3px solid #000000;
+            transition: all 0.1s ease-in-out;
+        }
+
+        .btn-cartoon:active {
+            transform: translateY(4px);
+            box-shadow: 0px 2px 0px 0px #000000;
+        }
+
+        /* Efeito de brilho */
+        .glow-neon {
+            box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+        }
+
+        /* Efeito de pulsação suave */
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .pulse-card {
+            animation: gentle-pulse 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-white select-none">
+
+    <!-- PALETA DE CORES SUGERIDA: Azul Céu, Roxo Suave, Dourado, Neon, Verde, Laranja -->
+
+    <!-- TELA DE BLOQUEIO DESKTOP (Apenas exibida em telas > 768px via media query) -->
+    <div id="desktop-block" class="hidden fixed inset-0 bg-gradient-to-br from-[#0c0c2a] via-[#120024] to-[#04040c] flex-col items-center justify-center p-6 text-center z-[9999]">
+        <div class="max-w-md bg-[#161633] border-4 border-black rounded-[2.5rem] p-10 shadow-[12px_12px_0px_rgba(0,0,0,1)] flex flex-col items-center">
+            <!-- Ícone Celular Animado -->
+            <div class="w-24 h-40 border-4 border-black rounded-[2rem] bg-black p-2 relative shadow-inner mb-6 flex flex-col items-center justify-between">
+                <div class="w-12 h-1 bg-zinc-800 rounded-full mt-1"></div>
+                <!-- Mini Tela do Jogo -->
+                <div class="w-full flex-grow bg-gradient-to-t from-orange-400 to-indigo-600 rounded-xl my-2 flex items-center justify-center text-xs overflow-hidden">
+                    <span class="animate-bounce text-xl">⚔️</span>
+                </div>
+                <div class="w-6 h-6 border-2 border-zinc-800 rounded-full"></div>
+            </div>
+            
+            <h1 class="font-fun text-4xl text-brand-neon uppercase tracking-wider mb-4 leading-none">Missão Bíblica<br>30 Segundos</h1>
+            
+            <p class="text-gray-300 text-sm leading-relaxed mb-6">
+                Este jogo foi desenvolvido sob medida para celular. Acesse pelo seu smartphone para viver essa aventura!
+            </p>
+            
+            <div class="bg-black/40 border border-white/10 px-4 py-2 rounded-xl text-brand-neon font-mono text-xs select-all">
+                umademats.com.br/missao
+            </div>
+
+            <!-- QR Code Alternativo Simples -->
+            <div class="mt-6 flex flex-col items-center">
+                <div class="p-3 bg-white rounded-2xl shadow-lg border-2 border-black max-w-[120px]">
+                    <!-- Placeholder QR Code em SVG para evitar dependências -->
+                    <svg viewBox="0 0 100 100" class="w-24 h-24 text-black">
+                        <path d="M0,0 h30 v10 h-20 v20 h-10 z M70,0 h30 v30 h-10 v-20 h-20 z M0,70 h10 v20 h20 v10 h-30 z M100,100 h-30 v-10 h20 v-20 h10 z M15,15 h10 v10 h-10 z M75,15 h10 v10 h-10 z M15,75 h10 v10 h-10 z" fill="currentColor"/>
+                        <rect x="35" y="35" width="30" height="30" fill="currentColor" rx="1" />
+                        <rect x="45" y="15" width="10" height="10" fill="currentColor" />
+                        <rect x="75" y="45" width="10" height="10" fill="currentColor" />
+                        <rect x="15" y="45" width="10" height="10" fill="currentColor" />
+                        <rect x="45" y="75" width="10" height="10" fill="currentColor" />
+                    </svg>
+                </div>
+                <span class="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-2">Aponte a câmera</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEWPORT CENTRAL DO JOGO (MOBILE 9:16) -->
+    <div id="game-viewport" class="mobile-container bg-gradient-to-b from-[#0b0b2e] via-[#1a0c3a] to-[#250d4f] select-none">
+        
+        <!-- Elementos decorativos de fundo (Nuvens e Estrelas) -->
+        <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            <!-- Nuvens -->
+            <div class="absolute top-[10%] -left-20 opacity-10 text-white text-5xl animate-cloud-slow">☁️</div>
+            <div class="absolute top-[25%] -left-20 opacity-20 text-white text-3xl animate-cloud-fast">☁️</div>
+            <div class="absolute top-[45%] -left-20 opacity-10 text-white text-4xl animate-cloud-slow" style="animation-delay: -5s;">☁️</div>
+            <!-- Estrelas cintilantes de fundo -->
+            <div class="absolute top-10 left-10 w-1 h-1 bg-white rounded-full opacity-60 animate-ping"></div>
+            <div class="absolute top-36 right-16 w-1 rounded-full bg-yellow-300 shadow-[0_0_8px_#fff] opacity-80 animate-pulse"></div>
+            <div class="absolute top-[50%] left-24 w-1.5 h-1.5 bg-brand-neon rounded-full opacity-40 animate-pulse" style="animation-delay: 2s;"></div>
+            <div class="absolute top-[70%] right-12 w-1 h-1 bg-white rounded-full opacity-50 animate-ping" style="animation-delay: 1.5s;"></div>
+        </div>
+
+        <!-- 1. TELA INICIAL (WELCOME SCREEN) -->
+        <div id="screen-start" class="absolute inset-0 z-20 flex flex-col justify-between p-6 overflow-y-auto no-scrollbar">
+            
+            <!-- Linha Decorativa Superior -->
+            <div class="flex items-center justify-between w-full mt-4">
+                <span class="text-[10px] uppercase font-black tracking-[0.25em] text-white/30">UMADEMATS • MISSÃO</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-neon/20 border border-brand-neon/30 text-[9px] text-brand-neon font-black tracking-widest">30s RUN</span>
+            </div>
+
+            <!-- Logotipo & Mascote Central -->
+            <div class="flex flex-col items-center justify-center my-auto py-8">
+                <!-- Mascote Estilo Cartoon -->
+                <div class="relative mb-6">
+                    <div class="absolute inset-x-0 -bottom-2 h-4 bg-black/40 rounded-full blur-sm"></div>
+                    <div class="text-7xl animate-float filter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]">🧑‍🚀📖</div>
+                </div>
+
+                <!-- TÍTULO PRINCIPAL (Bangers Font) -->
+                <h1 class="text-center font-fun text-5xl md:text-6xl text-white tracking-widest leading-[0.85] filter drop-shadow-[4px_4px_0px_#000000]">
+                    MISSÃO BÍBLICA<br>
+                    <span class="text-brand-neon tracking-wide text-5xl md:text-5xl inline-block mt-2">30 SEGUNDOS</span>
+                </h1>
+
+                <!-- SUBTÍTULO -->
+                <p class="text-zinc-300 text-center text-xs md:text-sm font-sans px-4 mt-4 leading-relaxed font-semibold">
+                    Complete desafios rápidos e teste sua atenção bíblica!
+                </p>
+            </div>
+
+            <!-- INSTRUÇÕES RÁPIDAS -->
+            <div class="bg-black/40 border-2 border-black/60 rounded-3xl p-5 mb-6 text-left shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">
+                <h3 class="text-brand-neon text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <span>💡</span> Como jogar:
+                </h3>
+                <ul class="text-xs text-zinc-300 space-y-2 font-medium">
+                    <li class="flex items-start gap-2">
+                        <span class="text-brand-neon">👉</span>
+                        <span>Toque nas respostas certas rapidamente.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-brand-neon">👉</span>
+                        <span>Arraste ou segure itens quando solicitado.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-brand-neon">👉</span>
+                        <span>Cuidado com as pegadinhas (erros custam caro)!</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-brand-neon">👉</span>
+                        <span>Você tem exatamente <strong class="text-white font-bold">30 segundos</strong> no relógio.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- BOTÃO PRINCIPAL DE ENTRADA -->
+            <div class="w-full pb-4">
+                <button id="btn-start" class="btn-cartoon w-full bg-brand-neon hover:bg-yellow-400 active:bg-yellow-500 text-black font-fun text-2xl uppercase tracking-widest py-4 rounded-full transition-all">
+                    COMEÇAR MISSÃO 🚀
+                </button>
+                <p class="text-center text-[10px] text-zinc-500 uppercase tracking-widest font-black mt-3">
+                    Disponível em umademats.com.br
+                </p>
+            </div>
+        </div>
+
+        <!-- 2. TELA DO JOGO (GAMEPLAY SCREEN) -->
+        <div id="screen-game" class="hidden absolute inset-0 z-20 flex flex-col justify-between p-5">
+            
+            <!-- HEADER DO GAMEPLAY (Tempo, Pontos, Combo) -->
+            <div class="flex items-center justify-between gap-2.5 bg-black/50 border-2 border-black rounded-2xl px-4 py-3 shadow-[4px_4px_0px_rgba(0,0,0,0.25)] mt-2">
+                <!-- Tempo -->
+                <div class="flex items-center gap-1.5">
+                    <span class="text-lg">⏱️</span>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">TEMPO</span>
+                        <span id="game-time" class="text-lg font-fun text-brand-neon leading-none mt-0.5">30s</span>
+                    </div>
+                </div>
+
+                <!-- Divisor -->
+                <div class="w-[1.5px] h-6 bg-zinc-700"></div>
+
+                <!-- Pontos -->
+                <div class="flex items-center gap-1.5 justify-center">
+                    <span class="text-lg">⭐</span>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">PONTOS</span>
+                        <span id="game-score" class="text-lg font-fun text-white leading-none mt-0.5">00</span>
+                    </div>
+                </div>
+
+                <!-- Divisor -->
+                <div class="w-[1.5px] h-6 bg-zinc-700"></div>
+
+                <!-- Combo -->
+                <div class="flex items-center gap-1.5 justify-end">
+                    <span class="text-lg">🔥</span>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">COMBO</span>
+                        <span id="game-combo" class="text-lg font-fun text-brand-pink leading-none mt-0.5">x0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROGRESS BAR DE TEMPO -->
+            <div class="w-full bg-black/40 h-2.5 border border-black rounded-full overflow-hidden mt-2 p-0.5">
+                <div id="time-bar" class="h-full bg-gradient-to-r from-brand-neon to-brand-green rounded-full transition-all duration-100 ease-linear" style="width: 100%;"></div>
+            </div>
+
+            <!-- MAIN CHALLENGE CARD CONTAINER -->
+            <div id="challenge-container" class="flex-grow flex flex-col justify-center items-center my-4 overflow-hidden relative">
+                <!-- O desafio e seus controles serão injetados dinamicamente via JS aqui -->
+            </div>
+
+            <!-- ELEMENTO DE COMENTÁRIO DO MASCOTE OU FEEDBACK GLOBAL COMPACTO -->
+            <div id="global-feedback" class="h-10 text-center flex items-center justify-center font-fun text-lg tracking-wider pointer-events-none transition-all duration-200">
+                <!-- Mostra "BEM!", "OPS -2s!", "COMBO x3!", etc. -->
+            </div>
+        </div>
+
+        <!-- 3. TELA FINAL (GAME OVER SCREEN) -->
+        <div id="screen-result" class="hidden absolute inset-0 z-20 flex flex-col justify-between p-6 overflow-y-auto no-scrollbar">
+            
+            <div class="flex items-center justify-center w-full mt-4">
+                <span class="px-4 py-1 rounded-full bg-brand-pink/20 border border-brand-pink/30 text-xs text-brand-pink font-black tracking-widest uppercase">Missão Concluída! 🏁</span>
+            </div>
+
+            <!-- Resumo do desempenho e Medalha/Título -->
+            <div class="flex flex-col items-center justify-center my-auto py-4">
+                
+                <!-- Medalha ou Emblema Animado -->
+                <div class="relative w-28 h-28 flex items-center justify-center bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-black rounded-full shadow-[6px_6px_0px_#000] rotate-6 animate-float mb-6">
+                    <span id="result-medal" class="text-5xl filter drop-shadow-md">🏆</span>
+                </div>
+
+                <!-- Título Final de Nível -->
+                <p class="text-zinc-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">NÍVEL ALCANÇADO</p>
+                <h2 id="result-rank-title" class="font-fun text-4xl text-brand-neon text-center leading-none tracking-wider uppercase drop-shadow-[2px_2px_0px_#000] mb-6">
+                    GUERREIRO DA FÉ
+                </h2>
+
+                <!-- Caixa de Score -->
+                <div class="w-full max-w-xs bg-black/50 border-3 border-black rounded-[2rem] p-6 text-center shadow-[6px_6px_0px_rgba(0,0,0,0.4)] relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 border-2 border-black px-4 py-1 rounded-full text-black font-fun uppercase text-xs">
+                        ESTATÍSTICAS
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs text-zinc-400 font-bold uppercase tracking-widest">PONTOS</span>
+                            <span id="result-final-score" class="text-4xl font-fun text-white mt-1">0</span>
+                        </div>
+                        <div class="flex flex-col items-center border-l border-zinc-800">
+                            <span class="text-xs text-zinc-400 font-bold uppercase tracking-widest">RECORDE</span>
+                            <span id="result-high-score" class="text-4xl font-fun text-brand-neon mt-1">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensagem Personalizada de Fé -->
+                <p id="result-message" class="text-zinc-300 text-center text-xs font-sans italic max-w-xs leading-relaxed px-4 mt-6">
+                    "Guardei a fé no coração e venci os desafios rápidos!"
+                </p>
+            </div>
+
+            <!-- BOTÕES FINAIS -->
+            <div class="space-y-3.5 pb-4 w-full">
+                <button id="btn-restart" class="btn-cartoon w-full bg-brand-neon hover:bg-yellow-400 active:bg-yellow-500 text-black font-fun text-xl uppercase tracking-widest py-3.5 rounded-full transition-all">
+                    JOGAR NOVAMENTE 🔄
+                </button>
+                <button id="btn-back-home" class="btn-cartoon w-full bg-[#1b1c3e] hover:bg-[#252654] active:bg-[#11122a] border-4 border-black text-white font-fun text-xl uppercase tracking-widest py-3 rounded-full transition-all">
+                    VOLTAR AO INÍCIO 🏠
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- AUDIO SYNTHESIS ENGINE (Puro Web Audio API, dispensando dependências de arquivos de áudio externos) -->
+    <script>
+        const AudioEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playSuccess() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Arpejo alegre
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.18);
+                });
+            },
+            playError() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            },
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            },
+            playTick() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.03);
+            },
+            playVictory() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Acorde triunfal maior
+                const chords = [523.25, 659.25, 783.99, 987.77, 1046.50]; // C, E, G, B, C
+                chords.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.04);
+                    osc.stop(now + 1.5);
+                });
+            }
+        };
+    </script>
+
+    <!-- CORE GAME LOGIC SCRIPT (Completo e Independente) -->
+    <script>
+        // CONFIGURAÇÕES GERAIS MODIFICÁVEIS
+        const GAME_DURATION = 30; // Tempo padrão (segundos)
+        const SCORE_PER_CORRECT = 1; // Pontos por acerto
+        const COMBO_INCREASE = 1; // Incremento de combo
+        const PENALTY_SECONDS = 2; // Penalidade de tempo ao errar (segundos)
+
+        // Banco de Questões e Desafios Bíblicos
+        const WHO_AM_I_DATA = [
+            { question: "Fui lançado na cova dos leões. Quem sou eu?", options: ["Daniel", "Davi", "Moisés", "Jonas"], correct: 0 },
+            { question: "Enfrentei Golias com apenas uma funda. Quem sou eu?", options: ["Salomão", "Davi", "Sansão", "Saul"], correct: 1 },
+            { question: "Construí uma arca gigante por ordem de Deus. Quem sou eu?", options: ["Noé", "Abraão", "Ló", "Enoque"], correct: 0 },
+            { question: "Fui engolido por um grande peixe após fugir de Deus. Quem sou eu?", options: ["Jonas", "Pedro", "Elias", "Isaías"], correct: 0 },
+            { question: "Recebi as tábuas dos Dez Mandamentos no Sinai. Quem sou eu?", options: ["Moisés", "Josué", "Arão", "Gideão"], correct: 0 },
+            { question: "Fui vendido por meus irmãos e virei governador do Egito.", options: ["José", "Benjamim", "Judá", "Rúben"], correct: 0 },
+            { question: "Fui o homem mais forte da Bíblia devido ao meu cabelo consagrado.", options: ["Sansão", "Gideão", "Davi", "Elias"], correct: 0 },
+            { question: "Fui a esposa leal de Boaz e bisavó do Rei Davi.", options: ["Rute", "Ester", "Sara", "Raquel"], correct: 0 }
+        ];
+
+        const COMPLETE_VERSE_DATA = [
+            { verse: "O Senhor é o meu ______ e nada me faltará.", options: ["Pastor", "Rei", "Escudo", "Caminho"], correct: 0 },
+            { verse: "Lâmpada para os meus pés é a tua ______.", options: ["Palavra", "Verdade", "Vida", "Luz"], correct: 0 },
+            { verse: "No princípio criou Deus os céus e a ______.", options: ["Terra", "Humanidade", "Natureza", "Luz"], correct: 0 },
+            { verse: "Tudo posso naquele que me ______.", options: ["Fortalece", "Guia", "Ama", "Salva"], correct: 0 },
+            { verse: "Porque Deus amou o mundo de tal ______ que deu o seu Filho unigênito...", options: ["Maneira", "Riqueza", "Bondade", "Justiça"], correct: 0 },
+            { verse: "Guardei a tua palavra no meu ______ para não pecar contra ti.", options: ["Coração", "Pensamento", "Espírito", "Corpo"], correct: 0 }
+        ];
+
+        const TRUE_FALSE_DATA = [
+            { phrase: "Noé construiu uma arca para salvar sua família.", isTrue: true },
+            { phrase: "Rei Davi foi engolido por um grande peixe peçonhento.", isTrue: false },
+            { phrase: "Moisés subiu ao monte e recebeu os Dez Mandamentos.", isTrue: true },
+            { phrase: "Jonas enfrentou e derrotou o gigante Golias.", isTrue: false },
+            { phrase: "Adão foi criado antes de Eva existir no Éden.", isTrue: true },
+            { phrase: "Sansão perdeu as forças porque cortaram as suas unhas.", isTrue: false },
+            { phrase: "Jesus nasceu na cidade histórica de Belém.", isTrue: true },
+            { phrase: "Pedro andou sobre a água para ir até Jesus.", isTrue: true }
+        ];
+
+        const ARMOR_OF_GOD_ITEMS = [
+            { name: "Capacete da Salvação", part: "cabeça", hint: "Protege a mente" },
+            { name: "Escudo da Fé", part: "mão", hint: "Apaga os dardos inflamados" },
+            { name: "Espada do Espírito", part: "mão-espada", hint: "Qual é a Palavra de Deus" },
+            { name: "Couraça da Justiça", part: "peito", hint: "Protege o coração e órgãos vitais" },
+            { name: "Cinto da Verdade", part: "cintura", hint: "Ajusta toda a armadura" },
+            { name: "Calçados do Evangelho", part: "pés", hint: "Pés prontos para anunciar a Paz" }
+        ];
+
+        const REFLEX_ITEMS = [
+            { emoji: "📜", name: "Pergaminho" },
+            { emoji: "👑", name: "Coroa" },
+            { emoji: "🕊️", name: "Pomba" },
+            { emoji: "🍞", name: "Peixe e Pão" },
+            { emoji: "⛵", name: "Arca" }
+        ];
+
+        const NEW_TESTAMENT_DATA = [
+            { options: ["Mateus", "Gênesis", "Êxodo", "Salmos"], correct: 0 },
+            { options: ["Provérbios", "Romanos", "Levítico", "Daniel"], correct: 1 },
+            { options: ["Isaías", "Atos", "Eclesiastes", "Rute"], correct: 1 },
+            { options: ["Apocalipse", "Oséias", "Ageu", "Malaquias"], correct: 0 }
+        ];
+
+        const EVENT_ORDER_DATA = [
+            { question: "Qual evento aconteceu primeiro?", options: ["Criação do mundo", "Nascimento de Jesus", "Paulo em Roma"], correct: 0 },
+            { question: "O que ocorreu antes na história bíblica?", options: ["Noé e a Arca", "Moisés no Mar Vermelho", "Davi e Golias"], correct: 0 },
+            { question: "Qual evento ocorreu por primeiro?", options: ["Nascimento de Jesus", "Ressurreição de Lázaro", "Festa de Pentecostes"], correct: 0 }
+        ];
+
+        const SPIRIT_FRUITS_ALL = {
+            correct: ["Amor", "Alegria", "Paz", "Mansidão", "Bondade", "Fé", "Domínio Próprio"],
+            incorrect: ["Inveja", "Ira", "Orgulho", "Mentira", "Medo", "Preguiça", "Egoísmo", "Vaidade"]
+        };
+
+        const GOOD_ATTITUDES = [
+            { question: "Um amigo precisa de ajuda. O que você faz?", options: ["Ajudo com amor", "Ignoro", "Zombo dele"], correct: 0 },
+            { question: "Seu irmão pisou no seu pé sem querer. E agora?", options: ["Perdoo na hora", "Empurro de volta", "Fico emburrado"], correct: 0 },
+            { question: "Seus pais dão uma tarefa. Qual a sua atitude?", options: ["Obedeço com alegria", "Finjo que não ouvi", "Reclamo muito"], correct: 0 }
+        ];
+
+        const EMOJI_CHARACTERS = [
+            { find: "Davi", emoji: "👑", pool: ["🐟", "🐑", "🛶", "📜"] },
+            { find: "Noé", emoji: "⛵", pool: ["🍞", "🦁", "🏹", "🌾"] },
+            { find: "Jonas", emoji: "🐳", pool: ["🍇", "🌾", "🧱", "🛡️"] },
+            { find: "Moisés", emoji: "📖", pool: ["🥩", "🏺", "🐍", "🍇"] }
+        ];
+
+        // VARIÁVEIS DE ESTADO
+        let score = 0;
+        let combo = 0;
+        let timeLeft = GAME_DURATION;
+        let timerInterval = null;
+        let activeChallenge = null;
+        let challengesPool = [];
+        let dragActiveItem = null;
+
+        // SELETORES
+        const screenStart = document.getElementById('screen-start');
+        const screenGame = document.getElementById('screen-game');
+        const screenResult = document.getElementById('screen-result');
+
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnBackHome = document.getElementById('btn-back-home');
+
+        const gameTimeText = document.getElementById('game-time');
+        const gameScoreText = document.getElementById('game-score');
+        const gameComboText = document.getElementById('game-combo');
+        const timeBar = document.getElementById('time-bar');
+
+        const challengeContainer = document.getElementById('challenge-container');
+        const globalFeedback = document.getElementById('global-feedback');
+
+        const resultMedal = document.getElementById('result-medal');
+        const resultRankTitle = document.getElementById('result-rank-title');
+        const resultFinalScore = document.getElementById('result-final-score');
+        const resultHighScore = document.getElementById('result-high-score');
+        const resultMessage = document.getElementById('result-message');
+        const gameViewport = document.getElementById('game-viewport');
+
+        // INICIALIZADORES DOS EVENTOS
+        btnStart.addEventListener('click', () => {
+            AudioEngine.playClick();
+            startGame();
+        });
+
+        btnRestart.addEventListener('click', () => {
+            AudioEngine.playClick();
+            startGame();
+        });
+
+        btnBackHome.addEventListener('click', () => {
+            AudioEngine.playClick();
+            showScreen(screenStart);
+        });
+
+        // NAVEGAÇÃO DE TELAS
+        function showScreen(screen) {
+            screenStart.classList.add('hidden');
+            screenGame.classList.add('hidden');
+            screenResult.classList.add('hidden');
+            screen.classList.remove('hidden');
+        }
+
+        // INÍCIO DO JOGO
+        function startGame() {
+            score = 0;
+            combo = 0;
+            timeLeft = GAME_DURATION;
+            updateStats();
+            
+            // Gerar pool de tipos de desafios reembaralhado para manter variedade
+            generateChallengesPool();
+
+            showScreen(screenGame);
+            
+            // Feedback de áudio opcional
+            AudioEngine.playClick();
+
+            // Iniciar Relógio
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                decrementTime();
+            }, 1000);
+
+            // Carrega primeiro desafio
+            loadNextChallenge();
+        }
+
+        // DECREMENTO DO TEMPO
+        function decrementTime() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                endGame();
+            } else {
+                if (timeLeft <= 5) {
+                    // Beep de contagem final
+                    AudioEngine.playTick();
+                    gameTimeText.classList.add('text-brand-pink', 'scale-110');
+                    setTimeout(() => gameTimeText.classList.remove('scale-110'), 150);
+                } else {
+                    gameTimeText.classList.remove('text-brand-pink');
+                }
+            }
+            updateStats();
+        }
+
+        // ATUALIZAÇÃO DOS INDICADORES DO TOPO
+        function updateStats() {
+            gameTimeText.innerText = `${timeLeft}s`;
+            gameScoreText.innerText = score < 10 ? `0${score}` : score;
+            gameComboText.innerText = `x${combo}`;
+            
+            // Barra de Progresso
+            const percentage = (timeLeft / GAME_DURATION) * 100;
+            timeBar.style.width = `${percentage}%`;
+
+            if (percentage <= 25) {
+                timeBar.className = "h-full bg-gradient-to-r from-red-500 to-brand-pink rounded-full transition-all duration-100 ease-linear";
+            } else if (percentage <= 50) {
+                timeBar.className = "h-full bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full transition-all duration-100 ease-linear";
+            } else {
+                timeBar.className = "h-full bg-gradient-to-r from-brand-neon to-brand-green rounded-full transition-all duration-100 ease-linear";
+            }
+        }
+
+        // FIM DA PARTIDA
+        function endGame() {
+            clearInterval(timerInterval);
+            AudioEngine.playVictory();
+
+            // Salva recorde no localStorage
+            const savedHighScore = parseInt(localStorage.getItem('umademats_missao_highscore') || '0', 10);
+            if (score > savedHighScore) {
+                localStorage.setItem('umademats_missao_highscore', score);
+                resultHighScore.innerText = score;
+            } else {
+                resultHighScore.innerText = savedHighScore;
+            }
+
+            resultFinalScore.innerText = score;
+
+            // Determinar classificação e medalha
+            let rank = "";
+            let medal = "";
+            let message = "";
+
+            if (score <= 5) {
+                rank = "Aprendiz";
+                medal = "🌱";
+                message = "Bom começo! No próximo desafio, preste bastante atenção para responder rápido e somar combos.";
+            } else if (score <= 12) {
+                rank = "Discípulo Atento";
+                medal = "🛡️";
+                message = "Muito bom! Seus conhecimentos estão em dia. Continue estudando a Palavra com a UMADEMATS.";
+            } else if (score <= 20) {
+                rank = "Bereano";
+                medal = "📜";
+                message = "Excelente! Como os bereanos, você examina as escrituras com entusiasmo e agilidade!";
+            } else if (score <= 30) {
+                rank = "Guerreiro da Fé";
+                medal = "🗡️";
+                message = "Incrível! Seus reflexos bíblicos são afiados e rápidos. Uma verdadeira referência.";
+            } else {
+                rank = "Mestre das Escrituras";
+                medal = "👑";
+                message = "Espetacular! Você completou incontáveis desafios. Conhece a Bíblia de ponta a ponta!";
+            }
+
+            resultRankTitle.innerText = rank;
+            resultMedal.innerText = medal;
+            resultMessage.innerText = `"${message}"`;
+
+            showScreen(screenResult);
+        }
+
+        // GERADOR DE POOL PARA EVITAR REPETIÇÕES EXAGERADAS
+        function generateChallengesPool() {
+            const types = [
+                'who_am_i', 'complete_verse', 'spirit_fruits', 'armor_of_god',
+                'true_false', 'drag_ninive', 'bible_reflex', 'new_testament',
+                'event_order', 'dont_touch_snake', 'hold_to_pray', 'find_character',
+                'good_attitude', 'collect_manna', 'disciples_fishing'
+            ];
+            // Reembaralhar
+            challengesPool = types.sort(() => Math.random() - 0.5);
+        }
+
+        // CARREGA PRÓXIMO DESAFIO DO POOL
+        function loadNextChallenge() {
+            if (challengesPool.length === 0) {
+                generateChallengesPool();
+            }
+            const activeType = challengesPool.pop();
+            renderChallenge(activeType);
+        }
+
+        // FEEDBACK DE ACERTO
+        function registerSuccess(msg = "Muito bem! 🎉") {
+            score += SCORE_PER_CORRECT;
+            combo += COMBO_INCREASE;
+            AudioEngine.playSuccess();
+            updateStats();
+
+            // Feedback Visual de Acerto
+            showFloatingFeedback(msg, "text-brand-neon");
+            
+            // Animação leve no container
+            challengeContainer.classList.add('pop-animation');
+            setTimeout(() => {
+                challengeContainer.classList.remove('pop-animation');
+                loadNextChallenge();
+            }, 500);
+        }
+
+        // FEEDBACK DE ERRO
+        function registerFailure(msg = "Oops! 😢") {
+            combo = 0;
+            timeLeft = Math.max(0, timeLeft - PENALTY_SECONDS);
+            AudioEngine.playError();
+            updateStats();
+
+            // Feedback Visual de Erro
+            showFloatingFeedback(msg, "text-brand-pink");
+
+            // Tremida clássica de tela
+            gameViewport.classList.add('shake-screen');
+            setTimeout(() => {
+                gameViewport.classList.remove('shake-screen');
+                loadNextChallenge();
+            }, 500);
+        }
+
+        // EXIBIR FEEDBACK FLUTUANTE
+        function showFloatingFeedback(text, colorClass) {
+            globalFeedback.innerText = text;
+            globalFeedback.className = `h-10 text-center flex items-center justify-center font-fun text-xl tracking-wider pointer-events-none transition-all duration-150 transform scale-110 ${colorClass}`;
+            setTimeout(() => {
+                globalFeedback.className = "h-10 text-center flex items-center justify-center font-fun text-lg tracking-wider pointer-events-none text-zinc-500 opacity-0";
+            }, 550);
+        }
+
+        // INJETOR DINÂMICO DE DESAFIOS (RENDER BUILDER)
+        function renderChallenge(type) {
+            challengeContainer.innerHTML = '';
+            
+            // Título/Comando do Desafio Superior
+            const textHeader = document.createElement('div');
+            textHeader.className = "text-center w-full px-2 mb-3 z-10 select-none";
+            challengeContainer.appendChild(textHeader);
+
+            // Container Interativo Inferior / Central 
+            const board = document.createElement('div');
+            board.className = "w-full flex-grow flex flex-col justify-center items-center z-10 px-1 select-none";
+            challengeContainer.appendChild(board);
+
+            switch(type) {
+                
+                case 'who_am_i': {
+                    // 1) QUEM SOU EU?
+                    const data = WHO_AM_I_DATA[Math.floor(Math.random() * WHO_AM_I_DATA.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">DESAFIO: QUEM SOU EU?</span>
+                        <h3 class="text-white text-base md:text-lg font-bold mt-1 px-3 leading-snug drop-shadow-md bg-black/30 py-2.5 rounded-2xl border border-white/5 pulse-card">${data.question}</h3>
+                    `;
+                    
+                    const optionsGrid = document.createElement('div');
+                    optionsGrid.className = "grid grid-cols-2 gap-3 w-full max-w-xs mt-3 select-none";
+                    
+                    data.options.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-white text-black text-sm font-bold uppercase py-4 px-2 rounded-2xl hover:bg-zinc-100 transition-all active:scale-95 flex items-center justify-center text-center leading-none min-h-[56px]";
+                        btn.innerText = opt;
+                        btn.addEventListener('click', () => {
+                            if (idx === data.correct) {
+                                btn.classList.replace('bg-white', 'bg-brand-green');
+                                btn.classList.add('text-white');
+                                registerSuccess("Correto! ⭐");
+                            } else {
+                                btn.classList.replace('bg-white', 'bg-brand-pink');
+                                btn.classList.add('text-white');
+                                registerFailure("Incorreto! ❌");
+                            }
+                        });
+                        optionsGrid.appendChild(btn);
+                    });
+                    board.appendChild(optionsGrid);
+                    break;
+                }
+
+                case 'complete_verse': {
+                    // 2) COMPLETE O VERSÍCULO
+                    const data = COMPLETE_VERSE_DATA[Math.floor(Math.random() * COMPLETE_VERSE_DATA.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-orange-400">COMPLETE O VERSÍCULO 📖</span>
+                        <h3 class="text-white text-base md:text-lg font-serif italic mt-1 px-4 py-3 leading-relaxed drop-shadow-md bg-black/40 rounded-2xl border border-white/5 pulse-card">${data.verse}</h3>
+                    `;
+
+                    const optionsGrid = document.createElement('div');
+                    optionsGrid.className = "grid grid-cols-2 gap-3 w-full max-w-xs mt-3 select-none";
+
+                    data.options.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-white text-black text-sm font-bold uppercase py-4 px-2 rounded-2xl hover:bg-zinc-100 transition-all active:scale-95 flex items-center justify-center text-center leading-none min-h-[56px]";
+                        btn.innerText = opt;
+                        btn.addEventListener('click', () => {
+                            if (idx === data.correct) {
+                                btn.classList.replace('bg-white', 'bg-brand-green');
+                                btn.classList.add('text-white');
+                                registerSuccess("Perfeito! 📖");
+                            } else {
+                                btn.classList.replace('bg-white', 'bg-brand-pink');
+                                btn.classList.add('text-white');
+                                registerFailure("Diferente! ❌");
+                            }
+                        });
+                        optionsGrid.appendChild(btn);
+                    });
+                    board.appendChild(optionsGrid);
+                    break;
+                }
+
+                case 'spirit_fruits': {
+                    // 3) TOQUE SOMENTE NO CERTO (FRUTOS DO ESPÍRITO)
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">FESTIVAL DE ACERTO 🍎</span>
+                        <h3 class="text-white font-fun text-2xl uppercase tracking-wider leading-none mt-1">Toque apenas nos Frutos do Espírito!</h3>
+                    `;
+
+                    // Escolher 3 Frutos e 2 Obras/Ira
+                    const selectedCorrect = [...SPIRIT_FRUITS_ALL.correct].sort(() => Math.random() - 0.5).slice(0, 3);
+                    const selectedWrong = [...SPIRIT_FRUITS_ALL.incorrect].sort(() => Math.random() - 0.5).slice(0, 3);
+                    
+                    const mixFruits = [...selectedCorrect.map(n => ({name: n, correct: true})), ...selectedWrong.map(n => ({name: n, correct: false}))];
+                    mixFruits.sort(() => Math.random() - 0.5);
+
+                    const grid = document.createElement('div');
+                    grid.className = "grid grid-cols-2 gap-2 w-full max-w-xs mt-2 select-none";
+
+                    let correctTapped = 0;
+
+                    mixFruits.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-[#1a0f35] border-2 border-black text-white text-xs font-bold py-3 px-1 rounded-xl transition-all active:scale-95 overflow-hidden text-center";
+                        btn.innerText = item.name;
+                        
+                        btn.addEventListener('click', () => {
+                            if (item.correct) {
+                                btn.disabled = true;
+                                btn.className = "btn-cartoon bg-brand-green text-black scale-95 opacity-50 text-xs font-bold py-3 px-1 rounded-xl";
+                                correctTapped++;
+                                AudioEngine.playSuccess();
+                                if (correctTapped === selectedCorrect.length) {
+                                    registerSuccess("Incansável! 🍏");
+                                }
+                            } else {
+                                btn.className = "btn-cartoon bg-brand-pink text-white text-xs font-bold py-3 px-1 rounded-xl";
+                                registerFailure("Não é Fruto! ❌");
+                            }
+                        });
+                        grid.appendChild(btn);
+                    });
+                    board.appendChild(grid);
+                    break;
+                }
+
+                case 'armor_of_god': {
+                    // 4) ARMADURA DE DEUS (Áreas Clicáveis no Mascote)
+                    const item = ARMOR_OF_GOD_ITEMS[Math.floor(Math.random() * ARMOR_OF_GOD_ITEMS.length)];
+                    
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-cyan-400">ARMADURA DE DEUS 🛡️</span>
+                        <h3 class="text-white text-sm font-bold mt-1 leading-none">Onde fica o <span class="text-brand-neon uppercase font-fun text-xl tracking-wider block mt-1">${item.name}</span>?</h3>
+                        <p class="text-[10px] text-zinc-400 font-sans mt-1">Dica: ${item.hint}</p>
+                    `;
+
+                    // Silhouette visual representational interactive targets
+                    const bodyLayout = document.createElement('div');
+                    bodyLayout.className = "relative w-48 h-64 bg-zinc-900/60 border-2 border-black rounded-[2rem] overflow-hidden mt-3 shadow-inner flex flex-col items-center justify-between p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 to-black";
+
+                    // Cabeça (Target)
+                    const headBtn = document.createElement('button');
+                    headBtn.className = "w-10 h-10 rounded-full border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex items-center justify-center text-xs font-bold transition-all hover:scale-105 active:scale-95";
+                    headBtn.innerHTML = "👨‍🦱<br><span class=" + '"text-[7px]"' + ">Cabeça</span>";
+                    headBtn.addEventListener('click', () => {
+                        if (item.part === 'cabeça') registerSuccess("Blindado! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    // Peito (Target)
+                    const chestBtn = document.createElement('button');
+                    chestBtn.className = "w-16 h-12 rounded-xl border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex flex-col items-center justify-center text-[10px] font-bold transition-all hover:scale-105 active:scale-95";
+                    chestBtn.innerHTML = "👕<span class=" + '"text-[7px]"' + ">Peito</span>";
+                    chestBtn.addEventListener('click', () => {
+                        if (item.part === 'peito') registerSuccess("Justiça! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    // Cintura / Mão row
+                    const midRow = document.createElement('div');
+                    midRow.className = "flex justify-between w-full px-2 gap-2";
+
+                    const handLeft = document.createElement('button'); // Escudo da fé
+                    handLeft.className = "w-11 h-11 rounded-full border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex flex-col items-center justify-center text-[8px] font-bold leading-none";
+                    handLeft.innerHTML = "🛡️<span>Mão</span>";
+                    handLeft.addEventListener('click', () => {
+                        if (item.part === 'mão' || item.part === 'mão-espada') registerSuccess("Firmeza! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    const belt = document.createElement('button'); // Cinto
+                    belt.className = "w-12 h-8 rounded border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex flex-col items-center justify-center text-[8px] font-bold leading-none";
+                    belt.innerHTML = "🎗️<span>Cinto</span>";
+                    belt.addEventListener('click', () => {
+                        if (item.part === 'cintura') registerSuccess("Verdade! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    const handRight = document.createElement('button'); // Espada do Espírito
+                    handRight.className = "w-11 h-11 rounded-full border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex flex-col items-center justify-center text-[8px] font-bold leading-none";
+                    handRight.innerHTML = "🗡️<span>Mão</span>";
+                    handRight.addEventListener('click', () => {
+                        if (item.part === 'mão-espada' || item.part === 'mão') registerSuccess("Poderoso! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    midRow.appendChild(handLeft);
+                    midRow.appendChild(belt);
+                    midRow.appendChild(handRight);
+
+                    // Pés (Target)
+                    const feetBtn = document.createElement('button');
+                    feetBtn.className = "w-16 h-8 rounded-lg border-2 border-dashed border-white/30 hover:border-brand-neon bg-zinc-800 flex flex-col items-center justify-center text-[8px] font-bold leading-none transition-all hover:scale-105 active:scale-95";
+                    feetBtn.innerHTML = "👟<span>Pés</span>";
+                    feetBtn.addEventListener('click', () => {
+                        if (item.part === 'pés') registerSuccess("Prontidão! 🛡️");
+                        else registerFailure("Incorreto! ❌");
+                    });
+
+                    bodyLayout.appendChild(headBtn);
+                    bodyLayout.appendChild(chestBtn);
+                    bodyLayout.appendChild(midRow);
+                    bodyLayout.appendChild(feetBtn);
+
+                    board.appendChild(bodyLayout);
+                    break;
+                }
+
+                case 'true_false': {
+                    // 5) VERDADEIRO OU FALSO
+                    const data = TRUE_FALSE_DATA[Math.floor(Math.random() * TRUE_FALSE_DATA.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">VERDADEIRO OU FALSO?</span>
+                        <h3 class="text-white text-base md:text-lg font-bold mt-1 px-4 py-4 leading-snug drop-shadow-md bg-black/40 rounded-2xl border border-white/5 pulse-card">${data.phrase}</h3>
+                    `;
+
+                    const rowBtn = document.createElement('div');
+                    rowBtn.className = "grid grid-cols-2 gap-4 w-full max-w-xs mt-6 select-none";
+
+                    // Botão True
+                    const btnTrue = document.createElement('button');
+                    btnTrue.className = "btn-cartoon bg-brand-green text-black font-fun text-xl uppercase py-4 rounded-2xl hover:scale-105 transition-all";
+                    btnTrue.innerText = "VERDADEIRO 👍";
+                    btnTrue.addEventListener('click', () => {
+                        if (data.isTrue) registerSuccess("Verdade absoluta! 🕊️");
+                        else registerFailure("Falsidade! ❌");
+                    });
+
+                    // Botão False
+                    const btnFalse = document.createElement('button');
+                    btnFalse.className = "btn-cartoon bg-brand-pink text-white font-fun text-xl uppercase py-4 rounded-2xl hover:scale-105 transition-all";
+                    btnFalse.innerText = "FALSO 👎";
+                    btnFalse.addEventListener('click', () => {
+                        if (!data.isTrue) registerSuccess("Correto! Não caiu na pegadinha. 👍");
+                        else registerFailure("É Verdade! ❌");
+                    });
+
+                    rowBtn.appendChild(btnTrue);
+                    rowBtn.appendChild(btnFalse);
+                    board.appendChild(rowBtn);
+                    break;
+                }
+
+                case 'drag_ninive': {
+                    // 6) ARRASTE PARA SALVAR (Incrível jogo de arrastar funcional e responsivo)
+                    const options = [
+                        { text: "Leve Jonas até Nínive! 🏛️", emoji: "⛵", targetEmoji: "🏛️", targetText: "Nínive" },
+                        { text: "Leve o maná até o cesto! 🧺", emoji: "🍞", targetEmoji: "🧺", targetText: "Cesto" },
+                        { text: "Leve a ovelha perdida ao pastor! 🧑‍🌾", emoji: "🐑", targetEmoji: "🧑‍🌾", targetText: "Pastor" }
+                    ];
+                    const selected = options[Math.floor(Math.random() * options.length)];
+                    
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-yellow-300">MISSÃO DE SALVAMENTO 🚛</span>
+                        <h3 class="text-white text-sm font-bold mt-1 leading-snug">${selected.text}</h3>
+                    `;
+
+                    const dragArea = document.createElement('div');
+                    dragArea.className = "relative w-full max-w-xs h-40 bg-black/40 border-2 border-dashed border-white/20 rounded-2xl mt-4 overflow-hidden flex items-center justify-between px-6 shadow-inner";
+
+                    // Elemento para arrastar (Esquerda)
+                    const dragItem = document.createElement('div');
+                    dragItem.id = "draggable-char";
+                    dragItem.className = "w-14 h-14 bg-white/10 border-2 border-black rounded-full flex items-center justify-center text-3xl cursor-grab active:cursor-grabbing shadow-lg select-none touch-none z-30 transition-transform hover:scale-110";
+                    dragItem.innerText = selected.emoji;
+                    dragItem.style.position = "absolute";
+                    dragItem.style.left = "20px";
+
+                    // Destino (Direita)
+                    const targetZone = document.createElement('div');
+                    targetZone.className = "absolute right-5 w-16 h-16 border-2 border-brand-neon bg-brand-neon/15 rounded-2xl flex flex-col items-center justify-center text-center p-1 z-10 animate-pulse";
+                    targetZone.innerHTML = `
+                        <span class="text-3xl leading-none">${selected.targetEmoji}</span>
+                        <span class="text-[8px] font-black uppercase text-brand-neon tracking-wider mt-1 leading-none">${selected.targetText}</span>
+                    `;
+
+                    dragArea.appendChild(targetZone);
+                    dragArea.appendChild(dragItem);
+                    board.appendChild(dragArea);
+
+                    // MECANISMO DE ARRASTE COMPATÍVEL COM MOUSE E TOUCH-SCREEN
+                    let isDragging = false;
+                    let initialX = 0;
+                    let elemX = 20;
+
+                    const widthLimit = 220; // limite de arrasto até o alvo
+
+                    // Eventos de Mouse
+                    dragItem.addEventListener('mousedown', startDrag);
+                    window.addEventListener('mousemove', dragMove);
+                    window.addEventListener('mouseup', endDrag);
+
+                    // Eventos Touch (Mobile)
+                    dragItem.addEventListener('touchstart', startDrag, { passive: true });
+                    window.addEventListener('touchmove', dragMove, { passive: false });
+                    window.addEventListener('touchend', endDrag);
+
+                    function startDrag(e) {
+                        isDragging = true;
+                        initialX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                        dragItem.style.cursor = 'grabbing';
+                    }
+
+                    function dragMove(e) {
+                        if (!isDragging) return;
+                        if (e.cancelable) e.preventDefault(); // Impedir scroll da página ao arrastar
+                        
+                        const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                        const deltaX = currentX - initialX;
+                        initialX = currentX;
+
+                        elemX += deltaX;
+
+                        // Impedir ultrapassar limites
+                        if (elemX < 10) elemX = 10;
+                        if (elemX > widthLimit) elemX = widthLimit;
+
+                        dragItem.style.left = `${elemX}px`;
+
+                        // Verificar colisão de sucesso próxima ao alvo
+                        if (elemX >= widthLimit - 15) {
+                            successTrigger();
+                        }
+                    }
+
+                    function endDrag() {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        dragItem.style.cursor = 'grab';
+
+                        // Se não acertou ainda, retorna de volta ao início suavemente
+                        if (elemX < widthLimit - 15) {
+                            elemX = 20;
+                            dragItem.style.transition = "left 0.3s ease-out";
+                            dragItem.style.left = `20px`;
+                            setTimeout(() => {
+                                dragItem.style.transition = "";
+                            }, 300);
+                        }
+                    }
+
+                    function successTrigger() {
+                        isDragging = false;
+                        window.removeEventListener('mousemove', dragMove);
+                        window.removeEventListener('mouseup', endDrag);
+                        window.removeEventListener('touchmove', dragMove);
+                        window.removeEventListener('touchend', endDrag);
+                        registerSuccess("Salvo com sucesso! 🗺️");
+                    }
+                    break;
+                }
+
+                case 'bible_reflex': {
+                    // 7) REFLEXO BÍBLICO (Toque rápido)
+                    const item = REFLEX_ITEMS[Math.floor(Math.random() * REFLEX_ITEMS.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">REFLEXO VELOZ! ⚡</span>
+                        <h3 class="text-white text-base font-fun uppercase tracking-widest mt-1">Toque rápido no <span class="bg-brand-neon text-black px-1.5 py-0.5 rounded">${item.name}</span>!</h3>
+                    `;
+
+                    const playField = document.createElement('div');
+                    playField.className = "relative w-full max-w-xs h-44 bg-black/40 border border-white/5 rounded-2xl mt-3 flex items-center justify-center overflow-hidden";
+                    
+                    const targetBubble = document.createElement('button');
+                    targetBubble.className = "absolute btn-cartoon w-14 h-14 bg-white border-2 border-black rounded-full flex items-center justify-center text-3xl cursor-pointer hover:scale-110 active:scale-95 transition-transform shadow-lg z-20";
+                    targetBubble.innerText = item.emoji;
+
+                    // Posicionamento RANDÔMICO dentro da caixa
+                    const posX = Math.floor(Math.random() * 55) + 15; // 15% a 70%
+                    const posY = Math.floor(Math.random() * 55) + 15;
+
+                    targetBubble.style.left = `${posX}%`;
+                    targetBubble.style.top = `${posY}%`;
+
+                    let hasBeenClicked = false;
+
+                    targetBubble.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (hasBeenClicked) return;
+                        hasBeenClicked = true;
+                        registerSuccess("Reflexo de águia! ⚡");
+                    });
+
+                    // Temporizador para desaparecer
+                    const timeoutMs = 1200; // 1.2 segundos para clicar
+                    const shrinkTimer = setTimeout(() => {
+                        if (!hasBeenClicked) {
+                            hasBeenClicked = true;
+                            targetBubble.style.transform = "scale(0)";
+                            targetBubble.style.opacity = "0";
+                            setTimeout(() => {
+                                registerFailure("Lento demais! ❌");
+                            }, 200);
+                        }
+                    }, timeoutMs);
+
+                    playField.appendChild(targetBubble);
+                    board.appendChild(playField);
+                    break;
+                }
+
+                case 'new_testament': {
+                    // 8) QUAL LIVRO PERTENCE AO NOVO TESTAMENTO?
+                    const data = NEW_TESTAMENT_DATA[Math.floor(Math.random() * NEW_TESTAMENT_DATA.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-cyan-400">ESTUDO DA PALAVRA 📖</span>
+                        <h3 class="text-white text-base md:text-lg font-bold mt-1 leading-snug">Qual livro pertence ao <span class="text-brand-neon">Novo Testamento</span>?</h3>
+                    `;
+
+                    const optionsGrid = document.createElement('div');
+                    optionsGrid.className = "grid grid-cols-2 gap-3 w-full max-w-xs mt-3 select-none";
+
+                    data.options.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-white text-black text-sm font-bold uppercase py-4 px-2 rounded-2xl hover:bg-zinc-100 transition-all active:scale-95 flex items-center justify-center text-center leading-none min-h-[56px]";
+                        btn.innerText = opt;
+                        btn.addEventListener('click', () => {
+                            if (idx === data.correct) {
+                                btn.classList.replace('bg-white', 'bg-brand-green');
+                                btn.classList.add('text-white');
+                                registerSuccess("Conhecimento puro! 📖");
+                            } else {
+                                btn.classList.replace('bg-white', 'bg-brand-pink');
+                                btn.classList.add('text-white');
+                                registerFailure("Antigo Testamento! ❌");
+                            }
+                        });
+                        optionsGrid.appendChild(btn);
+                    });
+                    board.appendChild(optionsGrid);
+                    break;
+                }
+
+                case 'event_order': {
+                    // 9) ORDEM CORRETA (Eventos Bíblicos)
+                    const data = EVENT_ORDER_DATA[Math.floor(Math.random() * EVENT_ORDER_DATA.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">LINHA DO TEMPO BÍBLICA 🕰️</span>
+                        <h3 class="text-white text-base font-bold mt-1 px-4 leading-snug drop-shadow-md text-center max-w-xs">${data.question}</h3>
+                    `;
+
+                    const listGroup = document.createElement('div');
+                    listGroup.className = "flex flex-col gap-2.5 w-full max-w-xs mt-3 select-none";
+
+                    data.options.forEach((opt, idx) => {
+                        const row = document.createElement('button');
+                        row.className = "btn-cartoon bg-white hover:bg-zinc-100 text-black text-xs font-bold uppercase py-3 px-3 rounded-xl transition-all active:scale-95 flex items-center justify-between gap-2";
+                        
+                        row.innerHTML = `
+                            <span>${opt}</span>
+                            <span class="text-zinc-400 font-normal text-[10px]">#${idx+1}</span>
+                        `;
+
+                        row.addEventListener('click', () => {
+                            if (idx === data.correct) {
+                                row.classList.replace('bg-white', 'bg-brand-green');
+                                row.classList.add('text-white');
+                                registerSuccess("Perfeito! Historiador Nota 10! 🕰️");
+                            } else {
+                                row.classList.replace('bg-white', 'bg-brand-pink');
+                                row.classList.add('text-white');
+                                registerFailure("Aconteceu depois! ❌");
+                            }
+                        });
+                        listGroup.appendChild(row);
+                    });
+
+                    board.appendChild(listGroup);
+                    break;
+                }
+
+                case 'dont_touch_snake': {
+                    // 10) NÃO TOQUE NO ERRADO (Bouncing fruits vs poison / serpents)
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">NÃO DEIXE SE ENGANAR! 🐍</span>
+                        <h3 class="text-white text-base font-fun uppercase tracking-widest mt-1">Toque nos peixes 🐟, mas NÃO toque na Serpente 🐍!</h3>
+                    `;
+
+                    const playbox = document.createElement('div');
+                    playbox.className = "relative w-full max-w-xs h-44 bg-gradient-to-t from-blue-900/60 to-black/30 border border-white/5 rounded-2xl mt-3 overflow-hidden";
+
+                    const elements = [
+                        { emoji: "🐟", correct: true },
+                        { emoji: "🐟", correct: true },
+                        { emoji: "🐟", correct: true },
+                        { emoji: "🐍", correct: false }
+                    ];
+
+                    let fishesRemaining = 3;
+
+                    elements.forEach((item, idx) => {
+                        const ball = document.createElement('button');
+                        ball.className = "absolute w-12 h-12 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-2xl cursor-pointer hover:scale-105 active:scale-90 transition-transform shadow";
+                        ball.innerText = item.emoji;
+
+                        // Posições espalhadas
+                        const left = (idx * 22) + 8;
+                        const top = Math.floor(Math.random() * 45) + 15;
+
+                        ball.style.left = `${left}%`;
+                        ball.style.top = `${top}%`;
+
+                        ball.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (item.correct) {
+                                ball.disabled = true;
+                                ball.className = "absolute w-12 h-12 bg-brand-green/30 border-2 border-brand-green rounded-full flex items-center justify-center text-xl opacity-30 text-white scale-75";
+                                fishesRemaining--;
+                                AudioEngine.playSuccess();
+                                if (fishesRemaining === 0) {
+                                    registerSuccess("Limpo e Seguro! 🐟");
+                                }
+                            } else {
+                                ball.className = "absolute w-12 h-12 bg-brand-pink border-2 border-black rounded-full flex items-center justify-center text-2xl scale-125 shake-screen";
+                                registerFailure("Ops! Tocou na Serpente! 🐍");
+                            }
+                        });
+
+                        playbox.appendChild(ball);
+                    });
+
+                    board.appendChild(playbox);
+                    break;
+                }
+
+                case 'hold_to_pray': {
+                    // 11) SEGURE PARA ORAR
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">AÇÕES DA FÉ 🙏</span>
+                        <h3 class="text-white text-base font-fun uppercase tracking-wider mt-1">Toque e SEGURE para Orar!</h3>
+                        <p class="text-[10px] text-zinc-400 font-sans mt-0.5">Mantenha pressionado por 2 segundos.</p>
+                    `;
+
+                    const holdBox = document.createElement('div');
+                    holdBox.className = "w-full max-w-xs flex flex-col items-center mt-4";
+
+                    // Barra de progresso circular ou linear
+                    const pBarContainer = document.createElement('div');
+                    pBarContainer.className = "w-full bg-zinc-800 h-4 border border-black rounded-full overflow-hidden p-0.5 mb-5 shadow-inner";
+                    
+                    const pBarFill = document.createElement('div');
+                    pBarFill.className = "h-full w-0 bg-brand-neon rounded-full transition-all duration-75";
+                    pBarContainer.appendChild(pBarFill);
+
+                    // Botão Gigante de Hold
+                    const giantBtn = document.createElement('button');
+                    giantBtn.className = "btn-cartoon w-24 h-24 bg-brand-purple border-3 border-black text-white text-3xl rounded-full flex items-center justify-center select-none cursor-pointer hover:scale-105 active:scale-95 transition-transform shadow-xl";
+                    giantBtn.innerText = "🙏";
+
+                    holdBox.appendChild(pBarContainer);
+                    holdBox.appendChild(giantBtn);
+                    board.appendChild(holdBox);
+
+                    let holdInterval = null;
+                    let holdProgress = 0;
+                    let holdSuccess = false;
+
+                    // MOUSE EVENTS
+                    giantBtn.addEventListener('mousedown', startHolding);
+                    giantBtn.addEventListener('mouseup', stopHolding);
+                    giantBtn.addEventListener('mouseleave', stopHolding);
+
+                    // TOUCH EVENTS
+                    giantBtn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        startHolding();
+                    });
+                    giantBtn.addEventListener('touchend', stopHolding);
+
+                    function startHolding() {
+                        if (holdSuccess) return;
+                        giantBtn.classList.replace('bg-brand-purple', 'bg-brand-neon');
+                        giantBtn.classList.add('text-black');
+                        
+                        holdInterval = setInterval(() => {
+                            holdProgress += 5; // Aumentar 5% a cada 100ms (Total de 2 segundos = 2000ms)
+                            if (holdProgress > 100) holdProgress = 100;
+                            
+                            pBarFill.style.width = `${holdProgress}%`;
+                            AudioEngine.playTick();
+
+                            if (holdProgress >= 100 && !holdSuccess) {
+                                holdSuccess = true;
+                                clearInterval(holdInterval);
+                                registerSuccess("Oração respondida! 🙏");
+                            }
+                        }, 100);
+                    }
+
+                    function stopHolding() {
+                        if (holdSuccess) return;
+                        clearInterval(holdInterval);
+                        holdProgress = 0;
+                        pBarFill.style.width = `0%`;
+                        giantBtn.className = "btn-cartoon w-24 h-24 bg-brand-purple border-3 border-black text-white text-3xl rounded-full flex items-center justify-center select-none shadow-xl";
+                    }
+                    break;
+                }
+
+                case 'find_character': {
+                    // 12) ENCONTRE O PERSONAGEM (Davi, Jonas, Moisés via Emoji específico)
+                    const data = EMOJI_CHARACTERS[Math.floor(Math.random() * EMOJI_CHARACTERS.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-cyan-400">DESAFIO DE ATENÇÃO 🔍</span>
+                        <h3 class="text-white text-base font-bold mt-1">Quem é o personagem <span class="text-brand-neon font-fun uppercase text-xl block mt-0.5">${data.find}</span>?</h3>
+                    `;
+
+                    const mixElements = [{emoji: data.emoji, correct: true}];
+                    data.pool.slice(0, 3).forEach(item => {
+                        mixElements.push({emoji: item, correct: false});
+                    });
+                    mixElements.sort(() => Math.random() - 0.5);
+
+                    const grid = document.createElement('div');
+                    grid.className = "grid grid-cols-2 gap-3.5 w-full max-w-xs mt-3 select-none";
+
+                    mixElements.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-white text-black text-4xl py-4 rounded-3xl hover:bg-zinc-100 transition-all active:scale-95 flex items-center justify-center text-center";
+                        btn.innerText = item.emoji;
+
+                        btn.addEventListener('click', () => {
+                            if (item.correct) {
+                                btn.classList.replace('bg-white', 'bg-brand-green');
+                                registerSuccess("Encontrou rápido! 🏹");
+                            } else {
+                                btn.classList.replace('bg-white', 'bg-brand-pink');
+                                registerFailure("Errou o personagem! ❌");
+                            }
+                        });
+                        grid.appendChild(btn);
+                    });
+
+                    board.appendChild(grid);
+                    break;
+                }
+
+                case 'good_attitude': {
+                    // 13) ESCOLHA A BOA ATITUDE
+                    const data = GOOD_ATTITUDES[Math.floor(Math.random() * GOOD_ATTITUDES.length)];
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">REFLITÃO DA ATITUDE 🕊️</span>
+                        <h3 class="text-white text-sm font-bold mt-1 px-4 py-2.5 leading-snug text-center bg-black/40 rounded-2xl border border-white/5 pulse-card">${data.question}</h3>
+                    `;
+
+                    const boxOptions = document.createElement('div');
+                    boxOptions.className = "flex flex-col gap-2.5 w-full max-w-xs mt-3.5 select-none";
+
+                    data.options.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = "btn-cartoon bg-white text-black text-xs font-bold uppercase py-3.5 px-3 rounded-xl transition-all active:scale-95 text-center leading-none";
+                        btn.innerText = opt;
+                        
+                        btn.addEventListener('click', () => {
+                            if (idx === data.correct) {
+                                btn.classList.replace('bg-white', 'bg-brand-green');
+                                btn.classList.add('text-white');
+                                registerSuccess("Belo coração! ❤️");
+                            } else {
+                                btn.classList.replace('bg-white', 'bg-brand-pink');
+                                btn.classList.add('text-white');
+                                registerFailure("Olha a atitude... ❌");
+                            }
+                        });
+                        boxOptions.appendChild(btn);
+                    });
+
+                    board.appendChild(boxOptions);
+                    break;
+                }
+
+                case 'collect_manna': {
+                    // 14) COLETE O MANÁ (Itens caindo, clique apenas no bom maná)
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-yellow-300">CHUVA NO DESERTO 🌧️</span>
+                        <h3 class="text-white text-base font-fun uppercase tracking-wider mt-1">Toque apenas no Pão ou Maná!</h3>
+                        <p class="text-[9px] text-zinc-400 font-sans leading-none mt-0.5">Evite as Pedras e Espinhos!</p>
+                    `;
+
+                    const mainDropBox = document.createElement('div');
+                    mainDropBox.className = "relative w-full max-w-xs h-44 bg-blue-900/40 border border-white/5 rounded-2xl mt-3 overflow-hidden";
+
+                    const pool = [
+                        { emoji: "🍞", correct: true, name: "Pão" },
+                        { emoji: "🥖", correct: true, name: "Maná" },
+                        { emoji: "🌵", correct: false, name: "Espinho" },
+                        { emoji: "🪨", correct: false, name: "Pedra" }
+                    ].sort(() => Math.random() - 0.5);
+
+                    let hitsNeeded = 2; // Precisa coletar os corretos (2)
+                    let totalCorrect = pool.filter(p => p.correct).length;
+
+                    pool.forEach((element, idx) => {
+                        const target = document.createElement('button');
+                        target.className = "absolute w-12 h-12 bg-white/15 border border-black rounded-full flex items-center justify-center text-xl cursor-pointer hover:scale-105 active:scale-90 transition-transform shadow";
+                        target.innerText = element.emoji;
+
+                        // Definição de coordenadas iniciais dispersas horizontalmente e verticalmente caindo
+                        const left = (idx * 22) + 8;
+                        const top = (idx * 15) + 15;
+
+                        target.style.left = `${left}%`;
+                        target.style.top = `${top}%`;
+                        target.style.animation = "bounce-slow 1.5s infinite ease-in-out";
+                        target.style.animationDelay = `${idx * 0.25}s`;
+
+                        target.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (element.correct) {
+                                target.disabled = true;
+                                target.className = "absolute w-12 h-12 bg-brand-green/35 border-2 border-brand-green rounded-full flex items-center justify-center text-xs opacity-40 text-black scale-75";
+                                hitsNeeded--;
+                                AudioEngine.playSuccess();
+                                if (hitsNeeded === 0) {
+                                    registerSuccess("Maná colhido! 🍞");
+                                }
+                            } else {
+                                target.className = "absolute w-12 h-12 bg-brand-pink border-2 border-black rounded-full flex items-center justify-center text-2xl scale-125 shake-screen";
+                                registerFailure("Maná ruim! ❌");
+                            }
+                        });
+
+                        mainDropBox.appendChild(target);
+                    });
+
+                    board.appendChild(mainDropBox);
+                    break;
+                }
+
+                case 'disciples_fishing': {
+                    // 15) PESCARIA DOS DISCÍPULOS (Peixes nadadores rápidos, clique neles)
+                    textHeader.innerHTML = `
+                        <span class="text-[9px] uppercase font-black tracking-widest text-[#ccff00]">GRANDE PESCA PEIXES 🐠</span>
+                        <h3 class="text-white text-base font-fun uppercase tracking-wider mt-1">Toque rápido no Peixe de Ouro!</h3>
+                    `;
+
+                    const oceanBox = document.createElement('div');
+                    oceanBox.className = "relative w-full max-w-xs h-44 bg-gradient-to-b from-blue-700/60 to-blue-999 border border-white/5 rounded-2xl mt-3 overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-900 to-indigo-950";
+
+                    // Peixe de Ouro Dourado
+                    const bgFish = document.createElement('button');
+                    bgFish.className = "absolute btn-cartoon px-2 py-1.5 bg-yellow-400 border border-black rounded-full flex items-center justify-center text-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-md z-20";
+                    bgFish.innerHTML = "🐠 <span class=" + '"text-[7px] text-black font-black leading-none ml-1"' + ">BÔNUS</span>";
+
+                    // Posicionamento RANDÔMICO do peixe dourado
+                    const goldenX = Math.floor(Math.random() * 50) + 15;
+                    const goldenY = Math.floor(Math.random() * 50) + 15;
+
+                    bgFish.style.left = `${goldenX}%`;
+                    bgFish.style.top = `${goldenY}%`;
+
+                    let goldenClicked = false;
+
+                    bgFish.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (goldenClicked) return;
+                        goldenClicked = true;
+                        // Ganha recompensa dupla por ser peixe bônus de ouro!
+                        score += 1;
+                        registerSuccess("Pesca Incrível! +2 Pontos! 🐠💰");
+                    });
+
+                    // Peixes normais de distração que fogem
+                    const normFish = document.createElement('div');
+                    normFish.className = "absolute text-2xl select-none select-none select-none animate-pulse pointer-events-none opacity-40";
+                    normFish.innerText = "🐟";
+                    normFish.style.left = "10%";
+                    normFish.style.top = "60%";
+                    oceanBox.appendChild(normFish);
+
+                    const normFish2 = document.createElement('div');
+                    normFish2.className = "absolute text-xl select-none animate-bounce pointer-events-none opacity-30";
+                    normFish2.innerText = "🐟";
+                    normFish2.style.right = "15%";
+                    normFish2.style.top = "30%";
+                    oceanBox.appendChild(normFish2);
+
+                    // Desaparecer rápido!
+                    const displayTimeout = 1400; 
+                    const vanishTimer = setTimeout(() => {
+                        if (!goldenClicked) {
+                            goldenClicked = true;
+                            bgFish.style.transform = "scale(0)";
+                            setTimeout(() => {
+                                registerFailure("O peixe escapou! ❌");
+                            }, 150);
+                        }
+                    }, displayTimeout);
+
+                    oceanBox.appendChild(bgFish);
+                    board.appendChild(oceanBox);
+                    break;
+                }
+
+            }
+        }
+    </script>
+
+    <!-- INSTRUÇÕES RÁPIDAS DE EDIÇÃO DE CONTEÚDO (MANDATÓRIO: FINAL DO CÓDIGO) -->
+    <!-- 
+      COMO FAZER ALTERAÇÕES NESSE JOGO:
+      - Para alterar as perguntas/respostas de "Quem Sou Eu": Modifique a constante 'WHO_AM_I_DATA'. Cada objeto possui 'question', 'options' (array com 4 itens) e o índice da resposta certa em 'correct' (0 a 3).
+      - Para alterar os versículos: Modifique a constante 'COMPLETE_VERSE_DATA' com a mesma estrutura.
+      - Para alterar verdadeiro ou falso: Altere a constante 'TRUE_FALSE_DATA', adicionando ou editando frases com 'phrase' e 'isTrue' (bool).
+      - Tempo padrão do Jogo: Ajuste a variável 'GAME_DURATION' (atualmente 30 segundos) no topo dos scripts.
+      - Sistema de Pontuação e combo: Modifique as constantes 'SCORE_PER_CORRECT' e 'PENALTY_SECONDS' (quantidade de tempo debitada ao errar).
+      - Para mudar as CORES da página: Altere as classes de tailwindconfig e as variáveis correspondentes.
+      - URL de publicação oficial testada: umademats.com.br/missao. Funciona 100% sob layout responsivo.
+    -->
+
+</body>
+</html>

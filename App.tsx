@@ -8,7 +8,7 @@ import { JesusReinaBanner } from './components/JesusReinaBanner';
 import { WelcomeExperience } from './components/WelcomeExperience';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabaseClient';
-import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight } from 'lucide-react';
+import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 
 // Lazy Load Secondary Pages
@@ -25,7 +25,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza' | 'missao';
 
 export default function App() {
   useSiteAnalytics();
@@ -42,6 +42,7 @@ export default function App() {
             return 'home';
         }
 
+        if (path === '/missao' || path === '/missao/') return 'missao';
         if (path === '/pedircamiseta') return 'shirt_request';
         if (path === '/camisetas') return 'tshirt_order';
         if (path === '/admin') return 'admin';
@@ -117,11 +118,37 @@ export default function App() {
       shirt_request: '/pedircamiseta',
       tshirt_order: '/camisetas',
       sulamita: '/sulamita',
-      gilmarfiuza: '/gilmarfiuza'
+      gilmarfiuza: '/gilmarfiuza',
+      missao: '/missao'
     };
     safePushState(paths[page]);
     setCurrentPage(page);
   };
+
+  if (currentPage === 'missao') {
+    return (
+      <main className="w-full bg-[#0b0b1e] min-h-screen relative overflow-hidden flex flex-col justify-start">
+        {/* Playful Float Floating Back Button overlay */}
+        <div className="absolute top-4 left-4 z-[100] pointer-events-auto">
+          <button 
+            onClick={() => handleNavigate('home')} 
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-black bg-white hover:bg-zinc-100 text-black font-semibold text-xs uppercase tracking-wider shadow-[4px_4px_0px_#000000] active:translate-y-0.5 active:shadow-[2px_2px_0px_#000000] transition-all"
+          >
+            <ArrowLeft size={14} strokeWidth={2.5} />
+            <span>Portal</span>
+          </button>
+        </div>
+
+        {/* The Game itself rendered in a clean iframe container */}
+        <iframe 
+          src="/missao/index.html" 
+          className="w-full h-screen border-none"
+          title="Missão Bíblica: 30 Segundos"
+          referrerPolicy="no-referrer"
+        />
+      </main>
+    );
+  }
 
   if (currentPage === 'shirt_request') {
     return <Suspense fallback={<LoadingFallback />}><ShirtRequestPage onBack={() => handleNavigate('home')} /></Suspense>;

@@ -7,6 +7,30 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
+// Helper functions for Currency Masking
+export const applyCurrencyMask = (val: string): string => {
+  const digits = val.replace(/\D/g, '');
+  if (!digits) return '';
+  const numericValue = parseInt(digits, 10) / 100;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(numericValue);
+};
+
+export const parseCurrencyToFloat = (val: string): number => {
+  if (!val) return 0;
+  const cleaned = val.replace(/[^\d,.-]/g, '');
+  let standard = cleaned;
+  if (cleaned.includes(',') && cleaned.includes('.')) {
+    standard = cleaned.replace(/\./g, '').replace(/,/g, '.');
+  } else if (cleaned.includes(',')) {
+    standard = cleaned.replace(/,/g, '.');
+  }
+  const parsed = parseFloat(standard);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 // Types
 export interface EstoqueProduto {
   id: string;
@@ -99,7 +123,20 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [showConfirmCancelVenda, setShowConfirmCancelVenda] = useState<EstoqueVenda | null>(null);
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<EstoqueProduto | null>(null);
+  const [productToEdit, setProductToEdit] = useState<EstoqueProduto | null>(null);
+  const [productForSizes, setProductForSizes] = useState<EstoqueProduto | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+
+  // Edit Product Form State
+  const [editProdName, setEditProdName] = useState('');
+  const [editProdPrice, setEditProdPrice] = useState('');
+  const [editProdCategory, setEditProdCategory] = useState<'VESTUÁRIO' | 'ITENS'>('VESTUÁRIO');
+  const [editProdQty, setEditProdQty] = useState('');
+  const [editSizeQuantities, setEditSizeQuantities] = useState<Record<string, number>>({});
+
+  // Sizes Modal State
+  const [sizesModalQuantities, setSizesModalQuantities] = useState<Record<string, number>>({});
+  const [sizesModalQty, setSizesModalQty] = useState('');
 
   // New Product Form state
   const [newProdName, setNewProdName] = useState('');
@@ -111,6 +148,20 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
 
   // Event creation form state
   const [eventoInputName, setEventoInputName] = useState('');
+
+  // Small Size edit modal state (VESTUÁRIO)
+  const [editingSizeCell, setEditingSizeCell] = useState<{ product: EstoqueProduto; size: string; curQty: number } | null>(null);
+  const [newSizeQtyInput, setNewSizeQtyInput] = useState<string>('');
+
+  // Toast Notification State
+  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; text: string }>>([]);
+  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Math.random().toString();
+    setToasts(prev => [...prev, { id, type, text }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
 
   // -------------------------------------------------------------
   // SQL CODE DEFINITION FOR USER REFERENCE
@@ -181,18 +232,28 @@ ALTER TABLE estoque_vendas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE estoque_venda_itens ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de RLS Universais Para Acesso Total Temporário (ou ajuste para Admin Autenticado)
+DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_produtos;
+DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_produtos;
 CREATE POLICY "Permitir leitura para todos" ON estoque_produtos FOR SELECT USING (true);
 CREATE POLICY "Permitir gravação para todos" ON estoque_produtos FOR ALL USING (true);
 
+DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_variacoes;
+DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_variacoes;
 CREATE POLICY "Permitir leitura para todos" ON estoque_variacoes FOR SELECT USING (true);
 CREATE POLICY "Permitir gravação para todos" ON estoque_variacoes FOR ALL USING (true);
 
+DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_eventos;
+DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_eventos;
 CREATE POLICY "Permitir leitura para todos" ON estoque_eventos FOR SELECT USING (true);
 CREATE POLICY "Permitir gravação para todos" ON estoque_eventos FOR ALL USING (true);
 
+DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_vendas;
+DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_vendas;
 CREATE POLICY "Permitir leitura para todos" ON estoque_vendas FOR SELECT USING (true);
 CREATE POLICY "Permitir gravação para todos" ON estoque_vendas FOR ALL USING (true);
 
+DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_venda_itens;
+DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_venda_itens;
 CREATE POLICY "Permitir leitura para todos" ON estoque_venda_itens FOR SELECT USING (true);
 CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL USING (true);`;
 
@@ -297,11 +358,25 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         // Tables exist, let's load from Supabase!
         setDbMode('SUPABASE');
         
-        const { data: dbProdutos } = await supabase.from('estoque_produtos').select('*');
-        const { data: dbVariacoes } = await supabase.from('estoque_variacoes').select('*');
-        const { data: dbEventos } = await supabase.from('estoque_eventos').select('*');
-        const { data: dbVendas } = await supabase.from('estoque_vendas').select('*');
-        const { data: dbVendaItens } = await supabase.from('estoque_venda_itens').select('*');
+        const [
+          resProdutos,
+          resVariacoes,
+          resEventos,
+          resVendas,
+          resVendaItens
+        ] = await Promise.all([
+          supabase.from('estoque_produtos').select('*').order('name', { ascending: true }),
+          supabase.from('estoque_variacoes').select('*'),
+          supabase.from('estoque_eventos').select('*').order('opened_at', { ascending: false }),
+          supabase.from('estoque_vendas').select('*').order('created_at', { ascending: false }),
+          supabase.from('estoque_venda_itens').select('*')
+        ]);
+
+        const dbProdutos = resProdutos.data;
+        const dbVariacoes = resVariacoes.data;
+        const dbEventos = resEventos.data;
+        const dbVendas = resVendas.data;
+        const dbVendaItens = resVendaItens.data;
 
         // Compile variations and items
         const parsedProducts: EstoqueProduto[] = (dbProdutos || []).map(p => {
@@ -365,12 +440,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProdName.trim()) {
-      alert("Informe o nome do produto.");
+      showToast("Informe o nome do produto.", "error");
       return;
     }
-    const price = parseFloat(newProdPrice) || 0;
+    const price = parseCurrencyToFloat(newProdPrice) || 0;
     if (price <= 0) {
-      alert("Informe um preço válido.");
+      showToast("Informe um preço válido.", "error");
       return;
     }
 
@@ -378,6 +453,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
     try {
       const generatedProdId = dbMode === 'SUPABASE' ? undefined : `prod-${Date.now()}`;
+      let optimisticNewProduct: EstoqueProduto | null = null;
       
       if (dbMode === 'SUPABASE') {
         // Real Supabase Insert
@@ -390,22 +466,45 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
         if (prodErr) throw prodErr;
 
-        if (newProdCategory === 'VESTUÁRIO' && insertedProduct) {
-          // Add variations
-          const varsToInsert = Object.entries(sizeQuantities)
-            .filter(([_, qty]) => (qty as number) > 0)
-            .map(([size, qty]) => ({
-              product_id: insertedProduct.id,
-              size,
-              quantity: qty as number
-            }));
+        if (insertedProduct) {
+          let compiledVars: EstoqueVariacao[] = [];
+          
+          if (newProdCategory === 'VESTUÁRIO') {
+            // Add variations
+            const varsToInsert = Object.entries(sizeQuantities)
+              .filter(([_, qty]) => (qty as number) > 0)
+              .map(([size, qty]) => ({
+                product_id: insertedProduct.id,
+                size,
+                quantity: qty as number
+              }));
 
-          if (varsToInsert.length > 0) {
-            const { error: varErr } = await supabase
-              .from('estoque_variacoes')
-              .insert(varsToInsert);
-            if (varErr) throw varErr;
+            if (varsToInsert.length > 0) {
+              const { error: varErr, data: insertedVars } = await supabase
+                .from('estoque_variacoes')
+                .insert(varsToInsert)
+                .select();
+              
+              if (varErr) throw varErr;
+              compiledVars = (insertedVars || []).map(v => ({
+                id: v.id,
+                product_id: v.product_id,
+                size: v.size,
+                quantity: v.quantity
+              }));
+            }
           }
+
+          const sumOfSizes = compiledVars.reduce((sum, item) => sum + item.quantity, 0);
+
+          optimisticNewProduct = {
+            id: insertedProduct.id,
+            name: insertedProduct.name,
+            category: insertedProduct.category,
+            price: insertedProduct.price,
+            initial_quantity: insertedProduct.category === 'VESTUÁRIO' ? sumOfSizes : insertedProduct.initial_quantity,
+            variations: compiledVars
+          };
         }
       } else {
         // Local Sync
@@ -428,7 +527,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           totalQty = parseInt(newProdQty) || 0;
         }
 
-        const newProduct: EstoqueProduto = {
+        optimisticNewProduct = {
           id: generatedProdId!,
           name: newProdName,
           category: newProdCategory,
@@ -437,43 +536,394 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           variations: CompiledVars
         };
 
-        const updatedProducts = [...produtos, newProduct];
+        const updatedProducts = [...produtos, optimisticNewProduct];
         saveLocalStorageData(updatedProducts, eventos, vendas);
       }
 
-      // Refresh data
-      await loadData();
-      
+      // Optimistically insert and sort locally
+      if (optimisticNewProduct) {
+        setProdutos(prev => [...prev, optimisticNewProduct!].sort((a, b) => a.name.localeCompare(b.name)));
+      }
+
       // Close state and cleanup
       setShowAddProductModal(false);
       setNewProdName('');
       setNewProdPrice('');
       setNewProdQty('');
       setSizeQuantities({});
-      alert("Produto cadastrado com sucesso!");
+      showToast("Produto cadastrado com sucesso!", "success");
+
+      // Silently refresh in background
+      loadData();
     } catch (err: any) {
       console.error(err);
-      alert("Erro ao cadastrar produto: " + err.message);
+      showToast("Erro ao cadastrar produto: " + err.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteProduct = async (id: string) => {
+    // 1. Optimistic UI state update
+    const previousProducts = [...produtos];
+    setProdutos(prev => prev.filter(p => p.id !== id));
+
     setLoading(true);
     try {
       if (dbMode === 'SUPABASE') {
-        await supabase.from('estoque_produtos').delete().eq('id', id);
+        const { error } = await supabase.from('estoque_produtos').delete().eq('id', id);
+        if (error) throw error;
       } else {
-        const updatedProducts = produtos.filter(p => p.id !== id);
+        const updatedProducts = previousProducts.filter(p => p.id !== id);
         saveLocalStorageData(updatedProducts, eventos, vendas);
       }
-      await loadData();
+      showToast("Produto excluído com sucesso!", "success");
+      // Silently sync background
+      loadData();
     } catch (err: any) {
       console.error("Erro ao excluir produto:", err.message);
+      setProdutos(previousProducts); // revert if failed
+      showToast("Erro ao excluir produto: " + err.message, "error");
     } finally {
       setLoading(false);
       setProductToDelete(null);
+    }
+  };
+
+  const handleUpdateProduct = async (
+    productId: string,
+    updatedData: {
+      name: string;
+      price: number;
+      category: 'VESTUÁRIO' | 'ITENS';
+      initial_quantity?: number;
+      variations?: { size: string; quantity: number }[];
+    }
+  ) => {
+    // 1. Optimistic local state update
+    const previousProducts = [...produtos];
+
+    let computedTotalQty = 0;
+    let optimisticVars: EstoqueVariacao[] = [];
+    if (updatedData.category === 'VESTUÁRIO' && updatedData.variations) {
+      optimisticVars = updatedData.variations.map((v, index) => {
+        computedTotalQty += v.quantity;
+        return {
+          id: `var-temp-${Date.now()}-${index}`,
+          product_id: productId,
+          size: v.size,
+          quantity: v.quantity
+        };
+      });
+    } else {
+      computedTotalQty = updatedData.initial_quantity || 0;
+    }
+
+    setProdutos(prev => prev.map(p => {
+      if (p.id === productId) {
+        return {
+          ...p,
+          name: updatedData.name,
+          price: updatedData.price,
+          category: updatedData.category,
+          initial_quantity: computedTotalQty,
+          variations: optimisticVars
+        };
+      }
+      return p;
+    }));
+
+    setLoading(true);
+    try {
+      if (dbMode === 'SUPABASE') {
+        // Update core product parameters
+        const { error: prodErr } = await supabase
+          .from('estoque_produtos')
+          .update({
+            name: updatedData.name,
+            price: updatedData.price,
+            category: updatedData.category,
+            initial_quantity: updatedData.category === 'ITENS' ? (updatedData.initial_quantity || 0) : 0
+          })
+          .eq('id', productId);
+        if (prodErr) throw prodErr;
+
+        if (updatedData.category === 'VESTUÁRIO' && updatedData.variations) {
+          // Fetch existing variations for this product
+          const { data: existingVars, error: fetchErr } = await supabase
+            .from('estoque_variacoes')
+            .select('*')
+            .eq('product_id', productId);
+            
+          if (fetchErr) throw fetchErr;
+
+          const existingMap = new Map<string, string>(); // size -> id
+          (existingVars || []).forEach(ev => {
+            existingMap.set(ev.size, ev.id);
+          });
+
+          // Perform individual insert or update to guarantee persistence
+          for (const v of updatedData.variations) {
+            const existingId = existingMap.get(v.size);
+            if (existingId) {
+              const { error: updErr } = await supabase
+                .from('estoque_variacoes')
+                .update({ quantity: v.quantity })
+                .eq('id', existingId);
+              if (updErr) throw updErr;
+            } else {
+              const { error: insErr } = await supabase
+                .from('estoque_variacoes')
+                .insert([{
+                  product_id: productId,
+                  size: v.size,
+                  quantity: v.quantity
+                }]);
+              if (insErr) throw insErr;
+            }
+          }
+        } else if (updatedData.category === 'ITENS') {
+          // If changed to items, remove variation records from db to prevent orphans
+          const { error: delErr } = await supabase
+            .from('estoque_variacoes')
+            .delete()
+            .eq('product_id', productId);
+          if (delErr) throw delErr;
+        }
+      } else {
+        // Local mode fallback
+        const updatedProducts = previousProducts.map(p => {
+          if (p.id === productId) {
+            return {
+              ...p,
+              name: updatedData.name,
+              price: updatedData.price,
+              category: updatedData.category,
+              initial_quantity: computedTotalQty,
+              variations: optimisticVars
+            };
+          }
+          return p;
+        });
+
+        saveLocalStorageData(updatedProducts, eventos, vendas);
+      }
+
+      showToast("Produto atualizado com sucesso!", "success");
+      // Sync in background
+      loadData();
+    } catch (err: any) {
+      console.error("Erro ao atualizar produto:", err.message);
+      setProdutos(previousProducts); // revert if failed
+      showToast("Erro ao salvar alterações: " + err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrepareEdit = (p: EstoqueProduto) => {
+    setProductToEdit(p);
+    setEditProdName(p.name);
+    setEditProdPrice(applyCurrencyMask(p.price.toFixed(2).replace(/\D/g, '')));
+    setEditProdCategory(p.category);
+    setEditProdQty(p.category === 'ITENS' ? p.initial_quantity.toString() : '');
+    
+    const sizeMap: Record<string, number> = {};
+    const allPossibleSizes = [
+      ...SIZES_CONFIG.INFANTIL,
+      ...SIZES_CONFIG.BABYLOOK,
+      ...SIZES_CONFIG.ADULTO
+    ];
+    allPossibleSizes.forEach(s => {
+      const match = (p.variations || []).find(v => v.size === s);
+      sizeMap[s] = match ? match.quantity : 0;
+    });
+    setEditSizeQuantities(sizeMap);
+  };
+
+  const handlePrepareSizes = (p: EstoqueProduto) => {
+    setProductForSizes(p);
+    setSizesModalQty(p.category === 'ITENS' ? p.initial_quantity.toString() : '');
+    
+    const sizeMap: Record<string, number> = {};
+    const allPossibleSizes = [
+      ...SIZES_CONFIG.INFANTIL,
+      ...SIZES_CONFIG.BABYLOOK,
+      ...SIZES_CONFIG.ADULTO
+    ];
+    allPossibleSizes.forEach(s => {
+      const match = (p.variations || []).find(v => v.size === s);
+      sizeMap[s] = match ? match.quantity : 0;
+    });
+    setSizesModalQuantities(sizeMap);
+  };
+
+  const handleSaveProductEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productToEdit) return;
+    if (!editProdName.trim()) {
+      showToast("Informe o nome do produto.", "error");
+      return;
+    }
+    const price = parseCurrencyToFloat(editProdPrice) || 0;
+    if (price <= 0) {
+      showToast("Informe um preço válido.", "error");
+      return;
+    }
+
+    const qtyVal = editProdCategory === 'ITENS' ? (parseInt(editProdQty) || 0) : 0;
+    const variationsToSave = editProdCategory === 'VESTUÁRIO' 
+      ? Object.entries(editSizeQuantities).map(([size, quantity]) => ({ size, quantity: Number(quantity) }))
+      : [];
+
+    await handleUpdateProduct(productToEdit.id, {
+      name: editProdName,
+      price,
+      category: editProdCategory,
+      initial_quantity: qtyVal,
+      variations: variationsToSave
+    });
+
+    setProductToEdit(null);
+  };
+
+  const handleSaveProductSizes = async () => {
+    if (!productForSizes) return;
+    
+    const qtyVal = productForSizes.category === 'ITENS' ? (parseInt(sizesModalQty) || 0) : 0;
+    const variationsToSave = productForSizes.category === 'VESTUÁRIO' 
+      ? Object.entries(sizesModalQuantities).map(([size, quantity]) => ({ size, quantity: Number(quantity) }))
+      : [];
+
+    await handleUpdateProduct(productForSizes.id, {
+      name: productForSizes.name,
+      price: productForSizes.price,
+      category: productForSizes.category,
+      initial_quantity: qtyVal,
+      variations: variationsToSave
+    });
+
+    setProductForSizes(null);
+  };
+
+  const handleSaveSizeQtyDirect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSizeCell) return;
+    const parsedQty = parseInt(newSizeQtyInput, 10);
+    if (isNaN(parsedQty) || parsedQty < 0) {
+      showToast("Informe uma quantidade de tamanho válida (número não negativo).", "error");
+      return;
+    }
+
+    if (editingSizeCell.product.id === 'new-product') {
+      setSizeQuantities(prev => ({
+        ...prev,
+        [editingSizeCell.size]: parsedQty
+      }));
+      setEditingSizeCell(null);
+      return;
+    }
+
+    if (editingSizeCell.product.id === 'edit-product') {
+      setEditSizeQuantities(prev => ({
+        ...prev,
+        [editingSizeCell.size]: parsedQty
+      }));
+      setEditingSizeCell(null);
+      return;
+    }
+
+    // Live optimistic update
+    const previousProducts = [...produtos];
+    const { product, size } = editingSizeCell;
+
+    setProdutos(prev => prev.map(p => {
+      if (p.id === product.id) {
+        let found = false;
+        const updatedVars = (p.variations || []).map(v => {
+          if (v.size === size) {
+            found = true;
+            return { ...v, quantity: parsedQty };
+          }
+          return v;
+        });
+        if (!found) {
+          updatedVars.push({
+            id: `var-temp-${Date.now()}`,
+            product_id: product.id,
+            size,
+            quantity: parsedQty
+          });
+        }
+        const totalQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+        return { ...p, variations: updatedVars, initial_quantity: totalQty };
+      }
+      return p;
+    }));
+
+    setLoading(true);
+    try {
+      if (dbMode === 'SUPABASE') {
+        const matchVar = (product.variations || []).find(v => v.size === size);
+        if (matchVar) {
+          const { error: err } = await supabase
+            .from('estoque_variacoes')
+            .update({ quantity: parsedQty })
+            .eq('id', matchVar.id);
+          if (err) throw err;
+        } else {
+          const { error: err } = await supabase
+            .from('estoque_variacoes')
+            .insert([{ product_id: product.id, size, quantity: parsedQty }]);
+          if (err) throw err;
+        }
+      } else {
+        const updatedProducts = previousProducts.map(p => {
+          if (p.id === product.id) {
+            let found = false;
+            const updatedVars = (p.variations || []).map(v => {
+              if (v.size === size) {
+                found = true;
+                return { ...v, quantity: parsedQty };
+              }
+              return v;
+            });
+            if (!found) {
+              updatedVars.push({
+                id: `var-${Date.now()}`,
+                product_id: product.id,
+                size,
+                quantity: parsedQty
+              });
+            }
+            const totalQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+            return { ...p, variations: updatedVars, initial_quantity: totalQty };
+          }
+          return p;
+        });
+        saveLocalStorageData(updatedProducts, eventos, vendas);
+      }
+
+      showToast("Quantidade do tamanho atualizada com sucesso!", "success");
+
+      // Background refetch
+      loadData();
+
+      // Refetch and sync size modal state instantly too
+      if (productForSizes && productForSizes.id === product.id) {
+        setSizesModalQuantities(prev => ({
+          ...prev,
+          [size]: parsedQty
+        }));
+      }
+
+      setEditingSizeCell(null);
+    } catch (err: any) {
+      console.error(err);
+      setProdutos(previousProducts); // rollback
+      showToast("Erro ao salvar quantidade: " + err.message, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -492,7 +942,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   const handleIniciarEvento = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventoInputName.trim()) {
-      alert("Informe o nome do evento.");
+      showToast("Informe o nome do evento.", "error");
       return;
     }
 
@@ -521,8 +971,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       await loadData();
       setShowAbrirLojaModal(false);
       setEventoInputName('');
+      showToast("Evento iniciado com sucesso!", "success");
     } catch (err: any) {
-      alert("Erro ao iniciar evento: " + err.message);
+      showToast("Erro ao iniciar evento: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -544,13 +995,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         if (produto.category === 'VESTUÁRIO' && size) {
           const matchedVar = produto.variations?.find(v => v.size === size);
           if (!matchedVar || matchedVar.quantity <= 0) {
-            alert("Estoque esgotado para este tamanho!");
+            showToast("Estoque esgotado para este tamanho!", "error");
             setLoading(false);
             return;
           }
           selectedVarId = matchedVar.id;
         } else if (produto.category === 'ITENS' && produto.initial_quantity <= 0) {
-          alert("Estoque esgotado para este item!");
+          showToast("Estoque esgotado para este item!", "error");
           setLoading(false);
           return;
         }
@@ -640,10 +1091,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         saveLocalStorageData(updatedProducts, eventos, updatedSales);
       }
 
+      showToast("Venda registrada com sucesso!", "success");
       await loadData();
       setShowVendaModal(null);
     } catch (err: any) {
-      alert("Erro ao realizar venda: " + err.message);
+      showToast("Erro ao realizar venda: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -735,9 +1187,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
       await loadData();
       setShowConfirmCancelVenda(null);
-      alert("Venda cancelada e estoque estornado com sucesso!");
+      showToast("Venda cancelada e estoque estornado com sucesso!", "success");
     } catch (err: any) {
-      alert("Erro ao estornar venda: " + err.message);
+      showToast("Erro ao estornar venda: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -770,9 +1222,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       // Keep active event stored locally for the final summary modal presentation after closure
       setShowFecharLojaModal(true);
       setActiveEvento(null);
+      showToast("Evento fechado com sucesso!", "success");
       await loadData();
     } catch (err: any) {
-      alert("Erro ao fechar evento: " + err.message);
+      showToast("Erro ao fechar evento: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -856,38 +1309,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
   };
 
+  const uniqueProdutos = useMemo(() => {
+    return Array.from(new Map(produtos.map(p => [p.id, p])).values());
+  }, [produtos]);
+
   return (
     <div className="space-y-6">
-      {/* DB Connection Indicator Card */}
-      <div className="flex flex-col md:flex-row items-center justify-between bg-[#151525] border border-white/10 rounded-2xl p-4 gap-4">
-        <div className="flex items-center gap-3">
-          <Layers className="text-brand-neon shrink-0 animate-pulse" size={20} />
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-widest text-[#ccff00]">Engine de Armazenamento</h4>
-            <p className="text-[10px] text-white/50 uppercase font-bold">
-              {dbMode === 'SUPABASE' 
-                ? 'Conectado diretamente ao banco de dados Supabase' 
-                : 'Rodando Offline/Local com Sincronismo LocalStorage Local'}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={() => setActiveSubTab('sql')} 
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[9px] uppercase font-black text-white tracking-widest border border-white/10"
-          >
-            Ver SQL do Banco
-          </button>
-          <button 
-            onClick={loadData} 
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[9px] uppercase font-black text-[#ccff00] tracking-widest border border-brand-neon/20 flex items-center gap-1"
-          >
-            <RefreshCw size={10} className={loading ? 'animate-spin' : ''} />
-            Recarregar
-          </button>
-        </div>
-      </div>
-
       {/* Main Switchboard */}
       {activeSubTab === 'menu' && (
         <div className="flex flex-col items-center justify-center py-12 px-4 gap-8">
@@ -957,7 +1384,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="w-full sm:w-auto bg-brand-neon hover:bg-[#b0db00] text-black px-6 py-3 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all"
+                className="w-full sm:w-auto h-11 bg-[#C7EF66] hover:bg-[#C7EF66]/90 text-[#11358B] px-6 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all"
               >
                 <Plus size={16} strokeWidth={2.5} />
                 Adicionar Produto
@@ -974,8 +1401,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <p className="text-xs uppercase font-bold tracking-widest text-white/30">Nenhum produto cadastrado no estoque.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {produtos.map(p => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {uniqueProdutos.map(p => {
                   const itemsCount = p.category === 'VESTUÁRIO' 
                     ? (p.variations || []).reduce((sum, current) => sum + current.quantity, 0)
                     : p.initial_quantity;
@@ -983,112 +1410,53 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   return (
                     <div 
                       key={p.id}
-                      onClick={() => setExpandedProductId(expandedProductId === p.id ? null : p.id)}
-                      className="bg-[#111111] hover:bg-[#151515] border border-white/10 hover:border-[#ccff00]/40 p-3 rounded-xl transition-all cursor-pointer select-none"
+                      onClick={() => handlePrepareSizes(p)}
+                      className="bg-[#111111] hover:bg-[#151515] border border-white/10 hover:border-[#ccff00]/40 p-2.5 rounded-lg transition-all cursor-pointer select-none"
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        {/* Left Side: Category Badge + Name & Qty */}
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${p.category === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
-                            {p.category === 'VESTUÁRIO' ? 'Vestuário' : 'Itens'}
+                      {/* Top Row: Type - Product Name - Edit/Delete Icons */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0 font-sans font-medium text-white">
+                          <span className={`${p.category === 'VESTUÁRIO' ? 'text-[#ccff00]' : 'text-brand-pink'} text-[10px] tracking-wider uppercase font-semibold shrink-0`}>
+                            {p.category}
                           </span>
-                          <h4 className="font-display text-sm md:text-base font-bold uppercase text-white truncate">
-                            {p.name} <span className="text-white/40 font-normal font-sans text-xs md:text-sm ml-1">— {itemsCount}un</span>
-                          </h4>
+                          <span className="text-white/40 text-[10px] shrink-0 font-semibold">—</span>
+                          <span className="truncate text-xs md:text-sm text-white/90 font-medium">
+                            {p.name}
+                          </span>
                         </div>
-
-                        {/* Right Side: Price + Red trash icon */}
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-sm md:text-base font-mono text-brand-neon font-bold">
-                            R$ {p.price.toFixed(2)}
-                          </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* pencil icon */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePrepareEdit(p);
+                            }}
+                            className="text-white/60 hover:text-[#ccff00] p-1.5 hover:bg-white/5 rounded-md transition-all"
+                            title="Editar Produto"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          {/* red trash icon */}
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               setProductToDelete(p);
                             }}
-                            className="text-red-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"
+                            className="text-red-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-md transition-all"
                             title="Excluir Produto"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
 
-                      {/* Nested Expanded details section for sizes */}
-                      <AnimatePresence>
-                        {expandedProductId === p.id && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden mt-3 pt-3 border-t border-white/5 space-y-3"
-                            onClick={(e) => e.stopPropagation()} // Prevent closing on detail click
-                          >
-                            {p.category === 'VESTUÁRIO' && (p.variations || []).length > 0 ? (
-                              <div className="space-y-3 bg-black/40 p-3 rounded-xl border border-white/5">
-                                {/* INFANTIL SIZES */}
-                                {p.variations?.some(v => SIZES_CONFIG.INFANTIL.includes(v.size)) && (
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Infantil</span>
-                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                                      {p.variations
-                                        ?.filter(v => SIZES_CONFIG.INFANTIL.includes(v.size))
-                                        .map(v => (
-                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
-                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size}</p>
-                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* BABYLOOK SIZES */}
-                                {p.variations?.some(v => SIZES_CONFIG.BABYLOOK.includes(v.size)) && (
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Babylook</span>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                      {p.variations
-                                        ?.filter(v => SIZES_CONFIG.BABYLOOK.includes(v.size))
-                                        .map(v => (
-                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
-                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size.replace('Babylook ', 'BL ')}</p>
-                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* ADULTO SIZES */}
-                                {p.variations?.some(v => SIZES_CONFIG.ADULTO.includes(v.size)) && (
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Adulto</span>
-                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                                      {p.variations
-                                        ?.filter(v => SIZES_CONFIG.ADULTO.includes(v.size))
-                                        .map(v => (
-                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
-                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size}</p>
-                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : p.category === 'VESTUÁRIO' ? (
-                              <p className="text-[10px] text-white/30 uppercase italic font-bold">Sem grade de tamanhos cadastrada.</p>
-                            ) : (
-                              <div className="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
-                                <p className="text-[9px] text-[#ccff00] font-bold uppercase tracking-wider">Item de Congresso Geral</p>
-                                <p className="text-xs text-white/60 font-medium mt-1">Este produto não possui grade ou variações de tamanho.</p>
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {/* Bottom Row: Quantity - Price */}
+                      <div className="flex items-center justify-between mt-1 text-xs text-white/50 font-sans leading-none">
+                        <span>{itemsCount} unidades</span>
+                        <span className="font-mono text-brand-neon font-semibold text-xs">
+                          R$ {p.price.toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -1176,7 +1544,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               <div className="space-y-4">
                 <h3 className="font-display text-xl uppercase tracking-wider text-white">Selecione o produto para vender</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {produtos.map(p => {
+                  {uniqueProdutos.map(p => {
                     const totalEstoque = p.category === 'VESTUÁRIO'
                       ? (p.variations || []).reduce((sum, curr) => sum + curr.quantity, 0)
                       : p.initial_quantity;
@@ -1202,10 +1570,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                           <div className="mt-2 space-y-2">
                             <p className="text-[8px] uppercase font-black text-white/20 tracking-widest leading-none mb-1">Selecione o tamanho para registrar venda:</p>
                             <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto no-scrollbar">
-                              {p.variations && p.variations.length > 0 ? p.variations.map(v => (
-                                <button
-                                  key={v.id}
-                                  disabled={v.quantity <= 0}
+                                {p.variations && p.variations.length > 0 ? p.variations.map(v => (
+                                  <button
+                                    key={`${p.id}-${v.size}`}
+                                    disabled={v.quantity <= 0}
                                   onClick={() => setShowVendaModal({ produto: p, size: v.size })}
                                   className={`p-1.5 rounded-lg border text-center text-[10px] uppercase font-semibold flex flex-col items-center justify-center transition-all ${v.quantity > 0 ? 'bg-white/5 border-white/10 hover:border-brand-neon hover:bg-brand-neon/5 text-white' : 'bg-red-500/5 border-red-500/10 text-white/20 cursor-not-allowed'}`}
                                 >
@@ -1348,12 +1716,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <div className="space-y-2">
                     <label className="text-white/[0.4] text-[9px] uppercase font-black tracking-widest pl-1">Valor Unitário (R$)</label>
                     <input 
-                      type="number" 
+                      type="text" 
                       required
-                      step="0.01"
                       value={newProdPrice}
-                      onChange={e => setNewProdPrice(e.target.value)}
-                      placeholder="Ex: 50.00"
+                      onChange={e => setNewProdPrice(applyCurrencyMask(e.target.value))}
+                      placeholder="R$ 0,00"
                       className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon text-sm font-mono font-bold"
                     />
                   </div>
@@ -1377,67 +1744,93 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 {newProdCategory === 'VESTUÁRIO' && (
                   <div className="space-y-4 pt-2 border-t border-white/5">
                     <div className="space-y-1">
-                      <h4 className="text-[10px] font-black uppercase text-brand-neon tracking-wider">GRADE DE TAMANHOS E SALDOS INICIAIS</h4>
-                      <p className="text-[9px] text-white/30 uppercase font-bold leading-normal">Defina as unidades disponíveis para cada tamanho.</p>
+                      <h4 className="text-[10px] font-black uppercase text-brand-neon tracking-wider">GRADE DE TAMANHOS (Clique para Editar)</h4>
+                      <p className="text-[9px] text-white/30 uppercase font-bold leading-normal">Defina as unidades disponíveis para cada tamanho clicando neles.</p>
                     </div>
 
                     {/* INFANTIL SIZES */}
                     <div className="space-y-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1">INFANTIL (Tamanhos 2 a 14)</span>
-                      <div className="grid grid-cols-4 gap-2">
-                        {SIZES_CONFIG.INFANTIL.map(size => (
-                          <div key={size} className="bg-black border border-white/5 p-2 rounded-xl flex flex-col gap-1">
-                            <span className="text-[9px] font-sans font-bold text-white/50 text-center uppercase">Tam {size}</span>
-                            <input 
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={sizeQuantities[size] || ''}
-                              onChange={e => updateSizeQty(size, e.target.value)}
-                              className="w-full bg-[#111] text-xs font-mono text-center text-[#ccff00] font-black rounded border border-white/10 py-1"
-                            />
-                          </div>
-                        ))}
+                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">INFANTIL (Tamanhos 2 a 14)</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {SIZES_CONFIG.INFANTIL.map(size => {
+                          const qty = sizeQuantities[size] || 0;
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setEditingSizeCell({
+                                  product: { id: 'new-product', name: newProdName || 'Novo Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(newProdPrice) || 0, initial_quantity: 0 },
+                                  size,
+                                  curQty: qty
+                                });
+                                setNewSizeQtyInput(qty.toString());
+                              }}
+                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                            >
+                              <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
                     {/* BABYLOOK SIZES */}
-                    <div className="space-y-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1">BABYLOOK (PP ao XGG)</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {SIZES_CONFIG.BABYLOOK.map(size => (
-                          <div key={size} className="bg-black border border-white/5 p-2 rounded-xl flex flex-col gap-1">
-                            <span className="text-[8px] font-sans font-bold text-white/50 text-center uppercase truncate">{size.replace('Babylook ', 'BL ')}</span>
-                            <input 
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={sizeQuantities[size] || ''}
-                              onChange={e => updateSizeQty(size, e.target.value)}
-                              className="w-full bg-[#111] text-xs font-mono text-center text-[#ccff00] font-black rounded border border-white/10 py-1"
-                            />
-                          </div>
-                        ))}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">BABYLOOK (PP ao XGG)</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {SIZES_CONFIG.BABYLOOK.map(size => {
+                          const qty = sizeQuantities[size] || 0;
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setEditingSizeCell({
+                                  product: { id: 'new-product', name: newProdName || 'Novo Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(newProdPrice) || 0, initial_quantity: 0 },
+                                  size,
+                                  curQty: qty
+                                });
+                                setNewSizeQtyInput(qty.toString());
+                              }}
+                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                            >
+                              <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                                {size.replace('Babylook ', 'BL ')}
+                              </span>
+                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
                     {/* ADULTO SIZES */}
-                    <div className="space-y-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1">ADULTO UNISSEX (PP ao XGG)</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {SIZES_CONFIG.ADULTO.map(size => (
-                          <div key={size} className="bg-black border border-white/5 p-2 rounded-xl flex flex-col gap-1">
-                            <span className="text-[8px] font-sans font-bold text-white/50 text-center uppercase tracking-wider">Tam {size}</span>
-                            <input 
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={sizeQuantities[size] || ''}
-                              onChange={e => updateSizeQty(size, e.target.value)}
-                              className="w-full bg-[#111] text-xs font-mono text-center text-[#ccff00] font-black rounded border border-white/10 py-1"
-                            />
-                          </div>
-                        ))}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">ADULTO UNISSEX (PP ao XGG)</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {SIZES_CONFIG.ADULTO.map(size => {
+                          const qty = sizeQuantities[size] || 0;
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setEditingSizeCell({
+                                  product: { id: 'new-product', name: newProdName || 'Novo Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(newProdPrice) || 0, initial_quantity: 0 },
+                                  size,
+                                  curQty: qty
+                                });
+                                setNewSizeQtyInput(qty.toString());
+                              }}
+                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                            >
+                              <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1832,7 +2225,491 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           </div>
         )}
 
+        {/* MODAL DE EDIÇÃO DE PRODUTO */}
+        {productToEdit && (
+          <div className="fixed inset-0 z-[125] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setProductToEdit(null)} 
+              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-[#1a1a1a] border-2 border-brand-neon w-full max-w-lg rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4 shrink-0">
+                <h3 className="text-lg font-display uppercase text-white font-bold">Editar Produto</h3>
+                <button onClick={() => setProductToEdit(null)} className="text-white/40 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProductEdit} className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1 pb-2 text-left">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Nome do Produto</label>
+                  <input
+                    type="text"
+                    value={editProdName}
+                    onChange={(e) => setEditProdName(e.target.value)}
+                    className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-neon"
+                    placeholder="Nome"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Preço (R$)</label>
+                    <input
+                      type="text"
+                      value={editProdPrice}
+                      onChange={(e) => setEditProdPrice(applyCurrencyMask(e.target.value))}
+                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-neon"
+                      placeholder="R$ 0,00"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Categoria</label>
+                    <select
+                      value={editProdCategory}
+                      onChange={(e) => setEditProdCategory(e.target.value as 'VESTUÁRIO' | 'ITENS')}
+                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-neon appearance-none font-bold uppercase"
+                    >
+                      <option value="VESTUÁRIO" className="bg-[#1a1a1a]">VESTUÁRIO</option>
+                      <option value="ITENS" className="bg-[#1a1a1a]">ITENS</option>
+                    </select>
+                  </div>
+                </div>
+
+                {editProdCategory === 'ITENS' ? (
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Quantidade em Estoque</label>
+                    <input
+                      type="number"
+                      value={editProdQty}
+                      onChange={(e) => setEditProdQty(e.target.value)}
+                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-neon"
+                      placeholder="Qtd"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3 pt-2">
+                    <span className="text-[10px] text-[#ccff00] uppercase font-black tracking-wider block">Grade de Quantidades por Tamanho (Clique para Editar)</span>
+                    
+                    <div className="space-y-3 max-h-[35vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] custom-scrollbar pr-1 bg-black/30 p-3 rounded-2xl border border-white/5">
+                      {/* INFANTIL */}
+                      <div className="space-y-2">
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Infantil</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {SIZES_CONFIG.INFANTIL.map(size => {
+                            const qty = editSizeQuantities[size] || 0;
+                            return (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => {
+                                  setEditingSizeCell({
+                                    product: { id: 'edit-product', name: editProdName || 'Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(editProdPrice) || 0, initial_quantity: 0 },
+                                    size,
+                                    curQty: qty
+                                  });
+                                  setNewSizeQtyInput(qty.toString());
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              >
+                                <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* BABYLOOK */}
+                      <div className="space-y-2 pt-2">
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Babylook</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {SIZES_CONFIG.BABYLOOK.map(size => {
+                            const qty = editSizeQuantities[size] || 0;
+                            return (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => {
+                                  setEditingSizeCell({
+                                    product: { id: 'edit-product', name: editProdName || 'Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(editProdPrice) || 0, initial_quantity: 0 },
+                                    size,
+                                    curQty: qty
+                                  });
+                                  setNewSizeQtyInput(qty.toString());
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-[#ccff00]/10 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              >
+                                <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                                  {size.replace('Babylook ', 'BL ')}
+                                </span>
+                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* ADULTO */}
+                      <div className="space-y-2 pt-2">
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Adulto</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {SIZES_CONFIG.ADULTO.map(size => {
+                            const qty = editSizeQuantities[size] || 0;
+                            return (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => {
+                                  setEditingSizeCell({
+                                    product: { id: 'edit-product', name: editProdName || 'Produto', category: 'VESTUÁRIO', price: parseCurrencyToFloat(editProdPrice) || 0, initial_quantity: 0 },
+                                    size,
+                                    curQty: qty
+                                  });
+                                  setNewSizeQtyInput(qty.toString());
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-[#ccff00]/10 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              >
+                                <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-3 shrink-0">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-brand-neon hover:bg-[#b0db00] text-black py-3 rounded-xl font-bold uppercase text-xs transition-colors"
+                  >
+                    Salvar Alterações
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductToEdit(null)}
+                    className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-[10px] tracking-widest"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL GRANDE DE DETALHAMENTO DE PRODUTO E TAMANHOS */}
+        {productForSizes && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setProductForSizes(null)} 
+              className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-lg rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="flex items-start justify-between pb-3 border-b border-white/5 mb-4 text-left shrink-0">
+                <div>
+                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${productForSizes.category === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
+                    {productForSizes.category}
+                  </span>
+                  <h3 className="text-xl font-display uppercase text-white font-extrabold mt-1">{productForSizes.name}</h3>
+                </div>
+                <button onClick={() => setProductForSizes(null)} className="text-white/40 hover:text-white mt-1">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Informações Gerais */}
+              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center mb-4 shrink-0 text-xs text-white/50 text-left">
+                <div>
+                  <span className="block text-[8px] uppercase font-bold tracking-wider mb-0.5">Valor Unitário</span>
+                  <span className="text-base text-brand-neon font-bold font-mono">
+                    R$ {productForSizes.price.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="block text-[8px] uppercase font-bold tracking-wider mb-0.5">Estoque Total</span>
+                  <span className="text-base text-white font-bold font-mono">
+                    {productForSizes.category === 'VESTUÁRIO' 
+                      ? Object.values(sizesModalQuantities).reduce((a: number, b: number) => a + Number(b), 0)
+                      : (parseInt(sizesModalQty) || 0)
+                    }un
+                  </span>
+                </div>
+              </div>
+
+              {/* Corpo Editável */}
+              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] custom-scrollbar pr-1 pb-4 space-y-4 text-left">
+                {productForSizes.category === 'ITENS' ? (
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Ajustar Quantidade em Estoque</label>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => {
+                          const current = parseInt(sizesModalQty) || 0;
+                          setSizesModalQty(Math.max(0, current - 1).toString());
+                        }}
+                        className="w-12 h-12 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 rounded-xl font-black text-white text-lg flex items-center justify-center select-none"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={sizesModalQty}
+                        onChange={(e) => setSizesModalQty(e.target.value)}
+                        className="flex-1 bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-center text-lg text-white font-mono focus:outline-none focus:border-brand-neon"
+                      />
+                      <button 
+                        onClick={() => {
+                          const current = parseInt(sizesModalQty) || 0;
+                          setSizesModalQty((current + 1).toString());
+                        }}
+                        className="w-12 h-12 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 rounded-xl font-black text-[#ccff00] text-lg flex items-center justify-center select-none"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <span className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Grade de Tamanhos (Clique para Editar)</span>
+
+                    <div className="space-y-4">
+                      {/* INFANTIL DISPLAY */}
+                      {SIZES_CONFIG.INFANTIL.some(size => sizesModalQuantities[size] !== undefined) && (
+                        <div className="space-y-1.5">
+                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Infantil</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {SIZES_CONFIG.INFANTIL.map(size => {
+                              const qty = sizesModalQuantities[size] || 0;
+                              return (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingSizeCell({ product: productForSizes, size, curQty: qty });
+                                    setNewSizeQtyInput(qty.toString());
+                                  }}
+                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                >
+                                  <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* BABYLOOK DISPLAY */}
+                      {SIZES_CONFIG.BABYLOOK.some(size => sizesModalQuantities[size] !== undefined) && (
+                        <div className="space-y-1.5 pt-2">
+                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Babylook</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {SIZES_CONFIG.BABYLOOK.map(size => {
+                              const qty = sizesModalQuantities[size] || 0;
+                              return (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingSizeCell({ product: productForSizes, size, curQty: qty });
+                                    setNewSizeQtyInput(qty.toString());
+                                  }}
+                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                >
+                                  <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                                    {size.replace('Babylook ', 'BL ')}
+                                  </span>
+                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ADULTO DISPLAY */}
+                      {SIZES_CONFIG.ADULTO.some(size => sizesModalQuantities[size] !== undefined) && (
+                        <div className="space-y-1.5 pt-2">
+                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Adulto</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {SIZES_CONFIG.ADULTO.map(size => {
+                              const qty = sizesModalQuantities[size] || 0;
+                              return (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingSizeCell({ product: productForSizes, size, curQty: qty });
+                                    setNewSizeQtyInput(qty.toString());
+                                  }}
+                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                >
+                                  <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
+                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Botões do Rodapé */}
+              <div className="pt-4 border-t border-white/5 flex gap-3 shrink-0">
+                {productForSizes.category === 'ITENS' ? (
+                  <>
+                    <button
+                      onClick={handleSaveProductSizes}
+                      className="flex-1 h-11 bg-[#C7EF66] hover:bg-[#C7EF66]/90 text-[#11358B] rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                    >
+                      Salvar Alterações
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductForSizes(null)}
+                      className="px-5 h-11 bg-[#EFF0F4] hover:bg-slate-200 text-[#11358B] rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setProductForSizes(null)}
+                    className="w-full h-11 bg-[#6192FC] hover:bg-[#11358B] hover:text-[#EFF0F4] text-white rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                  >
+                    Fechar Grade de Tamanhos
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL PEQUENO DE EDIÇÃO DE QUANTIDADE DE UM TAMANHO ESPECÍFICO (VESTUÁRIO) */}
+        {editingSizeCell && (
+          <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setEditingSizeCell(null)} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-[#1a1a1a] border-2 border-[#6192FC] w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col text-left"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4 shrink-0">
+                <div>
+                  <p className="text-[8px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Ajustar Saldo de Vestuário</p>
+                  <h4 className="text-base text-white font-extrabold uppercase truncate max-w-[200px]" title={editingSizeCell.product.name}>
+                    {editingSizeCell.product.name}
+                  </h4>
+                </div>
+                <button 
+                  onClick={() => setEditingSizeCell(null)} 
+                  className="text-white/40 hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSizeQtyDirect} className="space-y-4">
+                <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
+                  <span className="text-white/40 uppercase font-black tracking-wider">Tamanho</span>
+                  <span className="font-display font-black text-[#C7EF66] uppercase text-sm bg-[#C7EF66]/10 px-2.5 py-0.5 rounded-lg border border-[#C7EF66]/20">
+                    {editingSizeCell.size}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-white/40 uppercase font-black tracking-wider pl-1 font-sans">Nova quantidade</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    required
+                    value={newSizeQtyInput}
+                    onChange={(e) => setNewSizeQtyInput(e.target.value)}
+                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-[#ccff00] font-mono font-bold focus:outline-none focus:border-[#6192FC]"
+                    placeholder="Ex: 10"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#6192FC] hover:bg-[#11358B] hover:text-[#EFF0F4] text-white font-bold uppercase text-xs h-11 rounded-xl transition-colors"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingSizeCell(null)}
+                    className="px-5 bg-[#EFF0F4] hover:bg-slate-200 text-[#11358B] font-bold uppercase text-[10px] tracking-widest h-11 rounded-xl transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
       </AnimatePresence>
+
+      {/* Floating Toast Notification Container */}
+      <div className="fixed top-5 right-5 z-[99999] flex flex-col gap-2 pointer-events-none max-w-sm w-full">
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+              className={`p-4 rounded-xl shadow-2xl border flex items-start gap-3 pointer-events-auto ${
+                toast.type === 'success' 
+                  ? 'bg-emerald-950/95 border-emerald-500/35 text-emerald-200 shadow-emerald-900/10' 
+                  : toast.type === 'error'
+                  ? 'bg-rose-950/95 border-rose-500/35 text-rose-200 shadow-rose-900/10'
+                  : 'bg-zinc-900/95 border-white/10 text-zinc-100 shadow-black/20'
+              }`}
+            >
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />}
+              {toast.type === 'error' && <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />}
+              <span className="text-xs font-semibold leading-relaxed">{toast.text}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
     </div>
   );

@@ -127,6 +127,10 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [productForSizes, setProductForSizes] = useState<EstoqueProduto | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
+  // Expanded clothes product sizes and checkout confirmation
+  const [expandedProductSizes, setExpandedProductSizes] = useState<string | null>(null);
+  const [confirmVendaData, setConfirmVendaData] = useState<{ produto: EstoqueProduto; size?: string; paymentMethod: 'PIX' | 'CARTÃO' } | null>(null);
+
   // Edit Product Form State
   const [editProdName, setEditProdName] = useState('');
   const [editProdPrice, setEditProdPrice] = useState('');
@@ -1044,6 +1048,47 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               .update({ initial_quantity: currentQty - 1 })
               .eq('id', produto.id);
           }
+
+          // Update local state instantly for zero-latency screen refresh
+          const updatedProducts = produtos.map(p => {
+            if (p.id === produto.id) {
+              if (p.category === 'VESTUÁRIO') {
+                const updatedVars = (p.variations || []).map(v => {
+                  if (v.size === size) {
+                    return { ...v, quantity: Math.max(0, v.quantity - 1) };
+                  }
+                  return v;
+                });
+                const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+                return { ...p, variations: updatedVars, initial_quantity: sumQty };
+              } else {
+                return { ...p, initial_quantity: Math.max(0, p.initial_quantity - 1) };
+              }
+            }
+            return p;
+          });
+
+          const newSale: EstoqueVenda = {
+            id: dbSale.id,
+            event_id: activeEvento.id,
+            total_price: produto.price,
+            payment_method,
+            status: 'CONCLUIDA',
+            created_at: dbSale.created_at || new Date().toISOString(),
+            items: [{
+              id: `sale-item-${Date.now()}`,
+              sale_id: dbSale.id,
+              product_id: produto.id,
+              quantity: 1,
+              price_at_sale: produto.price,
+              size,
+              product_name: produto.name,
+              category: produto.category
+            }]
+          };
+
+          setProdutos(updatedProducts);
+          setVendas(prev => [newSale, ...prev]);
         }
       } else {
         // LOCAL DB WORKFLOW
@@ -1089,6 +1134,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
         const updatedSales = [newSale, ...vendas];
         saveLocalStorageData(updatedProducts, eventos, updatedSales);
+        
+        // Update states directly
+        setProdutos(updatedProducts);
+        setVendas(updatedSales);
       }
 
       showToast("Venda registrada com sucesso!", "success");
@@ -1235,7 +1284,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   const activeEventSales = useMemo(() => {
     const targetEventId = activeEvento?.id || (eventos.length > 0 ? eventos[eventos.length - 1].id : null);
     if (!targetEventId) return [];
-    return vendas.filter(v => v.event_id === targetEventId);
+    const salesFiltered = vendas.filter(v => v.event_id === targetEventId);
+    return Array.from(new Map(salesFiltered.map(v => [v.id, v])).values());
   }, [vendas, activeEvento, eventos]);
 
   const activeEventSummary = useMemo(() => {
@@ -1314,13 +1364,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   }, [produtos]);
 
   return (
-    <div className="space-y-6">
+    <div className="bg-white text-slate-800 p-6 md:p-8 rounded-3xl border border-[#EBEBEB] space-y-6 font-sans">
       {/* Main Switchboard */}
       {activeSubTab === 'menu' && (
         <div className="flex flex-col items-center justify-center py-12 px-4 gap-8">
           <div className="text-center space-y-2">
-            <h3 className="font-display italic text-3xl md:text-4xl text-white uppercase tracking-wide">Estoque Umademats</h3>
-            <p className="text-white/40 text-xs uppercase font-bold tracking-widest max-w-md mx-auto">
+            <h3 className="font-display italic text-3xl md:text-4xl text-[#10367D] uppercase tracking-wide font-extrabold">Estoque Umademats</h3>
+            <p className="text-slate-500 text-xs uppercase font-bold tracking-widest max-w-md mx-auto">
               Controle rápido de estoque de camisetas e itens do congresso, com vendas rápidas de balcão.
             </p>
           </div>
@@ -1331,13 +1381,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveSubTab('estoque')}
-              className="w-full sm:w-1/2 bg-[#121212] border border-white/10 hover:border-brand-neon rounded-2xl p-4 shadow-lg flex items-center gap-3 relative group transition-colors"
+              className="w-full sm:w-1/2 bg-[#EBEBEB] border border-slate-350 hover:border-[#10367D] rounded-2xl p-4 shadow-sm flex items-center gap-3 relative group transition-colors"
             >
-              <div className="w-10 h-10 bg-brand-neon/10 rounded-xl flex items-center justify-center text-[#ccff00] border border-brand-neon/20 shrink-0">
+              <div className="w-10 h-10 bg-[#10367D]/15 rounded-xl flex items-center justify-center text-[#10367D] border border-[#10367D]/20 shrink-0">
                 <ShoppingBag size={18} />
               </div>
               <div className="text-left">
-                <h4 className="font-display text-lg font-bold uppercase text-white group-hover:text-brand-neon transition-colors leading-none">Estoque</h4>
+                <h4 className="font-display text-lg font-bold uppercase text-slate-800 group-hover:text-[#10367D] transition-colors leading-none">Estoque</h4>
               </div>
             </motion.button>
 
@@ -1346,13 +1396,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveSubTab('loja')}
-              className="w-full sm:w-1/2 bg-[#121212] border border-white/10 hover:border-brand-purple rounded-2xl p-4 shadow-lg flex items-center gap-3 relative group transition-colors"
+              className="w-full sm:w-1/2 bg-[#EBEBEB] border border-slate-350 hover:border-[#75BCE8] rounded-2xl p-4 shadow-sm flex items-center gap-3 relative group transition-colors"
             >
-              <div className="w-10 h-10 bg-brand-purple/10 rounded-xl flex items-center justify-center text-[#a855f7] border border-brand-purple/20 shrink-0">
+              <div className="w-10 h-10 bg-[#75BCE8]/20 rounded-xl flex items-center justify-center text-[#75BCE8] border border-[#75BCE8]/35 shrink-0">
                 <Store size={18} />
               </div>
               <div className="text-left">
-                <h4 className="font-display text-lg font-bold uppercase text-white group-hover:text-[#a855f7] transition-colors leading-none">Abrir Loja</h4>
+                <h4 className="font-display text-lg font-bold uppercase text-slate-800 group-hover:text-[#75BCE8] transition-colors leading-none">Abrir Loja</h4>
               </div>
             </motion.button>
           </div>
@@ -1362,7 +1412,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onBack}
-              className="mt-4 px-6 py-3 rounded-xl border border-white/10 hover:border-white/35 text-white/60 hover:text-white uppercase font-bold text-xs tracking-widest flex items-center gap-2 transition-all bg-[#0d0d0d]"
+              className="mt-4 px-6 py-3 rounded-xl border border-[#10367D]/25 hover:border-[#10367D] text-[#10367D]/70 hover:text-[#10367D] uppercase font-bold text-xs tracking-widest flex items-center gap-2 transition-all bg-transparent"
             >
               <ArrowLeft size={14} /> Voltar ao Controle Administrativo
             </motion.button>
@@ -1373,10 +1423,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       {/* SECTION 1: ESTOQUE MANAGEMENT */}
       {activeSubTab === 'estoque' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <button 
               onClick={() => setActiveSubTab('menu')}
-              className="flex items-center gap-1.5 uppercase font-black text-xs text-white/50 hover:text-white tracking-widest active:translate-x-[-2px] transition-all"
+              className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#10367D] tracking-widest active:translate-x-[-2px] transition-all"
             >
               <ArrowLeft size={14} />
               Menu Principal
@@ -1384,7 +1434,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="w-full sm:w-auto h-11 bg-[#C7EF66] hover:bg-[#C7EF66]/90 text-[#11358B] px-6 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all"
+                className="w-full sm:w-auto h-11 bg-[#10367D] hover:bg-[#10367D]/90 text-white px-6 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
               >
                 <Plus size={16} strokeWidth={2.5} />
                 Adicionar Produto
@@ -1393,12 +1443,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-display text-xl uppercase tracking-wider text-white">Grade de Estoque Cadastrada</h3>
+            <h3 className="font-display text-xl uppercase tracking-wider text-[#10367D] font-bold">Grade de Estoque Cadastrada</h3>
             
             {produtos.length === 0 ? (
-              <div className="bg-[#101010] p-12 text-center rounded-2xl border border-white/5">
-                <ShoppingBag size={48} className="mx-auto text-white/10 mb-4 animate-bounce" />
-                <p className="text-xs uppercase font-bold tracking-widest text-white/30">Nenhum produto cadastrado no estoque.</p>
+              <div className="bg-[#EBEBEB] p-12 text-center rounded-2xl border border-slate-300">
+                <ShoppingBag size={48} className="mx-auto text-[#10367D]/20 mb-4" />
+                <p className="text-xs uppercase font-bold tracking-widest text-slate-500">Nenhum produto cadastrado no estoque.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -1411,16 +1461,16 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     <div 
                       key={p.id}
                       onClick={() => handlePrepareSizes(p)}
-                      className="bg-[#111111] hover:bg-[#151515] border border-white/10 hover:border-[#ccff00]/40 p-2.5 rounded-lg transition-all cursor-pointer select-none"
+                      className="bg-[#EBEBEB] hover:bg-slate-200 border border-slate-300 p-3 rounded-2xl transition-all cursor-pointer select-none shadow-sm"
                     >
                       {/* Top Row: Type - Product Name - Edit/Delete Icons */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0 font-sans font-medium text-white">
-                          <span className={`${p.category === 'VESTUÁRIO' ? 'text-[#ccff00]' : 'text-brand-pink'} text-[10px] tracking-wider uppercase font-semibold shrink-0`}>
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-300/50 pb-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0 font-sans font-medium text-slate-800">
+                          <span className={`${p.category === 'VESTUÁRIO' ? 'text-[#10367D]' : 'text-[#75BCE8]'} text-[10px] tracking-wider uppercase font-extrabold shrink-0`}>
                             {p.category}
                           </span>
-                          <span className="text-white/40 text-[10px] shrink-0 font-semibold">—</span>
-                          <span className="truncate text-xs md:text-sm text-white/90 font-medium">
+                          <span className="text-slate-400 text-[10px] shrink-0 font-semibold">—</span>
+                          <span className="truncate text-xs md:text-sm text-slate-800 font-bold">
                             {p.name}
                           </span>
                         </div>
@@ -1431,7 +1481,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               e.stopPropagation();
                               handlePrepareEdit(p);
                             }}
-                            className="text-white/60 hover:text-[#ccff00] p-1.5 hover:bg-white/5 rounded-md transition-all"
+                            className="text-slate-500 hover:text-[#10367D] p-1.5 hover:bg-slate-300 rounded-md transition-all"
                             title="Editar Produto"
                           >
                             <Edit3 size={14} />
@@ -1442,7 +1492,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               e.stopPropagation();
                               setProductToDelete(p);
                             }}
-                            className="text-red-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-md transition-all"
+                            className="text-red-600 hover:text-red-500 p-1.5 hover:bg-red-500/10 rounded-md transition-all"
                             title="Excluir Produto"
                           >
                             <Trash2 size={14} />
@@ -1451,9 +1501,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                       </div>
 
                       {/* Bottom Row: Quantity - Price */}
-                      <div className="flex items-center justify-between mt-1 text-xs text-white/50 font-sans leading-none">
+                      <div className="flex items-center justify-between mt-2 text-xs text-slate-500 font-sans leading-none font-bold">
                         <span>{itemsCount} unidades</span>
-                        <span className="font-mono text-brand-neon font-semibold text-xs">
+                        <span className="font-mono text-[#10367D] font-black text-xs">
                           R$ {p.price.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
@@ -1470,10 +1520,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       {activeSubTab === 'loja' && (
         <div className="space-y-6">
           {/* Header Action Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <button 
               onClick={() => setActiveSubTab('menu')}
-              className="flex items-center gap-1.5 uppercase font-black text-xs text-white/50 hover:text-white tracking-widest active:translate-x-[-2px] transition-all"
+              className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#10367D] tracking-widest active:translate-x-[-2px] transition-all"
             >
               <ArrowLeft size={14} />
               Menu Principal
@@ -1481,18 +1531,18 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {activeEvento ? (
                 <>
-                  <div className="bg-[#a855f7]/10 border border-brand-purple/30 px-4 py-2.5 rounded-xl flex items-center justify-between sm:justify-start gap-4">
+                  <div className="bg-[#75BCE8]/15 border border-[#75BCE8]/35 px-4 py-2.5 rounded-xl flex items-center justify-between sm:justify-start gap-4">
                     <div className="flex items-center gap-2">
-                      <Store size={16} className="text-[#a855f7] animate-pulse" />
+                      <Store size={16} className="text-[#10367D] animate-pulse" />
                       <div className="text-left">
-                        <p className="text-[8px] uppercase font-black text-white/30 tracking-wider">Loja Aberta</p>
-                        <p className="text-xs text-white font-bold max-w-[120px] truncate">{activeEvento.event_name}</p>
+                        <p className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">Loja Aberta</p>
+                        <p className="text-xs text-[#10367D] font-bold max-w-[125px] truncate">{activeEvento.event_name}</p>
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => handleFecharLojaConfirm()}
-                    className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Power size={14} />
                     Fechar Loja
@@ -1501,7 +1551,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               ) : (
                 <button
                   onClick={() => setShowAbrirLojaModal(true)}
-                  className="w-full sm:w-auto bg-brand-purple hover:bg-brand-purple/80 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all"
+                  className="w-full sm:w-auto bg-[#10367D] hover:bg-[#10367D]/90 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
                 >
                   <Power size={14} />
                   Abrir Loja
@@ -1516,33 +1566,33 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               {/* TOTAL VENDIDO DISPLAY PANEL */}
               <div 
                 onClick={() => setShowDetalhesVendasModal(true)}
-                className="bg-[#121222] border-2 border-[#ccff00] hover:border-white p-6 rounded-3xl cursor-pointer relative overflow-hidden group shadow-2xl transition-all"
+                className="bg-[#10367D] border-2 border-[#10367D] p-6 rounded-3xl cursor-pointer relative overflow-hidden group shadow-md transition-all"
               >
-                <div className="absolute right-0 top-0 p-6 text-brand-neon/10 group-hover:scale-110 transition-transform">
+                <div className="absolute right-0 top-0 p-6 text-white/5 group-hover:scale-110 transition-transform">
                   <TrendingUp size={100} />
                 </div>
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <span className="text-[10px] font-black uppercase text-[#ccff00] tracking-widest block mb-1">TOTAL VENDIDO NO EVENTO</span>
+                    <span className="text-[10px] font-black uppercase text-[#75BCE8] tracking-widest block mb-1">TOTAL VENDIDO NO EVENTO</span>
                     <span className="text-4xl md:text-5xl font-mono text-white font-black leading-none flex items-center gap-3">
                       R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}
                     </span>
                   </div>
-                  <button className="bg-brand-neon hover:bg-white text-black px-4 py-2.5 rounded-full text-[10px] uppercase font-black tracking-widest flex items-center gap-1">
+                  <button className="bg-[#75BCE8] hover:bg-white text-[#10367D] px-4 py-2.5 rounded-full text-[10px] uppercase font-black tracking-widest flex items-center gap-1 transition-all">
                     Ver Detalhamento das Vendas
                     <ChevronRight size={14} />
                   </button>
                 </div>
-                <div className="relative z-10 flex gap-6 mt-4 pt-4 border-t border-white/5 text-[10px] text-white/50 uppercase font-black tracking-wider">
+                <div className="relative z-10 flex gap-6 mt-4 pt-4 border-t border-white/10 text-[10px] text-white/70 uppercase font-bold tracking-wider">
                   <div>PIX: <span className="text-white">R$ {activeEventSummary.pixTotal.toFixed(2).replace('.', ',')}</span></div>
                   <div>Cartão: <span className="text-white">R$ {activeEventSummary.cardTotal.toFixed(2).replace('.', ',')}</span></div>
-                  <div>Canceladas: <span className="text-rose-500 font-bold">{activeEventSummary.canceledCount}</span></div>
+                  <div>Canceladas: <span className="text-red-300 font-bold">{activeEventSummary.canceledCount}</span></div>
                 </div>
               </div>
 
               {/* POS ITEMS GRID */}
               <div className="space-y-4">
-                <h3 className="font-display text-xl uppercase tracking-wider text-white">Selecione o produto para vender</h3>
+                <h3 className="font-display text-xl uppercase tracking-wider text-[#10367D] font-bold">Selecione o produto para vender</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {uniqueProdutos.map(p => {
                     const totalEstoque = p.category === 'VESTUÁRIO'
@@ -1552,48 +1602,73 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     return (
                       <div 
                         key={p.id}
-                        className="bg-[#111] border border-white/15 p-5 rounded-3xl flex flex-col justify-between hover:border-white/30 transition-all shadow-xl group"
+                        className="bg-[#EBEBEB] border border-slate-300 p-5 rounded-3xl flex flex-col justify-between hover:border-[#10367D]/40 transition-all shadow-sm group"
                       >
                         <div className="mb-4">
                           <div className="flex justify-between items-start mb-2">
-                            <span className="text-[8px] font-black uppercase text-white/40 tracking-wider">{p.category}</span>
-                            <span className={`text-[10px] font-black uppercase tracking-wider ${totalEstoque > 10 ? 'text-green-500' : totalEstoque > 0 ? 'text-amber-500' : 'text-red-500'}`}>
+                            <span className="text-[8.5px] font-bold uppercase text-slate-500 tracking-wider font-sans">{p.category}</span>
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wider ${totalEstoque > 10 ? 'text-green-600' : totalEstoque > 0 ? 'text-amber-600' : 'text-red-655'}`}>
                               {totalEstoque > 0 ? `${totalEstoque} em Estoque` : 'ESGOTADO'}
                             </span>
                           </div>
-                          <h4 className="font-display text-lg uppercase text-white group-hover:text-brand-neon transition-colors leading-snug">{p.name}</h4>
-                          <p className="text-xl font-mono text-white font-black mt-1">R$ {p.price.toFixed(2)}</p>
+                          <h4 className="font-display text-lg uppercase text-slate-800 group-hover:text-[#10367D] font-bold transition-colors leading-snug">{p.name}</h4>
+                          <p className="text-xl font-mono text-[#10367D] font-black mt-1">R$ {p.price.toFixed(2).replace('.', ',')}</p>
                         </div>
 
                         {/* RENDER VARIATIONS OR SELL INSTANT BUTTON */}
                         {p.category === 'VESTUÁRIO' ? (
-                          <div className="mt-2 space-y-2">
-                            <p className="text-[8px] uppercase font-black text-white/20 tracking-widest leading-none mb-1">Selecione o tamanho para registrar venda:</p>
-                            <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto no-scrollbar">
-                                {p.variations && p.variations.length > 0 ? p.variations.map(v => (
-                                  <button
-                                    key={`${p.id}-${v.size}`}
-                                    disabled={v.quantity <= 0}
-                                  onClick={() => setShowVendaModal({ produto: p, size: v.size })}
-                                  className={`p-1.5 rounded-lg border text-center text-[10px] uppercase font-semibold flex flex-col items-center justify-center transition-all ${v.quantity > 0 ? 'bg-white/5 border-white/10 hover:border-brand-neon hover:bg-brand-neon/5 text-white' : 'bg-red-500/5 border-red-500/10 text-white/20 cursor-not-allowed'}`}
+                          expandedProductSizes === p.id ? (
+                            <div className="mt-2 space-y-2 animate-fade-in">
+                              <div className="flex justify-between items-center mb-1">
+                                <p className="text-[9.5px] uppercase font-bold text-[#10367D] tracking-widest leading-none">Selecione o tamanho:</p>
+                                <button
+                                  onClick={() => setExpandedProductSizes(null)}
+                                  className="text-[9.5px] uppercase font-bold text-slate-500 hover:text-[#10367D] transition-colors"
                                 >
-                                  <span>{v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}</span>
-                                  <span className={`text-[8px] font-mono mt-0.5 font-bold ${v.quantity > 3 ? 'text-white/40' : v.quantity > 0 ? 'text-amber-500 font-extrabold' : 'text-red-500'}`}>
-                                    [{v.quantity}]
-                                  </span>
+                                  Voltar
                                 </button>
-                              )) : (
-                                <div className="col-span-4 p-2 text-center text-[10px] text-white/30 uppercase italic">
-                                  Sem variação cadastrada
-                                </div>
-                              )}
+                              </div>
+                              <div className="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto no-scrollbar">
+                                {p.variations && p.variations.some(v => v.quantity > 0) ? (
+                                  p.variations
+                                    .filter(v => v.quantity > 0)
+                                    .map(v => (
+                                      <button
+                                        key={`${p.id}-${v.size}`}
+                                        onClick={() => {
+                                          setShowVendaModal({ produto: p, size: v.size });
+                                          setExpandedProductSizes(null);
+                                        }}
+                                        className="p-2 rounded-xl bg-white border border-slate-300 hover:border-[#10367D] hover:bg-[#10367D]/10 text-[#10367D] text-[11px] uppercase font-bold flex flex-col items-center justify-center transition-all"
+                                      >
+                                        <span>{v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}</span>
+                                        <span className="text-[9px] font-mono mt-0.5 font-bold text-slate-500">
+                                          {v.quantity} un
+                                        </span>
+                                      </button>
+                                    ))
+                                ) : (
+                                  <div className="col-span-3 p-2 text-center text-[10px] text-slate-400 uppercase italic font-bold">
+                                    Sem estoque disponível
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <button
+                              disabled={totalEstoque <= 0}
+                              onClick={() => setExpandedProductSizes(p.id)}
+                              className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#10367D] text-white hover:bg-[#10367D]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
+                            >
+                              <ShoppingBag size={14} />
+                              VENDER ITEM
+                            </button>
+                          )
                         ) : (
                           <button
                             disabled={totalEstoque <= 0}
                             onClick={() => setShowVendaModal({ produto: p })}
-                            className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#ccff00] text-black hover:bg-white active:translate-y-0.5' : 'bg-[#151515] text-white/20 border border-white/5 cursor-not-allowed'}`}
+                            className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#10367D] text-white hover:bg-[#10367D]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
                           >
                             <ShoppingBag size={14} />
                             VENDER ITEM
@@ -1606,15 +1681,15 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#111] border border-white/5 rounded-3xl gap-4">
-              <Store size={48} className="text-white/10 shrink-0" />
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#EBEBEB] border border-slate-300 rounded-3xl gap-4">
+              <Store size={48} className="text-[#10367D]/25 shrink-0" />
               <div className="text-center space-y-1">
-                <h4 className="text-lg font-display uppercase text-white leading-none">LOJA FECHADA / DESATIVADA</h4>
-                <p className="text-xs text-white/30 uppercase font-black tracking-widest">Abra a loja acima seletivamente para iniciar vendas de evento.</p>
+                <h4 className="text-lg font-display uppercase text-[#10367D] font-bold leading-none">LOJA FECHADA / DESATIVADA</h4>
+                <p className="text-xs text-slate-500 uppercase font-black tracking-widest">Abra a loja acima seletivamente para iniciar vendas de evento.</p>
               </div>
               <button
                 onClick={() => setShowAbrirLojaModal(true)}
-                className="bg-brand-purple hover:bg-brand-purple/80 text-white px-8 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg flex items-center gap-2 mt-2 transition-all active:scale-95"
+                className="bg-[#10367D] hover:bg-[#10367D]/90 text-white px-8 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-md flex items-center gap-2 mt-2 transition-all active:scale-95"
               >
                 <Power size={14} />
                 Abrir Loja Agora
@@ -1756,7 +1831,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                           const qty = sizeQuantities[size] || 0;
                           return (
                             <button
-                              key={size}
+                              key={`add-infantil-${size}`}
                               type="button"
                               onClick={() => {
                                 setEditingSizeCell({
@@ -1784,7 +1859,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                           const qty = sizeQuantities[size] || 0;
                           return (
                             <button
-                              key={size}
+                              key={`add-babylook-${size}`}
                               type="button"
                               onClick={() => {
                                 setEditingSizeCell({
@@ -1814,7 +1889,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                           const qty = sizeQuantities[size] || 0;
                           return (
                             <button
-                              key={size}
+                              key={`add-adulto-${size}`}
                               type="button"
                               onClick={() => {
                                 setEditingSizeCell({
@@ -1926,9 +2001,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                      if (confirm(`Confirmar venda no valor de R$ ${showVendaModal.produto.price.toFixed(2)} via PIX?`)) {
-                        handleRegisterVenda('PIX');
-                      }
+                      setConfirmVendaData({
+                        produto: showVendaModal.produto,
+                        size: showVendaModal.size,
+                        paymentMethod: 'PIX'
+                      });
                     }}
                     className="py-4 bg-[#ccff00]/10 border border-[#ccff00]/30 hover:border-[#ccff00] text-brand-neon rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#ccff00]/20"
                   >
@@ -1939,9 +2016,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                      if (confirm(`Confirmar venda no valor de R$ ${showVendaModal.produto.price.toFixed(2)} via CARTÃO?`)) {
-                        handleRegisterVenda('CARTÃO');
-                      }
+                      setConfirmVendaData({
+                        produto: showVendaModal.produto,
+                        size: showVendaModal.size,
+                        paymentMethod: 'CARTÃO'
+                      });
                     }}
                     className="py-4 bg-[#a855f7]/10 border border-brand-purple/30 hover:border-brand-purple text-brand-purple rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#a855f7]/20"
                   >
@@ -1956,6 +2035,90 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-[0.15em] block pt-4"
                 >
                   Cancelar Venda
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* COMPREHENSIVE SALES CONFIRMATION OVERLAY MODAL */}
+        {confirmVendaData && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setConfirmVendaData(null)} 
+              className="absolute inset-0 bg-black/90 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-[#18181b] border-2 border-[#ccff00] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl text-left"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-2xl bg-[#ccff00]/10 text-brand-neon shrink-0">
+                  <ShoppingBag size={24} />
+                </div>
+                <div>
+                  <h3 className="font-display font-black text-lg uppercase text-white leading-tight">CONFIRMAR VENDA?</h3>
+                  <p className="text-[9px] font-black uppercase text-white/40 tracking-widest leading-none">Verifique as informações antes de finalizar</p>
+                </div>
+              </div>
+
+              <div className="space-y-3.5 bg-white/5 border border-white/5 rounded-2xl p-4 mb-5">
+                <div>
+                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">PRODUTO</span>
+                  <span className="text-sm font-bold text-white uppercase">{confirmVendaData.produto.name}</span>
+                </div>
+
+                {confirmVendaData.size && (
+                  <div>
+                    <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">TAMANHO</span>
+                    <span className="inline-block bg-[#ccff00]/10 text-brand-neon border border-[#ccff00]/20 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                      {confirmVendaData.size}
+                    </span>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">VALOR</span>
+                  <span className="text-xl font-mono font-black text-white">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
+                </div>
+
+                <div>
+                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">FORMA DE PAGAMENTO</span>
+                  <span className={`inline-block font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-widest mt-0.5 ${
+                    confirmVendaData.paymentMethod === 'PIX' 
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                  }`}>
+                    {confirmVendaData.paymentMethod}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={async () => {
+                    const paymentMethod = confirmVendaData.paymentMethod;
+                    await handleRegisterVenda(paymentMethod);
+                    setConfirmVendaData(null);
+                  }}
+                  className="w-full py-4.5 bg-[#ccff00] hover:bg-white text-black font-black uppercase text-xs rounded-2xl tracking-widest shadow-lg shadow-[#ccff00]/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  {loading ? <RefreshCw className="animate-spin" size={14} /> : 'Confirmar Venda'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setConfirmVendaData(null)}
+                  className="w-full py-3 text-white/40 hover:text-white uppercase font-bold text-[10px] tracking-widest transition-colors block text-center"
+                >
+                  Cancelar
                 </button>
               </div>
             </motion.div>
@@ -2309,7 +2472,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                             const qty = editSizeQuantities[size] || 0;
                             return (
                               <button
-                                key={size}
+                                key={`edit-infantil-${size}`}
                                 type="button"
                                 onClick={() => {
                                   setEditingSizeCell({
@@ -2337,7 +2500,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                             const qty = editSizeQuantities[size] || 0;
                             return (
                               <button
-                                key={size}
+                                key={`edit-babylook-${size}`}
                                 type="button"
                                 onClick={() => {
                                   setEditingSizeCell({
@@ -2367,7 +2530,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                             const qty = editSizeQuantities[size] || 0;
                             return (
                               <button
-                                key={size}
+                                key={`edit-adulto-${size}`}
                                 type="button"
                                 onClick={() => {
                                   setEditingSizeCell({
@@ -2503,7 +2666,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               const qty = sizesModalQuantities[size] || 0;
                               return (
                                 <button
-                                  key={size}
+                                  key={`sizes-infantil-${size}`}
                                   type="button"
                                   onClick={() => {
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });
@@ -2529,7 +2692,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               const qty = sizesModalQuantities[size] || 0;
                               return (
                                 <button
-                                  key={size}
+                                  key={`sizes-babylook-${size}`}
                                   type="button"
                                   onClick={() => {
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });
@@ -2557,7 +2720,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               const qty = sizesModalQuantities[size] || 0;
                               return (
                                 <button
-                                  key={size}
+                                  key={`sizes-adulto-${size}`}
                                   type="button"
                                   onClick={() => {
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });

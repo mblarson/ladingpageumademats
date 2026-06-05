@@ -97,6 +97,8 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [showDetalhesVendasModal, setShowDetalhesVendasModal] = useState(false);
   const [showFecharLojaModal, setShowFecharLojaModal] = useState(false);
   const [showConfirmCancelVenda, setShowConfirmCancelVenda] = useState<EstoqueVenda | null>(null);
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<EstoqueProduto | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
   // New Product Form state
@@ -458,7 +460,6 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("Excluir este produto permanentemente do estoque?")) return;
     setLoading(true);
     try {
       if (dbMode === 'SUPABASE') {
@@ -468,11 +469,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         saveLocalStorageData(updatedProducts, eventos, vendas);
       }
       await loadData();
-      alert("Produto excluído.");
     } catch (err: any) {
-      alert("Erro ao excluir: " + err.message);
+      console.error("Erro ao excluir produto:", err.message);
     } finally {
       setLoading(false);
+      setProductToDelete(null);
     }
   };
 
@@ -973,7 +974,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <p className="text-xs uppercase font-bold tracking-widest text-white/30">Nenhum produto cadastrado no estoque.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {produtos.map(p => {
                   const itemsCount = p.category === 'VESTUÁRIO' 
                     ? (p.variations || []).reduce((sum, current) => sum + current.quantity, 0)
@@ -982,50 +983,112 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   return (
                     <div 
                       key={p.id}
-                      className="bg-[#111111] border border-white/10 hover:border-white/20 p-6 rounded-2xl relative shadow-xl transition-colors"
+                      onClick={() => setExpandedProductId(expandedProductId === p.id ? null : p.id)}
+                      className="bg-[#111111] hover:bg-[#151515] border border-white/10 hover:border-[#ccff00]/40 p-3 rounded-xl transition-all cursor-pointer select-none"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${p.category === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
-                            {p.category}
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Left Side: Category Badge + Name & Qty */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${p.category === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
+                            {p.category === 'VESTUÁRIO' ? 'Vestuário' : 'Itens'}
                           </span>
-                          <h4 className="font-display text-lg uppercase text-white mt-1 leading-tight">{p.name}</h4>
+                          <h4 className="font-display text-sm md:text-base font-bold uppercase text-white truncate">
+                            {p.name} <span className="text-white/40 font-normal font-sans text-xs md:text-sm ml-1">— {itemsCount}un</span>
+                          </h4>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-white/30 uppercase font-medium leading-none">Preço</p>
-                          <p className="text-xl font-mono text-brand-neon font-black">R$ {p.price.toFixed(2)}</p>
+
+                        {/* Right Side: Price + Red trash icon */}
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-sm md:text-base font-mono text-brand-neon font-bold">
+                            R$ {p.price.toFixed(2)}
+                          </span>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProductToDelete(p);
+                            }}
+                            className="text-red-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"
+                            title="Excluir Produto"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
-                          <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Estoque Total</span>
-                          <span className="text-sm font-mono text-white font-bold">{itemsCount} unidades</span>
-                        </div>
+                      {/* Nested Expanded details section for sizes */}
+                      <AnimatePresence>
+                        {expandedProductId === p.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden mt-3 pt-3 border-t border-white/5 space-y-3"
+                            onClick={(e) => e.stopPropagation()} // Prevent closing on detail click
+                          >
+                            {p.category === 'VESTUÁRIO' && (p.variations || []).length > 0 ? (
+                              <div className="space-y-3 bg-black/40 p-3 rounded-xl border border-white/5">
+                                {/* INFANTIL SIZES */}
+                                {p.variations?.some(v => SIZES_CONFIG.INFANTIL.includes(v.size)) && (
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Infantil</span>
+                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                                      {p.variations
+                                        ?.filter(v => SIZES_CONFIG.INFANTIL.includes(v.size))
+                                        .map(v => (
+                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
+                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size}</p>
+                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
 
-                        {p.category === 'VESTUÁRIO' && (p.variations || []).length > 0 ? (
-                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-32 overflow-y-auto custom-scrollbar pt-2 pr-1">
-                            {p.variations?.map(v => (
-                              <div key={v.id} className="bg-white/5 border border-white/5 text-center p-1.5 rounded-lg">
-                                <p className="text-[8px] font-black text-white/30 truncate leading-none uppercase">{v.size}</p>
-                                <p className="text-xs font-mono text-brand-neon font-bold mt-1">{v.quantity}</p>
+                                {/* BABYLOOK SIZES */}
+                                {p.variations?.some(v => SIZES_CONFIG.BABYLOOK.includes(v.size)) && (
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Babylook</span>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                      {p.variations
+                                        ?.filter(v => SIZES_CONFIG.BABYLOOK.includes(v.size))
+                                        .map(v => (
+                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
+                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size.replace('Babylook ', 'BL ')}</p>
+                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* ADULTO SIZES */}
+                                {p.variations?.some(v => SIZES_CONFIG.ADULTO.includes(v.size)) && (
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.1em] block">Adulto</span>
+                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                                      {p.variations
+                                        ?.filter(v => SIZES_CONFIG.ADULTO.includes(v.size))
+                                        .map(v => (
+                                          <div key={v.id} className="bg-white/5 border border-white/5 text-center py-1 px-1.5 rounded-lg">
+                                            <p className="text-[8px] font-black text-white/30 truncate uppercase leading-none">{v.size}</p>
+                                            <p className="text-xs font-mono text-brand-neon font-bold mt-1 leading-none">{v.quantity}</p>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                          </div>
-                        ) : p.category === 'VESTUÁRIO' ? (
-                          <p className="text-[10px] text-white/30 uppercase italic font-bold">Sem grade de tamanhos cadastrada.</p>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-4 flex justify-between items-center bg-black/20 px-4 py-2.5 rounded-xl border border-white/5">
-                        <span className="text-[8px] uppercase font-bold text-white/20">Exclusão Permanente</span>
-                        <button 
-                          onClick={() => handleDeleteProduct(p.id)}
-                          className="text-red-500 hover:text-red-400 p-1 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                            ) : p.category === 'VESTUÁRIO' ? (
+                              <p className="text-[10px] text-white/30 uppercase italic font-bold">Sem grade de tamanhos cadastrada.</p>
+                            ) : (
+                              <div className="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                                <p className="text-[9px] text-[#ccff00] font-bold uppercase tracking-wider">Item de Congresso Geral</p>
+                                <p className="text-xs text-white/60 font-medium mt-1">Este produto não possui grade ou variações de tamanho.</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}
@@ -1708,6 +1771,61 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   className="bg-white/5 hover:bg-white/10 text-white px-6 py-4 rounded-xl font-bold uppercase text-xs"
                 >
                   Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* CUSTOM PRODUCT DELETE CONFIRMATION MODAL */}
+        {productToDelete && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setProductToDelete(null)} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-[#1a1a1a] border-2 border-red-500 w-full max-w-sm rounded-[2rem] p-6 text-center shadow-2xl"
+            >
+              <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
+              <h3 className="text-xl font-display uppercase text-white mb-2 leading-none">Excluir Produto?</h3>
+              <p className="text-white/40 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
+                Tem certeza que deseja excluir permanentemente o produto do estoque?
+              </p>
+
+              <div className="bg-black/30 p-4 rounded-xl border border-red-500/10 text-left mb-6">
+                <p className="text-[8px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Produto Selecionado</p>
+                <p className="text-sm font-extrabold uppercase text-white">
+                  {productToDelete.name}
+                </p>
+                <p className="text-[#ccff00] text-xs font-mono font-bold mt-1 uppercase">
+                  Categoria: {productToDelete.category}
+                </p>
+                <p className="text-xl font-mono text-red-500 font-black mt-2 leading-none">
+                  Valor: R$ {productToDelete.price.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProduct(productToDelete.id)}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1 active:translate-y-0.5"
+                >
+                  Sim, Excluir Produto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductToDelete(null)}
+                  className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-widest"
+                >
+                  Cancelar
                 </button>
               </div>
             </motion.div>

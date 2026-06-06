@@ -1370,23 +1370,23 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       {/* SIDEBAR DESKTOP */}
       <aside className="hidden md:flex flex-col w-[280px] h-full bg-[#111827] text-white shrink-0 shadow-xl relative z-10">
         <div className="p-6 flex items-center justify-center border-b border-white/10 h-24">
-          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center">
             <img 
               src="https://res.cloudinary.com/dnoqaitd6/image/upload/v1780755790/lojaumadematslogo_czyapl.png" 
               alt="Logo" 
-              className="w-[180px] h-auto object-cover scale-[1.3] translate-y-[2px]" 
+              className="max-w-full max-h-16 object-contain" 
             />
           </div>
         </div>
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
           <button onClick={() => setActiveSubTab('loja')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'loja' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-small'}`}>
-            <Store size={20} /> <span className="uppercase text-sm tracking-widest">Abrir Loja</span>
+            <Store size={20} /> <span className="uppercase tracking-widest text-[8px] lg:text-xs font-black text-center lg:text-left">Abrir Loja</span>
           </button>
           <button onClick={() => setActiveSubTab('estoque')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'estoque' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-medium'}`}>
-            <ShoppingBag size={20} /> <span className="uppercase text-sm tracking-widest">Estoque</span>
+            <ShoppingBag size={20} /> <span className="uppercase tracking-widest text-[8px] lg:text-xs font-black text-center lg:text-left">Estoque</span>
           </button>
           <button onClick={() => setActiveSubTab('ultimos-eventos')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'ultimos-eventos' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-medium'}`}>
-            <History size={20} /> <span className="uppercase text-sm tracking-widest">Últimos Eventos</span>
+            <History size={20} /> <span className="uppercase tracking-widest text-[8px] lg:text-xs font-black text-center lg:text-left">Últimos Eventos</span>
           </button>
         </nav>
         {onBack && (
@@ -1415,8 +1415,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {isMobileMenuOpen && (
            <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} className="fixed inset-0 bg-[#111827] z-[99999] flex flex-col items-center justify-start p-6 text-white md:hidden overflow-y-auto">
               <div className="flex w-full items-center justify-between mb-8 opacity-100 pb-4 border-b border-white/10">
-                 <div className="overflow-hidden w-[140px] h-[50px] flex items-center">
-                   <img src="https://res.cloudinary.com/dnoqaitd6/image/upload/v1780755790/lojaumadematslogo_czyapl.png" alt="Loja" className="w-full h-auto object-cover scale-[1.3] min-w-[140px]" />
+                 <div className="w-[140px] h-[50px] flex items-center justify-center">
+                   <img src="https://res.cloudinary.com/dnoqaitd6/image/upload/v1780755790/lojaumadematslogo_czyapl.png" alt="Loja" className="max-w-full max-h-full object-contain" />
                  </div>
                  <button onClick={() => setIsMobileMenuOpen(false)} className="p-3 bg-white/10 rounded-xl hover:bg-white/20">
                     <X size={24} />
@@ -2201,9 +2201,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     await handleRegisterVenda(paymentMethod);
                     setConfirmVendaData(null);
                   }}
-                  className="w-full py-4.5 bg-[#111827] hover:bg-[#111827]/90 text-white font-black uppercase text-xs rounded-2xl tracking-widest shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase text-sm md:text-base rounded-2xl tracking-widest shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                  {loading ? <RefreshCw className="animate-spin" size={14} /> : 'Confirmar Venda'}
+                  {loading ? <RefreshCw className="animate-spin" size={14} /> : 'CONFIRMAR'}
                 </button>
 
                 <button

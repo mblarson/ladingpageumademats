@@ -1400,7 +1400,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
       {/* MOBILE TOPBAR */}
       <div className="md:hidden flex items-center justify-between bg-[#111827] text-white p-4 shrink-0 shadow-md relative z-10">
-        <h1 className="font-display font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+        <h1 className="font-montserrat font-bold uppercase tracking-widest text-sm flex items-center gap-2">
            {activeSubTab === 'loja' && <><Store size={18} /> Abrir Loja</>}
            {activeSubTab === 'estoque' && <><ShoppingBag size={18} /> Estoque</>}
            {activeSubTab === 'ultimos-eventos' && <><History size={18} /> Últimos Eventos</>}
@@ -1451,7 +1451,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       {activeSubTab === 'estoque' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
-            <h2 className="text-xl font-display font-bold uppercase tracking-wider text-[#111827]">Gestão de Estoque</h2>
+            <h2 className="text-xl font-montserrat font-bold uppercase tracking-wider text-[#111827]">Gestão de Estoque</h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowAddProductModal(true)}
@@ -1603,7 +1603,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
               {/* POS ITEMS GRID */}
               <div className="space-y-3">
-                <h3 className="font-display text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
+                <h3 className="font-montserrat text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {uniqueProdutos.map(p => {
                     const totalEstoque = p.category === 'VESTUÁRIO'
@@ -1622,7 +1622,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                               {totalEstoque > 0 ? `${totalEstoque} em Estoque` : 'ESGOTADO'}
                             </span>
                           </div>
-                          <h4 className="font-display text-sm uppercase text-slate-800 group-hover:text-[#111827] font-bold transition-colors leading-snug truncate">{p.name}</h4>
+                          <h4 className="font-montserrat text-sm uppercase text-slate-800 group-hover:text-[#111827] font-bold transition-colors leading-snug truncate">{p.name}</h4>
                           <p className="text-lg font-mono text-[#111827] font-black mt-1 tracking-tighter">R$ {p.price.toFixed(2).replace('.', ',')}</p>
                         </div>
 
@@ -1695,7 +1695,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#EBEBEB] border border-slate-300 rounded-3xl gap-4">
               <Store size={48} className="text-[#111827]/25 shrink-0" />
               <div className="text-center space-y-1">
-                <h4 className="text-lg font-display uppercase text-[#111827] font-bold leading-none">LOJA FECHADA / DESATIVADA</h4>
+                <h4 className="text-lg font-montserrat uppercase text-[#111827] font-bold leading-none">LOJA FECHADA / DESATIVADA</h4>
                 <p className="text-xs text-slate-500 uppercase font-black tracking-widest">Abra a loja acima seletivamente para iniciar vendas de evento.</p>
               </div>
               <button
@@ -1714,7 +1714,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       {activeSubTab === 'ultimos-eventos' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 className="text-xl font-display font-bold uppercase tracking-wider text-[#111827]">Últimos Eventos</h2>
+            <h2 className="text-xl font-montserrat font-bold uppercase tracking-wider text-[#111827]">Últimos Eventos</h2>
             {selectedPastEventId && (
                <button onClick={() => setSelectedPastEventId(null)} className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#111827] transition-colors"><ArrowLeft size={14}/> Voltar</button>
             )}
@@ -1840,7 +1840,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddProductModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#FAFAFA] border-2 border-[#111827] w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] text-left">
               <div className="p-5 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
-                <h3 className="font-display uppercase text-lg text-[#111827] font-black">Cadastrar Novo Produto</h3>
+                <h3 className="font-montserrat uppercase text-lg text-[#111827] font-black">Cadastrar Novo Produto</h3>
                 <button onClick={() => setShowAddProductModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={20} /></button>
               </div>
 
@@ -2032,7 +2032,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAbrirLojaModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-8 text-center shadow-md">
               <Store size={40} className="mx-auto text-[#111827] mb-4" />
-              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">ABRIR SEÇÃO DE EVENTO</h3>
+              <h3 className="text-xl font-montserrat uppercase text-[#111827] font-black mb-2 leading-none">ABRIR SEÇÃO DE EVENTO</h3>
               <p className="text-slate-500 text-xs uppercase font-bold tracking-widest mb-6">Nomeie sessão de vendas de balcão.</p>
               
               <form onSubmit={handleIniciarEvento} className="space-y-4">
@@ -2077,7 +2077,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               <ShoppingBag size={40} className="mx-auto text-[#111827] mb-4 animate-bounce" />
               <div className="space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
-                <h3 className="text-xl font-display uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
+                <h3 className="text-xl font-montserrat uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
                 {showVendaModal.size && (
                   <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
                     Tamanho: {showVendaModal.size}
@@ -2155,7 +2155,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <ShoppingBag size={24} />
                 </div>
                 <div>
-                  <h3 className="font-display font-black text-lg uppercase text-[#111827] leading-tight">CONFIRMAR VENDA?</h3>
+                  <h3 className="font-montserrat font-black text-lg uppercase text-[#111827] leading-tight">CONFIRMAR VENDA?</h3>
                   <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none">Verifique as informações antes de finalizar</p>
                 </div>
               </div>
@@ -2225,7 +2225,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-xl rounded-3xl overflow-hidden shadow-md flex flex-col max-h-[85vh] text-left">
               <div className="p-6 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="font-display uppercase text-xl text-[#111827] font-black">Vendas Realizadas</h3>
+                  <h3 className="font-montserrat uppercase text-xl text-[#111827] font-black">Vendas Realizadas</h3>
                   <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Histórico completo da seção aberta de balcão</p>
                 </div>
                 <button onClick={() => setShowDetalhesVendasModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={24} /></button>
@@ -2302,7 +2302,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConfirmCancelVenda(null)} className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-red-500 w-full max-w-sm rounded-[2rem] p-8 text-center shadow-md">
               <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
-              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">Confirmar Cancelamento?</h3>
+              <h3 className="text-xl font-montserrat uppercase text-[#111827] font-black mb-2 leading-none">Confirmar Cancelamento?</h3>
               <p className="text-slate-500 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
                 Esta ação restaura imediatamente os saldos de estoque do produto.
               </p>
@@ -2349,7 +2349,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-3xl overflow-hidden shadow-md flex flex-col max-h-[90vh] text-left">
               <div className="p-6 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="font-display uppercase text-2xl text-[#111827] font-black">Resumo de Fechamento</h3>
+                  <h3 className="font-montserrat uppercase text-2xl text-[#111827] font-black">Resumo de Fechamento</h3>
                   <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Conclusão bem-sucedida do caixa</p>
                 </div>
                 <button onClick={() => setShowFecharLojaModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={24} /></button>
@@ -2443,7 +2443,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md"
             >
               <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
-              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">Excluir Produto?</h3>
+              <h3 className="text-xl font-montserrat uppercase text-[#111827] font-black mb-2 leading-none">Excluir Produto?</h3>
               <p className="text-slate-500 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
                 Tem certeza que deseja excluir permanentemente o produto do estoque?
               </p>
@@ -2498,7 +2498,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-3xl p-6 shadow-md flex flex-col max-h-[90vh]"
             >
               <div className="flex items-center justify-between pb-3 border-b border-[#111827]/10 mb-4 shrink-0">
-                <h3 className="text-lg font-display uppercase text-[#111827] font-black">Editar Produto</h3>
+                <h3 className="text-lg font-montserrat uppercase text-[#111827] font-black">Editar Produto</h3>
                 <button onClick={() => setProductToEdit(null)} className="text-slate-400 hover:text-[#111827]">
                   <X size={20} />
                 </button>
@@ -2687,7 +2687,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${productForSizes.category === 'VESTUÁRIO' ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
                     {productForSizes.category}
                   </span>
-                  <h3 className="text-xl font-display uppercase text-[#111827] font-extrabold mt-1">{productForSizes.name}</h3>
+                  <h3 className="text-xl font-montserrat uppercase text-[#111827] font-extrabold mt-1">{productForSizes.name}</h3>
                 </div>
                 <button onClick={() => setProductForSizes(null)} className="text-slate-400 hover:text-[#111827] mt-1">
                   <X size={20} />
@@ -2900,7 +2900,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               <form onSubmit={handleSaveSizeQtyDirect} className="space-y-4">
                 <div className="bg-white p-3 rounded-xl border border-[#EBEBEB] shadow-sm flex justify-between items-center text-xs">
                   <span className="text-slate-500 uppercase font-black tracking-wider">Tamanho</span>
-                  <span className="font-display font-black text-[#111827] uppercase text-sm bg-[#75BCE8]/20 px-2.5 py-0.5 rounded-lg border border-[#75BCE8]/30">
+                  <span className="font-montserrat font-black text-[#111827] uppercase text-sm bg-[#75BCE8]/20 px-2.5 py-0.5 rounded-lg border border-[#75BCE8]/30">
                     {editingSizeCell.size}
                   </span>
                 </div>

@@ -1029,13 +1029,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
       </div>
   );
   if (adminView === 'presence') return <PresenceCounter onBack={() => setAdminView('menu')} />;
-  if (adminView === 'estoque') return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
-        <EstoqueUmadematsAdmin onBack={() => setAdminView('menu')} />
-      </div>
-    </div>
-  );
+  if (adminView === 'estoque') return <EstoqueUmadematsAdmin onBack={() => setAdminView('menu')} />;
   const TABS = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'bg-white', textColor: 'text-black' },
     { id: 'lidera', label: 'Lidera UMADEMATS', icon: GraduationCap, color: 'bg-brand-neon', textColor: 'text-black' },

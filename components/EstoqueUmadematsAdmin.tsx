@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Tag, Plus, X, Check, Trash2, DollarSign, 
   Smartphone, Calendar, TrendingUp, Share2, Power, Store, 
-  ChevronRight, ArrowLeft, RefreshCw, Layers, Edit3, ShieldAlert, Copy, CheckCircle2
+  ChevronRight, ArrowLeft, RefreshCw, Layers, Edit3, ShieldAlert, Copy, CheckCircle2, History, Menu
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -104,7 +104,9 @@ const SIZES_CONFIG = {
 
 export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   // Navigation & Sub-Tabs
-  const [activeSubTab, setActiveSubTab] = useState<'menu' | 'estoque' | 'loja' | 'sql'>('menu');
+  const [activeSubTab, setActiveSubTab] = useState<'loja' | 'estoque' | 'ultimos-eventos'>('loja');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedPastEventId, setSelectedPastEventId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [dbMode, setDbMode] = useState<'SUPABASE' | 'LOCAL'>('LOCAL');
 
@@ -156,11 +158,14 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   // Small Size edit modal state (VESTUÁRIO)
   const [editingSizeCell, setEditingSizeCell] = useState<{ product: EstoqueProduto; size: string; curQty: number } | null>(null);
   const [newSizeQtyInput, setNewSizeQtyInput] = useState<string>('');
+  
+  // Custom Success Modal Message
+  const [successModalMessage, setSuccessModalMessage] = useState<string | null>(null);
 
   // Toast Notification State
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; text: string }>>([]);
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const id = Math.random().toString();
+    const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
     setToasts(prev => [...prev, { id, type, text }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -337,8 +342,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   };
 
   // Sync everything
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // 1. Try to query Supabase
       const { data: testProds, error: testErr } = await supabase
@@ -424,7 +429,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       const activeEv = local.eventos.find(ev => ev.status === 'ABERTO');
       setActiveEvento(activeEv || null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -456,7 +461,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
     setLoading(true);
 
     try {
-      const generatedProdId = dbMode === 'SUPABASE' ? undefined : `prod-${Date.now()}`;
+      const generatedProdId = dbMode === 'SUPABASE' ? undefined : `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       let optimisticNewProduct: EstoqueProduto | null = null;
       
       if (dbMode === 'SUPABASE') {
@@ -521,7 +526,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             .map(([size, qty], index) => {
               totalQty += (qty as number);
               return {
-                id: `var-${Date.now()}-${index}`,
+                id: `var-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
                 product_id: generatedProdId!,
                 size,
                 quantity: qty as number
@@ -555,10 +560,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       setNewProdPrice('');
       setNewProdQty('');
       setSizeQuantities({});
-      showToast("Produto cadastrado com sucesso!", "success");
+      setSuccessModalMessage("Produto cadastrado com sucesso!");
 
       // Silently refresh in background
-      loadData();
+      loadData(true);
     } catch (err: any) {
       console.error(err);
       showToast("Erro ao cadastrar produto: " + err.message, "error");
@@ -581,9 +586,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         const updatedProducts = previousProducts.filter(p => p.id !== id);
         saveLocalStorageData(updatedProducts, eventos, vendas);
       }
-      showToast("Produto excluído com sucesso!", "success");
+      setSuccessModalMessage("Produto excluído com sucesso!");
       // Silently sync background
-      loadData();
+      loadData(true);
     } catch (err: any) {
       console.error("Erro ao excluir produto:", err.message);
       setProdutos(previousProducts); // revert if failed
@@ -613,7 +618,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       optimisticVars = updatedData.variations.map((v, index) => {
         computedTotalQty += v.quantity;
         return {
-          id: `var-temp-${Date.now()}-${index}`,
+          id: `var-temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
           product_id: productId,
           size: v.size,
           quantity: v.quantity
@@ -853,7 +858,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         });
         if (!found) {
           updatedVars.push({
-            id: `var-temp-${Date.now()}`,
+            id: `var-temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             product_id: product.id,
             size,
             quantity: parsedQty
@@ -894,7 +899,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             });
             if (!found) {
               updatedVars.push({
-                id: `var-${Date.now()}`,
+                id: `var-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 product_id: product.id,
                 size,
                 quantity: parsedQty
@@ -963,7 +968,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         setActiveEvento(newEv);
       } else {
         const newEv: EstoqueEvento = {
-          id: `ev-${Date.now()}`,
+          id: `ev-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           event_name: eventoInputName,
           status: 'ABERTO',
           opened_at: new Date().toISOString()
@@ -1076,7 +1081,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             status: 'CONCLUIDA',
             created_at: dbSale.created_at || new Date().toISOString(),
             items: [{
-              id: `sale-item-${Date.now()}`,
+              id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
               sale_id: dbSale.id,
               product_id: produto.id,
               quantity: 1,
@@ -1112,7 +1117,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         });
 
         // 2. Create Sale
-        const saleId = `sale-${Date.now()}`;
+        const saleId = `sale-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const newSale: EstoqueVenda = {
           id: saleId,
           event_id: activeEvento.id,
@@ -1121,7 +1126,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           status: 'CONCLUIDA',
           created_at: new Date().toISOString(),
           items: [{
-            id: `sale-item-${Date.now()}`,
+            id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             sale_id: saleId,
             product_id: produto.id,
             quantity: 1,
@@ -1140,8 +1145,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         setVendas(updatedSales);
       }
 
-      showToast("Venda registrada com sucesso!", "success");
-      await loadData();
+      setSuccessModalMessage("Venda registrada com sucesso!");
+      loadData(true);
       setShowVendaModal(null);
     } catch (err: any) {
       showToast("Erro ao realizar venda: " + err.message, "error");
@@ -1234,9 +1239,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         saveLocalStorageData(restoredProducts, eventos, updatedSales);
       }
 
-      await loadData();
+      loadData(true);
       setShowConfirmCancelVenda(null);
-      showToast("Venda cancelada e estoque estornado com sucesso!", "success");
+      setSuccessModalMessage("Venda cancelada e estoque estornado com sucesso!");
     } catch (err: any) {
       showToast("Erro ao estornar venda: " + err.message, "error");
     } finally {
@@ -1271,8 +1276,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       // Keep active event stored locally for the final summary modal presentation after closure
       setShowFecharLojaModal(true);
       setActiveEvento(null);
-      showToast("Evento fechado com sucesso!", "success");
-      await loadData();
+      setSuccessModalMessage("Loja fechada com sucesso!");
+      loadData(true);
     } catch (err: any) {
       showToast("Erro ao fechar evento: " + err.message, "error");
     } finally {
@@ -1282,7 +1287,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
   // Calculations for current/last event sales metrics
   const activeEventSales = useMemo(() => {
-    const targetEventId = activeEvento?.id || (eventos.length > 0 ? eventos[eventos.length - 1].id : null);
+    // We should fallback to the most recent event, which is at index 0 because we prepend new ones or Supabase orders by DESC.
+    const targetEventId = activeEvento?.id || (eventos.length > 0 ? eventos[0].id : null);
     if (!targetEventId) return [];
     const salesFiltered = vendas.filter(v => v.event_id === targetEventId);
     return Array.from(new Map(salesFiltered.map(v => [v.id, v])).values());
@@ -1326,7 +1332,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
   // WhatsApp formatted string API trigger
   const handleShareWhatsApp = () => {
-    const targetEvent = activeEvento || (eventos.length > 0 ? eventos[eventos.length - 1] : null);
+    const targetEvent = activeEvento || (eventos.length > 0 ? eventos[0] : null);
     if (!targetEvent) return;
 
     const summary = activeEventSummary;
@@ -1348,11 +1354,6 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       });
     }
 
-    if (summary.canceledCount > 0) {
-      message += `\n*🚫 ESTORNOS / VENDAS CANCELADAS:*\n`;
-      message += `• ${summary.canceledCount} vendas canceladas (Estorno de R$ ${summary.canceledTotal.toFixed(2).replace('.', ',')})\n`;
-    }
-
     message += `\n_Relatório gerado em: ${new Date().toLocaleString('pt-BR')}_`;
 
     const encoded = encodeURIComponent(message);
@@ -1364,94 +1365,112 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   }, [produtos]);
 
   return (
-    <div className="bg-white text-slate-800 p-6 md:p-8 rounded-3xl border border-[#EBEBEB] space-y-6 font-sans">
-      {/* Main Switchboard */}
-      {activeSubTab === 'menu' && (
-        <div className="flex flex-col items-center justify-center py-12 px-4 gap-8">
-          <div className="text-center space-y-2">
-            <h3 className="font-display italic text-3xl md:text-4xl text-[#10367D] uppercase tracking-wide font-extrabold">Estoque Umademats</h3>
-            <p className="text-slate-500 text-xs uppercase font-bold tracking-widest max-w-md mx-auto">
-              Controle rápido de estoque de camisetas e itens do congresso, com vendas rápidas de balcão.
-            </p>
+    <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAFAFA] text-slate-800 font-sans overflow-hidden absolute inset-0 z-50">
+      
+      {/* SIDEBAR DESKTOP */}
+      <aside className="hidden md:flex flex-col w-[280px] h-full bg-[#111827] text-white shrink-0 shadow-xl relative z-10">
+        <div className="p-6 flex items-center justify-center border-b border-white/10 h-24">
+          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+            <img 
+              src="https://res.cloudinary.com/dnoqaitd6/image/upload/v1780755790/lojaumadematslogo_czyapl.png" 
+              alt="Logo" 
+              className="w-[180px] h-auto object-cover scale-[1.3] translate-y-[2px]" 
+            />
           </div>
-
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full max-w-lg mx-auto">
-            {/* Option 1: ESTOQUE */}
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveSubTab('estoque')}
-              className="w-full sm:w-1/2 bg-[#EBEBEB] border border-slate-350 hover:border-[#10367D] rounded-2xl p-4 shadow-sm flex items-center gap-3 relative group transition-colors"
-            >
-              <div className="w-10 h-10 bg-[#10367D]/15 rounded-xl flex items-center justify-center text-[#10367D] border border-[#10367D]/20 shrink-0">
-                <ShoppingBag size={18} />
-              </div>
-              <div className="text-left">
-                <h4 className="font-display text-lg font-bold uppercase text-slate-800 group-hover:text-[#10367D] transition-colors leading-none">Estoque</h4>
-              </div>
-            </motion.button>
-
-            {/* Option 2: ABRIR LOJA / LOJA */}
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveSubTab('loja')}
-              className="w-full sm:w-1/2 bg-[#EBEBEB] border border-slate-350 hover:border-[#75BCE8] rounded-2xl p-4 shadow-sm flex items-center gap-3 relative group transition-colors"
-            >
-              <div className="w-10 h-10 bg-[#75BCE8]/20 rounded-xl flex items-center justify-center text-[#75BCE8] border border-[#75BCE8]/35 shrink-0">
-                <Store size={18} />
-              </div>
-              <div className="text-left">
-                <h4 className="font-display text-lg font-bold uppercase text-slate-800 group-hover:text-[#75BCE8] transition-colors leading-none">Abrir Loja</h4>
-              </div>
-            </motion.button>
-          </div>
-
-          {onBack && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onBack}
-              className="mt-4 px-6 py-3 rounded-xl border border-[#10367D]/25 hover:border-[#10367D] text-[#10367D]/70 hover:text-[#10367D] uppercase font-bold text-xs tracking-widest flex items-center gap-2 transition-all bg-transparent"
-            >
-              <ArrowLeft size={14} /> Voltar ao Controle Administrativo
-            </motion.button>
-          )}
         </div>
-      )}
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+          <button onClick={() => setActiveSubTab('loja')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'loja' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-small'}`}>
+            <Store size={20} /> <span className="uppercase text-sm tracking-widest">Abrir Loja</span>
+          </button>
+          <button onClick={() => setActiveSubTab('estoque')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'estoque' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-medium'}`}>
+            <ShoppingBag size={20} /> <span className="uppercase text-sm tracking-widest">Estoque</span>
+          </button>
+          <button onClick={() => setActiveSubTab('ultimos-eventos')} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeSubTab === 'ultimos-eventos' ? 'bg-white text-[#111827] font-bold shadow-sm' : 'hover:bg-white/10 text-white/90 font-medium'}`}>
+            <History size={20} /> <span className="uppercase text-sm tracking-widest">Últimos Eventos</span>
+          </button>
+        </nav>
+        {onBack && (
+          <div className="p-6 border-t border-white/10">
+            <button onClick={onBack} className="w-full flex justify-center items-center gap-2 p-4 rounded-xl border border-white/20 text-white/70 uppercase font-bold text-xs tracking-widest hover:text-white hover:bg-white/10 transition-colors">
+              <ArrowLeft size={16} /> Voltar ao Gestor
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* MOBILE TOPBAR */}
+      <div className="md:hidden flex items-center justify-between bg-[#111827] text-white p-4 shrink-0 shadow-md relative z-10">
+        <h1 className="font-display font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+           {activeSubTab === 'loja' && <><Store size={18} /> Abrir Loja</>}
+           {activeSubTab === 'estoque' && <><ShoppingBag size={18} /> Estoque</>}
+           {activeSubTab === 'ultimos-eventos' && <><History size={18} /> Últimos Eventos</>}
+        </h1>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+           <Menu size={20} />
+        </button>
+      </div>
+
+      {/* MOBILE MENU MODAL */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+           <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} className="fixed inset-0 bg-[#111827] z-[99999] flex flex-col items-center justify-start p-6 text-white md:hidden overflow-y-auto">
+              <div className="flex w-full items-center justify-between mb-8 opacity-100 pb-4 border-b border-white/10">
+                 <div className="overflow-hidden w-[140px] h-[50px] flex items-center">
+                   <img src="https://res.cloudinary.com/dnoqaitd6/image/upload/v1780755790/lojaumadematslogo_czyapl.png" alt="Loja" className="w-full h-auto object-cover scale-[1.3] min-w-[140px]" />
+                 </div>
+                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-3 bg-white/10 rounded-xl hover:bg-white/20">
+                    <X size={24} />
+                 </button>
+              </div>
+              <div className="flex flex-col gap-4 w-full">
+                 <button onClick={() => { setActiveSubTab('loja'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-start px-6 py-5 rounded-2xl border ${activeSubTab === 'loja' ? 'bg-white text-[#111827] border-white shadow-lg scale-[1.02]' : 'bg-transparent border-white/20 text-white'}`}>
+                    <span className="font-bold uppercase tracking-widest text-sm flex items-center gap-4"><Store size={22} /> Abrir Loja</span>
+                 </button>
+                 <button onClick={() => { setActiveSubTab('estoque'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-start px-6 py-5 rounded-2xl border ${activeSubTab === 'estoque' ? 'bg-white text-[#111827] border-white shadow-lg scale-[1.02]' : 'bg-transparent border-white/20 text-white'}`}>
+                    <span className="font-bold uppercase tracking-widest text-sm flex items-center gap-4"><ShoppingBag size={22} /> Estoque</span>
+                 </button>
+                 <button onClick={() => { setActiveSubTab('ultimos-eventos'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-start px-6 py-5 rounded-2xl border ${activeSubTab === 'ultimos-eventos' ? 'bg-white text-[#111827] border-white shadow-lg scale-[1.02]' : 'bg-transparent border-white/20 text-white'}`}>
+                    <span className="font-bold uppercase tracking-widest text-sm flex items-center gap-4"><History size={22} /> Últimos Eventos</span>
+                 </button>
+                 
+                 {onBack && (
+                     <button onClick={onBack} className="mt-6 w-full flex justify-center items-center gap-2 p-5 rounded-xl border border-white/10 bg-white/5 text-white/70 uppercase font-bold text-xs tracking-widest hover:text-white hover:bg-white/10">
+                        <ArrowLeft size={16} /> Voltar ao Gestor
+                     </button>
+                 )}
+              </div>
+           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 overflow-y-auto w-full relative bg-[#FAFAFA]">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
 
       {/* SECTION 1: ESTOQUE MANAGEMENT */}
       {activeSubTab === 'estoque' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-            <button 
-              onClick={() => setActiveSubTab('menu')}
-              className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#10367D] tracking-widest active:translate-x-[-2px] transition-all"
-            >
-              <ArrowLeft size={14} />
-              Menu Principal
-            </button>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+            <h2 className="text-xl font-display font-bold uppercase tracking-wider text-[#111827]">Gestão de Estoque</h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="w-full sm:w-auto h-11 bg-[#10367D] hover:bg-[#10367D]/90 text-white px-6 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                className="w-full sm:w-auto h-9 bg-[#111827] hover:bg-[#111827]/90 text-white px-5 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
               >
-                <Plus size={16} strokeWidth={2.5} />
+                <Plus size={14} strokeWidth={2.5} />
                 Adicionar Produto
               </button>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-display text-xl uppercase tracking-wider text-[#10367D] font-bold">Grade de Estoque Cadastrada</h3>
-            
             {produtos.length === 0 ? (
-              <div className="bg-[#EBEBEB] p-12 text-center rounded-2xl border border-slate-300">
-                <ShoppingBag size={48} className="mx-auto text-[#10367D]/20 mb-4" />
-                <p className="text-xs uppercase font-bold tracking-widest text-slate-500">Nenhum produto cadastrado no estoque.</p>
+              <div className="bg-white p-10 text-center rounded-xl border border-slate-200 shadow-sm">
+                <ShoppingBag size={40} className="mx-auto text-slate-300 mb-3" />
+                <p className="text-[11px] uppercase font-bold tracking-widest text-slate-400">Nenhum produto cadastrado no estoque.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {uniqueProdutos.map(p => {
                   const itemsCount = p.category === 'VESTUÁRIO' 
                     ? (p.variations || []).reduce((sum, current) => sum + current.quantity, 0)
@@ -1461,49 +1480,48 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     <div 
                       key={p.id}
                       onClick={() => handlePrepareSizes(p)}
-                      className="bg-[#EBEBEB] hover:bg-slate-200 border border-slate-300 p-3 rounded-2xl transition-all cursor-pointer select-none shadow-sm"
+                      className="bg-white hover:border-[#111827]/30 border border-slate-200 p-3.5 rounded-xl transition-all cursor-pointer select-none shadow-sm flex flex-col justify-between"
                     >
                       {/* Top Row: Type - Product Name - Edit/Delete Icons */}
-                      <div className="flex items-center justify-between gap-2 border-b border-slate-300/50 pb-1.5">
-                        <div className="flex items-center gap-1.5 min-w-0 font-sans font-medium text-slate-800">
-                          <span className={`${p.category === 'VESTUÁRIO' ? 'text-[#10367D]' : 'text-[#75BCE8]'} text-[10px] tracking-wider uppercase font-extrabold shrink-0`}>
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+                        <div className="flex items-center gap-1.5 min-w-0 font-sans font-medium text-slate-800 pt-0.5">
+                          <span className={`${p.category === 'VESTUÁRIO' ? 'bg-[#111827]/10 text-[#111827]' : 'bg-[#75BCE8]/20 text-[#75BCE8]'} text-[9px] tracking-wider uppercase font-extrabold shrink-0 px-1.5 py-0.5 rounded-md`}>
                             {p.category}
                           </span>
-                          <span className="text-slate-400 text-[10px] shrink-0 font-semibold">—</span>
-                          <span className="truncate text-xs md:text-sm text-slate-800 font-bold">
-                            {p.name}
-                          </span>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {/* pencil icon */}
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handlePrepareEdit(p);
                             }}
-                            className="text-slate-500 hover:text-[#10367D] p-1.5 hover:bg-slate-300 rounded-md transition-all"
+                            className="text-slate-400 hover:text-[#111827] p-1 hover:bg-slate-100 rounded transition-all"
                             title="Editar Produto"
                           >
-                            <Edit3 size={14} />
+                            <Edit3 size={12} />
                           </button>
-                          {/* red trash icon */}
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               setProductToDelete(p);
                             }}
-                            className="text-red-600 hover:text-red-500 p-1.5 hover:bg-red-500/10 rounded-md transition-all"
+                            className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-all"
                             title="Excluir Produto"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       </div>
 
+                      {/* Middle: Name */}
+                      <div className="mb-2">
+                         <span className="truncate text-sm text-slate-800 font-bold block">{p.name}</span>
+                      </div>
+
                       {/* Bottom Row: Quantity - Price */}
-                      <div className="flex items-center justify-between mt-2 text-xs text-slate-500 font-sans leading-none font-bold">
-                        <span>{itemsCount} unidades</span>
-                        <span className="font-mono text-[#10367D] font-black text-xs">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-sans leading-none font-bold mt-auto pt-2">
+                        <span className="text-[10px] uppercase">{itemsCount} un.</span>
+                        <span className="font-mono text-[#111827] font-black tracking-tighter">
                           R$ {p.price.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
@@ -1518,31 +1536,24 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
       {/* SECTION 2: LIVE STORE TERMINAL */}
       {activeSubTab === 'loja' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Header Action Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-            <button 
-              onClick={() => setActiveSubTab('menu')}
-              className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#10367D] tracking-widest active:translate-x-[-2px] transition-all"
-            >
-              <ArrowLeft size={14} />
-              Menu Principal
-            </button>
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto ml-auto">
               {activeEvento ? (
                 <>
-                  <div className="bg-[#75BCE8]/15 border border-[#75BCE8]/35 px-4 py-2.5 rounded-xl flex items-center justify-between sm:justify-start gap-4">
+                  <div className="bg-[#75BCE8]/15 border border-[#75BCE8]/35 px-4 py-2 rounded-xl flex items-center justify-between sm:justify-start gap-4 flex-1">
                     <div className="flex items-center gap-2">
-                      <Store size={16} className="text-[#10367D] animate-pulse" />
+                      <Store size={14} className="text-[#111827] animate-pulse" />
                       <div className="text-left">
-                        <p className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">Loja Aberta</p>
-                        <p className="text-xs text-[#10367D] font-bold max-w-[125px] truncate">{activeEvento.event_name}</p>
+                        <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wider leading-none">Loja Aberta</p>
+                        <p className="text-[11px] text-[#111827] font-bold max-w-[125px] truncate pt-0.5">{activeEvento.event_name}</p>
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => handleFecharLojaConfirm()}
-                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full sm:w-auto h-9 bg-red-600 hover:bg-red-700 text-white px-5 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Power size={14} />
                     Fechar Loja
@@ -1551,7 +1562,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               ) : (
                 <button
                   onClick={() => setShowAbrirLojaModal(true)}
-                  className="w-full sm:w-auto bg-[#10367D] hover:bg-[#10367D]/90 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+                  className="w-full sm:w-auto h-9 bg-[#111827] hover:bg-[#111827]/90 text-white px-6 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
                 >
                   <Power size={14} />
                   Abrir Loja
@@ -1562,28 +1573,28 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
           {/* ACTIVE sales panel */}
           {activeEvento ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* TOTAL VENDIDO DISPLAY PANEL */}
               <div 
                 onClick={() => setShowDetalhesVendasModal(true)}
-                className="bg-[#10367D] border-2 border-[#10367D] p-6 rounded-3xl cursor-pointer relative overflow-hidden group shadow-md transition-all"
+                className="bg-[#111827] border border-[#111827] p-5 rounded-2xl cursor-pointer relative overflow-hidden group shadow-md transition-all"
               >
-                <div className="absolute right-0 top-0 p-6 text-white/5 group-hover:scale-110 transition-transform">
-                  <TrendingUp size={100} />
+                <div className="absolute right-0 top-0 p-5 text-white/5 group-hover:scale-110 transition-transform">
+                  <TrendingUp size={80} />
                 </div>
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <span className="text-[10px] font-black uppercase text-[#75BCE8] tracking-widest block mb-1">TOTAL VENDIDO NO EVENTO</span>
-                    <span className="text-4xl md:text-5xl font-mono text-white font-black leading-none flex items-center gap-3">
-                      R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}
+                    <span className="text-[9px] font-black uppercase text-[#75BCE8] tracking-widest block mb-1">TOTAL VENDIDO NO EVENTO</span>
+                    <span className="text-3xl md:text-4xl font-mono text-white font-black leading-none flex items-center gap-2">
+                       R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}
                     </span>
                   </div>
-                  <button className="bg-[#75BCE8] hover:bg-white text-[#10367D] px-4 py-2.5 rounded-full text-[10px] uppercase font-black tracking-widest flex items-center gap-1 transition-all">
-                    Ver Detalhamento das Vendas
+                  <button className="bg-[#75BCE8] hover:bg-white text-[#111827] px-4 py-2 rounded-lg text-[9px] uppercase font-black tracking-widest flex items-center gap-1 transition-all">
+                    Ver Detalhamento
                     <ChevronRight size={14} />
                   </button>
                 </div>
-                <div className="relative z-10 flex gap-6 mt-4 pt-4 border-t border-white/10 text-[10px] text-white/70 uppercase font-bold tracking-wider">
+                <div className="relative z-10 flex gap-6 mt-3 pt-3 border-t border-white/10 text-[9px] text-white/70 uppercase font-bold tracking-wider">
                   <div>PIX: <span className="text-white">R$ {activeEventSummary.pixTotal.toFixed(2).replace('.', ',')}</span></div>
                   <div>Cartão: <span className="text-white">R$ {activeEventSummary.cardTotal.toFixed(2).replace('.', ',')}</span></div>
                   <div>Canceladas: <span className="text-red-300 font-bold">{activeEventSummary.canceledCount}</span></div>
@@ -1591,9 +1602,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               </div>
 
               {/* POS ITEMS GRID */}
-              <div className="space-y-4">
-                <h3 className="font-display text-xl uppercase tracking-wider text-[#10367D] font-bold">Selecione o produto para vender</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-3">
+                <h3 className="font-display text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {uniqueProdutos.map(p => {
                     const totalEstoque = p.category === 'VESTUÁRIO'
                       ? (p.variations || []).reduce((sum, curr) => sum + curr.quantity, 0)
@@ -1602,33 +1613,33 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     return (
                       <div 
                         key={p.id}
-                        className="bg-[#EBEBEB] border border-slate-300 p-5 rounded-3xl flex flex-col justify-between hover:border-[#10367D]/40 transition-all shadow-sm group"
+                        className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col justify-between hover:border-[#111827]/40 transition-all shadow-sm group"
                       >
-                        <div className="mb-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-[8.5px] font-bold uppercase text-slate-500 tracking-wider font-sans">{p.category}</span>
-                            <span className={`text-[10px] font-extrabold uppercase tracking-wider ${totalEstoque > 10 ? 'text-green-600' : totalEstoque > 0 ? 'text-amber-600' : 'text-red-655'}`}>
+                        <div className="mb-3">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <span className="text-[8px] font-bold uppercase tracking-wider font-sans bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{p.category}</span>
+                            <span className={`text-[9px] font-extrabold uppercase tracking-wider ${totalEstoque > 10 ? 'text-green-600' : totalEstoque > 0 ? 'text-amber-600' : 'text-red-500'}`}>
                               {totalEstoque > 0 ? `${totalEstoque} em Estoque` : 'ESGOTADO'}
                             </span>
                           </div>
-                          <h4 className="font-display text-lg uppercase text-slate-800 group-hover:text-[#10367D] font-bold transition-colors leading-snug">{p.name}</h4>
-                          <p className="text-xl font-mono text-[#10367D] font-black mt-1">R$ {p.price.toFixed(2).replace('.', ',')}</p>
+                          <h4 className="font-display text-sm uppercase text-slate-800 group-hover:text-[#111827] font-bold transition-colors leading-snug truncate">{p.name}</h4>
+                          <p className="text-lg font-mono text-[#111827] font-black mt-1 tracking-tighter">R$ {p.price.toFixed(2).replace('.', ',')}</p>
                         </div>
 
                         {/* RENDER VARIATIONS OR SELL INSTANT BUTTON */}
                         {p.category === 'VESTUÁRIO' ? (
                           expandedProductSizes === p.id ? (
-                            <div className="mt-2 space-y-2 animate-fade-in">
+                            <div className="mt-2 space-y-2 animate-fade-in border-t border-slate-100 pt-2">
                               <div className="flex justify-between items-center mb-1">
-                                <p className="text-[9.5px] uppercase font-bold text-[#10367D] tracking-widest leading-none">Selecione o tamanho:</p>
+                                <p className="text-[9px] uppercase font-bold text-[#111827] tracking-widest leading-none">Tamanhos:</p>
                                 <button
                                   onClick={() => setExpandedProductSizes(null)}
-                                  className="text-[9.5px] uppercase font-bold text-slate-500 hover:text-[#10367D] transition-colors"
+                                  className="text-[9px] uppercase font-bold text-slate-400 hover:text-[#111827] transition-colors"
                                 >
                                   Voltar
                                 </button>
                               </div>
-                              <div className="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto no-scrollbar">
+                              <div className="grid grid-cols-4 gap-1.5 max-h-32 overflow-y-auto no-scrollbar">
                                 {p.variations && p.variations.some(v => v.quantity > 0) ? (
                                   p.variations
                                     .filter(v => v.quantity > 0)
@@ -1639,7 +1650,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                           setShowVendaModal({ produto: p, size: v.size });
                                           setExpandedProductSizes(null);
                                         }}
-                                        className="p-2 rounded-xl bg-white border border-slate-300 hover:border-[#10367D] hover:bg-[#10367D]/10 text-[#10367D] text-[11px] uppercase font-bold flex flex-col items-center justify-center transition-all"
+                                        className="p-2 rounded-xl bg-white border border-slate-300 hover:border-[#111827] hover:bg-[#111827]/10 text-[#111827] text-[11px] uppercase font-bold flex flex-col items-center justify-center transition-all"
                                       >
                                         <span>{v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}</span>
                                         <span className="text-[9px] font-mono mt-0.5 font-bold text-slate-500">
@@ -1658,7 +1669,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                             <button
                               disabled={totalEstoque <= 0}
                               onClick={() => setExpandedProductSizes(p.id)}
-                              className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#10367D] text-white hover:bg-[#10367D]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
+                              className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#111827] text-white hover:bg-[#111827]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
                             >
                               <ShoppingBag size={14} />
                               VENDER ITEM
@@ -1668,7 +1679,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                           <button
                             disabled={totalEstoque <= 0}
                             onClick={() => setShowVendaModal({ produto: p })}
-                            className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#10367D] text-white hover:bg-[#10367D]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
+                            className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#111827] text-white hover:bg-[#111827]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
                           >
                             <ShoppingBag size={14} />
                             VENDER ITEM
@@ -1682,14 +1693,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#EBEBEB] border border-slate-300 rounded-3xl gap-4">
-              <Store size={48} className="text-[#10367D]/25 shrink-0" />
+              <Store size={48} className="text-[#111827]/25 shrink-0" />
               <div className="text-center space-y-1">
-                <h4 className="text-lg font-display uppercase text-[#10367D] font-bold leading-none">LOJA FECHADA / DESATIVADA</h4>
+                <h4 className="text-lg font-display uppercase text-[#111827] font-bold leading-none">LOJA FECHADA / DESATIVADA</h4>
                 <p className="text-xs text-slate-500 uppercase font-black tracking-widest">Abra a loja acima seletivamente para iniciar vendas de evento.</p>
               </div>
               <button
                 onClick={() => setShowAbrirLojaModal(true)}
-                className="bg-[#10367D] hover:bg-[#10367D]/90 text-white px-8 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-md flex items-center gap-2 mt-2 transition-all active:scale-95"
+                className="bg-[#111827] hover:bg-[#111827]/90 text-white px-8 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-md flex items-center gap-2 mt-2 transition-all active:scale-95"
               >
                 <Power size={14} />
                 Abrir Loja Agora
@@ -1699,40 +1710,105 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         </div>
       )}
 
-      {/* SQL REFERENCE VIEW */}
-      {activeSubTab === 'sql' && (
+      {/* SECTION 3: ÚLTIMOS EVENTOS */}
+      {activeSubTab === 'ultimos-eventos' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-white/5 pb-4">
-            <button 
-              onClick={() => setActiveSubTab('menu')}
-              className="flex items-center gap-1.5 uppercase font-black text-xs text-white/50 hover:text-white tracking-widest active:translate-x-[-2px] transition-all"
-            >
-              <ArrowLeft size={14} />
-              Menu Principal
-            </button>
-            <button
-              onClick={copySQL}
-              className="bg-brand-neon hover:bg-white text-black px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
-            >
-              {isCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-              {isCopied ? 'Copiado!' : 'Copiar SQL Inteiro'}
-            </button>
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 className="text-xl font-display font-bold uppercase tracking-wider text-[#111827]">Últimos Eventos</h2>
+            {selectedPastEventId && (
+               <button onClick={() => setSelectedPastEventId(null)} className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#111827] transition-colors"><ArrowLeft size={14}/> Voltar</button>
+            )}
           </div>
-
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <h3 className="font-display text-xl uppercase text-white leading-none">Script SQL para o Supabase</h3>
-              <p className="text-white/40 text-xs uppercase font-bold tracking-widest leading-relaxed">
-                Execute o script de criação estruturada abaixo diretamente no Terminal de Editores SQL da console Supabase para provisionar o estoque definitivo.
-              </p>
+          
+          {!selectedPastEventId ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {eventos.filter(e => e.status === 'FECHADO').length === 0 ? (
+                 <div className="col-span-full py-16 text-center text-slate-400 font-bold uppercase tracking-wider text-xs">
+                   <History size={32} className="mx-auto mb-3 opacity-30" />
+                   Nenhum evento encerrado encontrado.
+                 </div>
+              ) : (
+                eventos.filter(e => e.status === 'FECHADO').sort((a,b) => new Date(b.opened_at || 0).getTime() - new Date(a.opened_at || 0).getTime()).map(ev => {
+                  const eventSales = vendas.filter(v => v.event_id === ev.id && v.status === 'CONCLUIDA');
+                  const totalGeral = eventSales.reduce((acc, v) => acc + (v.total_price || 0), 0);
+                  const dtOpen = ev.opened_at ? new Date(ev.opened_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
+                  return (
+                    <motion.div key={ev.id} whileHover={{ scale: 1.01 }} className="bg-white border hover:border-[#111827]/30 border-slate-200 rounded-2xl p-5 shadow-sm cursor-pointer transition-all flex flex-col justify-between h-[140px]" onClick={() => setSelectedPastEventId(ev.id)}>
+                       <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="text-sm font-bold uppercase text-[#111827] line-clamp-1">{ev.event_name}</h4>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">{dtOpen}</p>
+                          </div>
+                          <div className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[9px] font-bold uppercase shrink-0">Encerrado</div>
+                       </div>
+                       <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-[#111827]/60 flex items-center gap-1.5"><ShoppingBag size={12}/> {eventSales.length} Vendas</span>
+                          <span className="text-sm font-black text-slate-800">{applyCurrencyMask((totalGeral * 100).toString())}</span>
+                       </div>
+                    </motion.div>
+                  )
+                })
+              )}
             </div>
-
-            <div className="bg-black border border-white/15 p-6 rounded-3xl overflow-x-auto relative">
-              <pre className="text-[11px] font-mono text-zinc-300 whitespace-pre scrollbar-thin">
-                {SQL_CODE}
-              </pre>
+          ) : (
+            <div className="space-y-6 max-w-2xl mx-auto">
+              {(() => {
+                const ev = eventos.find(e => e.id === selectedPastEventId);
+                const eventSales = vendas.filter(v => v.event_id === selectedPastEventId && v.status === 'CONCLUIDA');
+                // Calculate summaries
+                const pixTotal = eventSales.filter(v => v.payment_method === 'PIX').reduce((acc, v) => acc + (v.total_price || 0), 0);
+                const cardTotal = eventSales.filter(v => v.payment_method === 'CARTÃO').reduce((acc, v) => acc + (v.total_price || 0), 0);
+                const generalTotal = pixTotal + cardTotal;
+                
+                const productCounts: Record<string, { qty: number, total: number }> = {};
+                eventSales.forEach(s => {
+                    s.items?.forEach(vi => {
+                       const name = vi.size ? `${vi.product_name || 'Produto'} (${vi.size})` : (vi.product_name || 'Produto');
+                       if (!productCounts[name]) productCounts[name] = { qty: 0, total: 0 };
+                       productCounts[name].qty += vi.quantity;
+                       productCounts[name].total += (vi.price_at_sale * vi.quantity);
+                    })
+                });
+                return (
+                  <>
+                     <div className="bg-[#111827] text-white p-8 rounded-3xl shadow-sm text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                           <History size={100} />
+                        </div>
+                        <h3 className="text-xl font-bold uppercase relative z-10">{ev?.event_name}</h3>
+                        <p className="text-xs text-white/70 font-bold uppercase tracking-widest mt-2 relative z-10">Total Faturado</p>
+                        <p className="text-4xl font-black mt-2 relative z-10">{applyCurrencyMask((generalTotal * 100).toString())}</p>
+                        <div className="flex gap-4 items-center justify-center mt-8 relative z-10">
+                           <div className="bg-white/10 rounded-2xl px-6 py-4 flex-1 max-w-[160px]">
+                              <p className="text-[10px] text-white/60 uppercase font-black tracking-widest mb-1.5">PIX</p>
+                              <p className="text-lg font-bold">{applyCurrencyMask((pixTotal * 100).toString())}</p>
+                           </div>
+                           <div className="bg-white/10 rounded-2xl px-6 py-4 flex-1 max-w-[160px]">
+                              <p className="text-[10px] text-white/60 uppercase font-black tracking-widest mb-1.5">CARTÃO</p>
+                              <p className="text-lg font-bold">{applyCurrencyMask((cardTotal * 100).toString())}</p>
+                           </div>
+                        </div>
+                     </div>
+                     <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                        <h4 className="text-xs uppercase font-black tracking-widest text-[#111827] mb-4 pb-2 border-b border-slate-100 flex items-center gap-2"><ShoppingBag size={14}/> Itens Vendidos</h4>
+                        {Object.keys(productCounts).length === 0 ? (
+                           <p className="text-xs font-bold text-slate-400 py-6 text-center">Nenhum item vendido neste evento.</p>
+                        ) : (
+                          <div className="space-y-1">
+                             {Object.entries(productCounts).sort((a,b) => b[1].qty - a[1].qty).map(([name, data], idx) => (
+                               <div key={idx} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 px-3 rounded-lg transition-colors">
+                                  <span className="text-sm font-bold text-slate-700">{name} <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold ml-2">x{data.qty}</span></span>
+                                  <span className="text-sm font-black text-[#111827]">{applyCurrencyMask((data.total * 100).toString())}</span>
+                               </div>
+                             ))}
+                          </div>
+                        )}
+                     </div>
+                  </>
+                )
+              })()}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1741,45 +1817,62 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
          ------------------------------------------------------------- */}
       <AnimatePresence>
         
+        {/* SUCCESS CONFIRMATION MODAL */}
+        {successModalMessage && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSuccessModalMessage(null)} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-xs rounded-3xl p-6 text-center shadow-md">
+              <div className="w-12 h-12 bg-[#111827]/10 text-[#111827] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#111827]/20">
+                <CheckCircle2 size={24} />
+              </div>
+              <h3 className="text-[#111827] font-bold text-lg mb-2">Sucesso!</h3>
+              <p className="text-slate-600 text-sm font-medium mb-6">{successModalMessage}</p>
+              <button onClick={() => setSuccessModalMessage(null)} className="w-full h-11 bg-[#111827] hover:bg-[#111827]/90 text-white rounded-xl font-bold uppercase text-xs tracking-wider shadow-sm transition-all">
+                OK
+              </button>
+            </motion.div>
+          </div>
+        )}
+
         {/* ADD PRODUCT MODAL */}
         {showAddProductModal && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddProductModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-[#ccff00] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] text-left">
-              <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
-                <h3 className="font-display uppercase text-xl text-white">Cadastrar Novo Produto</h3>
-                <button onClick={() => setShowAddProductModal(false)} className="text-white/30 hover:text-white transition-colors"><X size={24} /></button>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#FAFAFA] border-2 border-[#111827] w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] text-left">
+              <div className="p-5 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
+                <h3 className="font-display uppercase text-lg text-[#111827] font-black">Cadastrar Novo Produto</h3>
+                <button onClick={() => setShowAddProductModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={20} /></button>
               </div>
 
-              <form onSubmit={handleAddProduct} className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-5">
+              <form onSubmit={handleAddProduct} className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-4">
                 {/* Nome */}
-                <div className="space-y-2">
-                  <label className="text-white/[0.4] text-[9px] uppercase font-black tracking-widest pl-1">Nome do Produto</label>
+                <div className="space-y-1.5">
+                  <label className="text-slate-500 text-[9px] uppercase font-black tracking-widest pl-1">Nome do Produto</label>
                   <input 
                     type="text" 
                     required
                     value={newProdName}
                     onChange={e => setNewProdName(e.target.value)}
                     placeholder="Ex: Camiseta UMADEMATS 2026"
-                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon text-sm uppercase font-bold"
+                    className="w-full bg-white border border-[#EBEBEB] shadow-sm rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:border-[#75BCE8] text-sm font-bold"
                   />
                 </div>
 
                 {/* Categoria Selector */}
-                <div className="space-y-2">
-                  <label className="text-white/[0.4] text-[9px] uppercase font-black tracking-widest pl-1">Categoria de Produto</label>
+                <div className="space-y-1.5">
+                  <label className="text-slate-500 text-[9px] uppercase font-black tracking-widest pl-1">Categoria de Produto</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setNewProdCategory('VESTUÁRIO')}
-                      className={`py-3.5 rounded-xl font-bold text-xs uppercase border-2 transition-all ${newProdCategory === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 border-brand-neon text-[#ccff00]' : 'bg-black border-white/10 text-white/50 hover:border-white/20'}`}
+                      className={`py-2.5 rounded-lg font-bold text-xs uppercase border-2 transition-all ${newProdCategory === 'VESTUÁRIO' ? 'bg-[#75BCE8]/20 border-[#75BCE8] text-[#111827]' : 'bg-white border-[#EBEBEB] text-slate-400 hover:border-[#75BCE8]'}`}
                     >
                       VESTUÁRIO (Grade)
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewProdCategory('ITENS')}
-                      className={`py-3.5 rounded-xl font-bold text-xs uppercase border-2 transition-all ${newProdCategory === 'ITENS' ? 'bg-brand-pink/10 border-brand-pink text-brand-pink' : 'bg-black border-white/10 text-white/50 hover:border-white/20'}`}
+                      className={`py-3.5 rounded-xl font-bold text-xs uppercase border-2 transition-all ${newProdCategory === 'ITENS' ? 'bg-[#75BCE8]/20 border-[#75BCE8] text-[#111827]' : 'bg-white border-[#EBEBEB] text-slate-400 hover:border-[#75BCE8]'}`}
                     >
                       ITENS (Qtd Única)
                     </button>
@@ -1789,27 +1882,27 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 {/* Valor & Qtd Unica (Itens) */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-white/[0.4] text-[9px] uppercase font-black tracking-widest pl-1">Valor Unitário (R$)</label>
+                    <label className="text-slate-500 text-[9px] uppercase font-black tracking-widest pl-1">Valor Unitário (R$)</label>
                     <input 
                       type="text" 
                       required
                       value={newProdPrice}
                       onChange={e => setNewProdPrice(applyCurrencyMask(e.target.value))}
                       placeholder="R$ 0,00"
-                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon text-sm font-mono font-bold"
+                      className="w-full bg-white border border-[#EBEBEB] shadow-sm rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[#75BCE8] text-sm font-mono font-bold"
                     />
                   </div>
 
                   {newProdCategory === 'ITENS' && (
                     <div className="space-y-2">
-                      <label className="text-white/[0.4] text-[9px] uppercase font-black tracking-widest pl-1">Quantidade Inicial</label>
+                      <label className="text-slate-500 text-[9px] uppercase font-black tracking-widest pl-1">Quantidade Inicial</label>
                       <input 
                         type="number" 
                         required
                         value={newProdQty}
                         onChange={e => setNewProdQty(e.target.value)}
                         placeholder="Ex: 100"
-                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-neon text-sm font-mono font-bold"
+                        className="w-full bg-white border border-[#EBEBEB] shadow-sm rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[#75BCE8] text-sm font-mono font-bold"
                       />
                     </div>
                   )}
@@ -1817,15 +1910,15 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                 {/* Size Grid (For Vestuario Category) */}
                 {newProdCategory === 'VESTUÁRIO' && (
-                  <div className="space-y-4 pt-2 border-t border-white/5">
+                  <div className="space-y-4 pt-2 border-t border-[#111827]/10">
                     <div className="space-y-1">
-                      <h4 className="text-[10px] font-black uppercase text-brand-neon tracking-wider">GRADE DE TAMANHOS (Clique para Editar)</h4>
-                      <p className="text-[9px] text-white/30 uppercase font-bold leading-normal">Defina as unidades disponíveis para cada tamanho clicando neles.</p>
+                      <h4 className="text-[10px] font-black uppercase text-[#111827] tracking-wider">GRADE DE TAMANHOS (Clique para Editar)</h4>
+                      <p className="text-[9px] text-slate-400 uppercase font-bold leading-normal">Defina as unidades disponíveis para cada tamanho clicando neles.</p>
                     </div>
 
                     {/* INFANTIL SIZES */}
                     <div className="space-y-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">INFANTIL (Tamanhos 2 a 14)</span>
+                      <span className="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] block pl-1 font-sans">INFANTIL (Tamanhos 2 a 14)</span>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {SIZES_CONFIG.INFANTIL.map(size => {
                           const qty = sizeQuantities[size] || 0;
@@ -1841,10 +1934,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                 });
                                 setNewSizeQtyInput(qty.toString());
                               }}
-                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                             >
-                              <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                              <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                             </button>
                           );
                         })}
@@ -1853,7 +1946,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                     {/* BABYLOOK SIZES */}
                     <div className="space-y-2 pt-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">BABYLOOK (PP ao XGG)</span>
+                      <span className="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] block pl-1 font-sans">BABYLOOK (PP ao XGG)</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {SIZES_CONFIG.BABYLOOK.map(size => {
                           const qty = sizeQuantities[size] || 0;
@@ -1869,12 +1962,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                 });
                                 setNewSizeQtyInput(qty.toString());
                               }}
-                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                             >
-                              <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                              <span className="text-xs text-slate-500 font-semibold uppercase truncate max-w-[110px]" title={size}>
                                 {size.replace('Babylook ', 'BL ')}
                               </span>
-                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                             </button>
                           );
                         })}
@@ -1883,7 +1976,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                     {/* ADULTO SIZES */}
                     <div className="space-y-2 pt-2">
-                      <span className="text-[8px] font-black uppercase text-white/40 tracking-[0.2em] block pl-1 font-sans">ADULTO UNISSEX (PP ao XGG)</span>
+                      <span className="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] block pl-1 font-sans">ADULTO UNISSEX (PP ao XGG)</span>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {SIZES_CONFIG.ADULTO.map(size => {
                           const qty = sizeQuantities[size] || 0;
@@ -1899,10 +1992,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                 });
                                 setNewSizeQtyInput(qty.toString());
                               }}
-                              className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                              className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                             >
-                              <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                              <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                              <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                              <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                             </button>
                           );
                         })}
@@ -1911,11 +2004,11 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-white/5 flex gap-2 shrink-0">
+                <div className="pt-4 border-t border-[#111827]/10 flex gap-2 shrink-0">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-brand-neon hover:bg-[#b0db00] text-black py-4 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-1.5 active:translate-y-0.5"
+                    className="flex-1 bg-[#111827] hover:bg-[#111827]/90 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm flex items-center justify-center gap-1.5 active:translate-y-0.5"
                   >
                     {loading ? <RefreshCw className="animate-spin" size={14} /> : <Check size={14} strokeWidth={2.5} />}
                     Cadastrar Produto
@@ -1923,7 +2016,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <button
                     type="button"
                     onClick={() => setShowAddProductModal(false)}
-                    className="flex-1 bg-white/5 hover:bg-white/10 text-white max-w-[120px] rounded-xl font-bold text-xs uppercase"
+                    className="flex-1 bg-white hover:bg-slate-50 border border-[#EBEBEB] text-[#111827] max-w-[120px] rounded-xl font-bold text-xs uppercase shadow-sm"
                   >
                     Cancelar
                   </button>
@@ -1937,28 +2030,28 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {showAbrirLojaModal && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAbrirLojaModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-brand-purple w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl">
-              <Store size={40} className="mx-auto text-brand-purple mb-4" />
-              <h3 className="text-xl font-display uppercase text-white mb-2 leading-none">ABRIR SEÇÃO DE EVENTO</h3>
-              <p className="text-white/40 text-xs uppercase font-bold tracking-widest mb-6">Nomeie sessão de vendas de balcão.</p>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-8 text-center shadow-md">
+              <Store size={40} className="mx-auto text-[#111827] mb-4" />
+              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">ABRIR SEÇÃO DE EVENTO</h3>
+              <p className="text-slate-500 text-xs uppercase font-bold tracking-widest mb-6">Nomeie sessão de vendas de balcão.</p>
               
               <form onSubmit={handleIniciarEvento} className="space-y-4">
                 <div className="text-left space-y-1">
-                  <span className="text-[8px] font-black uppercase text-white/30 tracking-widest block pl-1">Nome do Encontro / Congresso</span>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block pl-1">Nome do Encontro / Congresso</span>
                   <input 
                     type="text" 
                     required
                     value={eventoInputName}
                     onChange={e => setEventoInputName(e.target.value)}
                     placeholder="Ex: Congresso UMADEMATS 2026"
-                    className="w-full bg-black border border-white/15 focus:border-brand-purple focus:outline-none rounded-xl px-4 py-3 text-sm text-white uppercase font-bold text-center"
+                    className="w-full bg-white border border-[#EBEBEB] focus:border-[#75BCE8] focus:outline-none rounded-xl px-4 py-3 text-sm text-slate-800 uppercase font-bold text-center shadow-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-brand-purple hover:bg-purple-600 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-wider shadow-lg flex items-center justify-center gap-1 active:translate-y-0.5"
+                    className="w-full bg-[#111827] hover:bg-[#111827]/90 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-wider shadow-sm flex items-center justify-center gap-1 active:translate-y-0.5"
                   >
                     {loading ? <RefreshCw className="animate-spin" size={14} /> : <Power size={14} />}
                     Iniciar Evento
@@ -1966,7 +2059,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <button 
                     type="button" 
                     onClick={() => setShowAbrirLojaModal(false)} 
-                    className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-widest"
+                    className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-widest"
                   >
                     Voltar
                   </button>
@@ -1980,23 +2073,23 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {showVendaModal && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowVendaModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-brand-neon w-full max-w-sm rounded-[2rem] p-6 text-center shadow-2xl">
-              <ShoppingBag size={40} className="mx-auto text-brand-neon mb-4 animate-bounce" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md">
+              <ShoppingBag size={40} className="mx-auto text-[#111827] mb-4 animate-bounce" />
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-white/30 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
-                <h3 className="text-xl font-display uppercase text-white leading-none mt-2">{showVendaModal.produto.name}</h3>
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
+                <h3 className="text-xl font-display uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
                 {showVendaModal.size && (
-                  <span className="inline-block bg-[#ccff00]/10 text-brand-neon border border-[#ccff00]/20 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
+                  <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
                     Tamanho: {showVendaModal.size}
                   </span>
                 )}
-                <div className="font-mono text-3xl text-white font-black py-4">
+                <div className="font-mono text-3xl text-slate-800 font-black py-4">
                   R$ {showVendaModal.produto.price.toFixed(2).replace('.', ',')}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/5 space-y-4">
-                <p className="text-[10px] font-black uppercase text-white/30 tracking-widest">Meio de Pagamento Utilizado:</p>
+              <div className="pt-4 border-t border-slate-300 space-y-4">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Meio de Pagamento Utilizado:</p>
                 <div className="grid grid-cols-2 gap-3">
                   <motion.button
                     whileTap={{ scale: 0.95 }}
@@ -2007,7 +2100,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                         paymentMethod: 'PIX'
                       });
                     }}
-                    className="py-4 bg-[#ccff00]/10 border border-[#ccff00]/30 hover:border-[#ccff00] text-brand-neon rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#ccff00]/20"
+                    className="py-4 bg-white border border-[#EBEBEB] hover:border-[#75BCE8] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm"
                   >
                     <Smartphone size={20} />
                     <span className="text-xs font-bold uppercase tracking-wider">Pix</span>
@@ -2022,7 +2115,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                         paymentMethod: 'CARTÃO'
                       });
                     }}
-                    className="py-4 bg-[#a855f7]/10 border border-brand-purple/30 hover:border-brand-purple text-brand-purple rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#a855f7]/20"
+                    className="py-4 bg-white border border-[#EBEBEB] hover:border-[#111827] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm"
                   >
                     <DollarSign size={20} />
                     <span className="text-xs font-bold uppercase tracking-wider">Cartão</span>
@@ -2032,7 +2125,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <button
                   type="button"
                   onClick={() => setShowVendaModal(null)}
-                  className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-[0.15em] block pt-4"
+                  className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-[0.15em] block pt-4 transition-colors"
                 >
                   Cancelar Venda
                 </button>
@@ -2055,44 +2148,44 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#18181b] border-2 border-[#ccff00] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl text-left"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 shadow-md text-left"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-2xl bg-[#ccff00]/10 text-brand-neon shrink-0">
+                <div className="p-3 rounded-2xl bg-[#111827]/10 text-[#111827] shrink-0 border border-[#111827]/20">
                   <ShoppingBag size={24} />
                 </div>
                 <div>
-                  <h3 className="font-display font-black text-lg uppercase text-white leading-tight">CONFIRMAR VENDA?</h3>
-                  <p className="text-[9px] font-black uppercase text-white/40 tracking-widest leading-none">Verifique as informações antes de finalizar</p>
+                  <h3 className="font-display font-black text-lg uppercase text-[#111827] leading-tight">CONFIRMAR VENDA?</h3>
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none">Verifique as informações antes de finalizar</p>
                 </div>
               </div>
 
-              <div className="space-y-3.5 bg-white/5 border border-white/5 rounded-2xl p-4 mb-5">
+              <div className="space-y-3.5 bg-white border border-[#EBEBEB] rounded-2xl p-4 mb-5 shadow-sm">
                 <div>
-                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">PRODUTO</span>
-                  <span className="text-sm font-bold text-white uppercase">{confirmVendaData.produto.name}</span>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">PRODUTO</span>
+                  <span className="text-sm font-bold text-slate-800 uppercase">{confirmVendaData.produto.name}</span>
                 </div>
 
                 {confirmVendaData.size && (
                   <div>
-                    <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">TAMANHO</span>
-                    <span className="inline-block bg-[#ccff00]/10 text-brand-neon border border-[#ccff00]/20 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">TAMANHO</span>
+                    <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
                       {confirmVendaData.size}
                     </span>
                   </div>
                 )}
 
                 <div>
-                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">VALOR</span>
-                  <span className="text-xl font-mono font-black text-white">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">VALOR</span>
+                  <span className="text-xl font-mono font-black text-slate-800">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
                 </div>
 
                 <div>
-                  <span className="text-[8px] font-black uppercase text-white/30 tracking-wider block">FORMA DE PAGAMENTO</span>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">FORMA DE PAGAMENTO</span>
                   <span className={`inline-block font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-widest mt-0.5 ${
                     confirmVendaData.paymentMethod === 'PIX' 
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                      : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                      ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' 
+                      : 'bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/30'
                   }`}>
                     {confirmVendaData.paymentMethod}
                   </span>
@@ -2108,7 +2201,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     await handleRegisterVenda(paymentMethod);
                     setConfirmVendaData(null);
                   }}
-                  className="w-full py-4.5 bg-[#ccff00] hover:bg-white text-black font-black uppercase text-xs rounded-2xl tracking-widest shadow-lg shadow-[#ccff00]/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full py-4.5 bg-[#111827] hover:bg-[#111827]/90 text-white font-black uppercase text-xs rounded-2xl tracking-widest shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   {loading ? <RefreshCw className="animate-spin" size={14} /> : 'Confirmar Venda'}
                 </button>
@@ -2116,7 +2209,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <button
                   type="button"
                   onClick={() => setConfirmVendaData(null)}
-                  className="w-full py-3 text-white/40 hover:text-white uppercase font-bold text-[10px] tracking-widest transition-colors block text-center"
+                  className="w-full py-3 text-slate-400 hover:text-[#111827] uppercase font-bold text-[10px] tracking-widest transition-colors block text-center"
                 >
                   Cancelar
                 </button>
@@ -2129,13 +2222,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {showDetalhesVendasModal && (
           <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDetalhesVendasModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] text-left">
-              <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-xl rounded-3xl overflow-hidden shadow-md flex flex-col max-h-[85vh] text-left">
+              <div className="p-6 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="font-display uppercase text-xl text-white">Vendas Realizadas</h3>
-                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mt-1">Histórico completo da seção aberta de balcão</p>
+                  <h3 className="font-display uppercase text-xl text-[#111827] font-black">Vendas Realizadas</h3>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Histórico completo da seção aberta de balcão</p>
                 </div>
-                <button onClick={() => setShowDetalhesVendasModal(false)} className="text-white/30 hover:text-white transition-colors"><X size={24} /></button>
+                <button onClick={() => setShowDetalhesVendasModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={24} /></button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
@@ -2151,33 +2244,33 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     return (
                       <div 
                         key={sale.id}
-                        className={`p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${isCanceled ? 'bg-red-500/5 border border-red-500/10 opacity-40' : 'bg-white/5 border border-white/5 hover:border-white/10'}`}
+                        className={`p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all shadow-sm ${isCanceled ? 'bg-red-50 border border-red-100 opacity-60' : 'bg-white border border-[#EBEBEB] hover:border-[#75BCE8]'}`}
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${isCanceled ? 'bg-red-500/20 text-red-500 border border-red-500/20' : sale.payment_method === 'PIX' ? 'bg-[#ccff00]/10 text-brand-neon border border-[#ccff00]/20' : 'bg-brand-purple/10 text-brand-purple border border-brand-purple/20'}`}>
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${isCanceled ? 'bg-red-100 text-red-600 border border-red-200' : sale.payment_method === 'PIX' ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' : 'bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/30'}`}>
                               {isCanceled ? 'Cancelada' : sale.payment_method}
                             </span>
-                            <span className="text-[8px] text-white/30 uppercase font-mono">
+                            <span className="text-[8px] text-slate-400 uppercase font-mono">
                               {new Date(sale.created_at).toLocaleTimeString('pt-BR')}
                             </span>
                           </div>
                           
-                          <p className={`text-sm font-bold uppercase mt-1.5 leading-tight ${isCanceled ? 'line-through text-white/30' : 'text-white'}`}>
+                          <p className={`text-sm font-bold uppercase mt-1.5 leading-tight ${isCanceled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                             {matchedItem ? matchedItem.product_name : 'Produto Desconhecido'}
                           </p>
 
                           {matchedItem?.size && (
-                            <span className="inline-block bg-white/5 text-white/50 text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1.5 border border-white/5">
+                            <span className="inline-block bg-white text-slate-500 text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1.5 border border-[#EBEBEB]">
                               Tamanho: {matchedItem.size}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t border-white/5 sm:border-0 pt-2 sm:pt-0 shrink-0">
+                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t border-[#EBEBEB] sm:border-0 pt-2 sm:pt-0 shrink-0">
                           <div className="text-left sm:text-right">
-                            <span className="text-[8px] text-white/30 uppercase block font-bold leading-none mb-1">Valor Final</span>
-                            <span className={`text-base font-mono font-black ${isCanceled ? 'text-white/20' : 'text-[#ccff00]'}`}>
+                            <span className="text-[8px] text-slate-400 uppercase block font-bold leading-none mb-1">Valor Final</span>
+                            <span className={`text-base font-mono font-black ${isCanceled ? 'text-slate-300' : 'text-[#111827]'}`}>
                               R$ {sale.total_price.toFixed(2).replace('.', ',')}
                             </span>
                           </div>
@@ -2207,20 +2300,20 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {showConfirmCancelVenda && (
           <div className="fixed inset-0 z-[115] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConfirmCancelVenda(null)} className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-red-500 w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-red-500 w-full max-w-sm rounded-[2rem] p-8 text-center shadow-md">
               <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
-              <h3 className="text-xl font-display uppercase text-white mb-2 leading-none">Confirmar Cancelamento?</h3>
-              <p className="text-white/40 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
+              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">Confirmar Cancelamento?</h3>
+              <p className="text-slate-500 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
                 Esta ação restaura imediatamente os saldos de estoque do produto.
               </p>
 
-              <div className="bg-black/30 p-4 rounded-xl border border-red-500/10 text-left mb-6">
-                <p className="text-[8px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Item Vendido</p>
-                <p className="text-sm font-extrabold uppercase text-white">
+              <div className="bg-white p-4 rounded-xl border border-[#EBEBEB] text-left mb-6 shadow-sm">
+                <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Item Vendido</p>
+                <p className="text-sm font-extrabold uppercase text-slate-800">
                   {showConfirmCancelVenda.items && showConfirmCancelVenda.items[0]?.product_name}
                 </p>
                 {showConfirmCancelVenda.items?.[0]?.size && (
-                  <p className="text-[10px] text-[#ccff00] uppercase font-black">
+                  <p className="text-[10px] text-[#75BCE8] uppercase font-black mt-1">
                     Tamanho: {showConfirmCancelVenda.items[0].size}
                   </p>
                 )}
@@ -2240,7 +2333,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <button
                   type="button"
                   onClick={() => setShowConfirmCancelVenda(null)}
-                  className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-widest"
+                  className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-widest transition-colors"
                 >
                   Voltar
                 </button>
@@ -2253,52 +2346,52 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         {showFecharLojaModal && (
           <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowFecharLojaModal(false)} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#1a1a1a] border-2 border-[#ccff00] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] text-left">
-              <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between shrink-0">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-3xl overflow-hidden shadow-md flex flex-col max-h-[90vh] text-left">
+              <div className="p-6 border-b border-[#111827]/10 bg-white/50 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="font-display uppercase text-2xl text-[#ccff00]">Resumo de Fechamento</h3>
-                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mt-1">Conclusão bem-sucedida do caixa</p>
+                  <h3 className="font-display uppercase text-2xl text-[#111827] font-black">Resumo de Fechamento</h3>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Conclusão bem-sucedida do caixa</p>
                 </div>
-                <button onClick={() => setShowFecharLojaModal(false)} className="text-white/30 hover:text-white transition-colors"><X size={24} /></button>
+                <button onClick={() => setShowFecharLojaModal(false)} className="text-slate-400 hover:text-[#111827] transition-colors"><X size={24} /></button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
                 {/* Event Name Badge */}
-                <div className="bg-[#ccff00]/10 border border-[#ccff00]/30 p-4 rounded-2xl flex items-center gap-3">
-                  <CheckCircle2 size={24} className="text-brand-neon shrink-0" />
+                <div className="bg-[#111827]/10 border border-[#111827]/20 p-4 rounded-2xl flex items-center gap-3">
+                  <CheckCircle2 size={24} className="text-[#111827] shrink-0" />
                   <div className="text-left">
-                    <p className="text-[8px] uppercase font-black text-white/30 tracking-widest leading-none mb-1">FECHAMENTO DE SEÇÃO DE VENDAS</p>
-                    <p className="text-base text-white font-extrabold uppercase">Sessão Finalizada</p>
+                    <p className="text-[8px] uppercase font-black text-[#111827]/50 tracking-widest leading-none mb-1">FECHAMENTO DE SEÇÃO DE VENDAS</p>
+                    <p className="text-base text-[#111827] font-extrabold uppercase">Sessão Finalizada</p>
                   </div>
                 </div>
 
                 {/* Metrics */}
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                    <span className="text-[8px] uppercase font-bold text-white/30 tracking-wider block mb-1">Faturamento</span>
-                    <span className="text-lg font-mono font-black text-white">R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}</span>
+                  <div className="bg-white border border-[#EBEBEB] shadow-sm p-3 rounded-2xl">
+                    <span className="text-[8px] uppercase font-bold text-slate-400 tracking-wider block mb-1">Faturamento</span>
+                    <span className="text-lg font-mono font-black text-[#111827]">R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                    <span className="text-[8px] uppercase font-bold text-white/30 tracking-wider block mb-1">PIX</span>
-                    <span className="text-lg font-mono font-black text-[#ccff00]">R$ {activeEventSummary.pixTotal.toFixed(2).replace('.', ',')}</span>
+                  <div className="bg-white border border-[#EBEBEB] shadow-sm p-3 rounded-2xl">
+                    <span className="text-[8px] uppercase font-bold text-slate-400 tracking-wider block mb-1">PIX</span>
+                    <span className="text-lg font-mono font-black text-[#111827]">R$ {activeEventSummary.pixTotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                    <span className="text-[8px] uppercase font-bold text-white/30 tracking-wider block mb-1">CARTÃO</span>
-                    <span className="text-lg font-mono font-black text-[#a855f7]">R$ {activeEventSummary.cardTotal.toFixed(2).replace('.', ',')}</span>
+                  <div className="bg-white border border-[#EBEBEB] shadow-sm p-3 rounded-2xl">
+                    <span className="text-[8px] uppercase font-bold text-slate-400 tracking-wider block mb-1">CARTÃO</span>
+                    <span className="text-lg font-mono font-black text-[#111827]">R$ {activeEventSummary.cardTotal.toFixed(2).replace('.', ',')}</span>
                   </div>
                 </div>
 
                 {/* Items Sold list */}
                 <div className="space-y-3">
-                  <span className="text-[9px] uppercase font-black text-white/40 tracking-[0.2em] block pl-1">Balancete de Produtos Vendidos</span>
-                  <div className="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar">
+                  <span className="text-[9px] uppercase font-black text-slate-500 tracking-[0.2em] block pl-1">Balancete de Produtos Vendidos</span>
+                  <div className="bg-white p-4 rounded-2xl border border-[#EBEBEB] shadow-sm space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar">
                     {activeEventSummary.products.length === 0 ? (
-                      <p className="text-center text-[10px] text-white/30 uppercase italic py-4 font-bold">Nenhum produto vendido nessa seção.</p>
+                      <p className="text-center text-[10px] text-slate-400 uppercase italic py-4 font-bold">Nenhum produto vendido nessa seção.</p>
                     ) : (
                       activeEventSummary.products.map((p, idx) => (
-                        <div key={idx} className="flex justify-between items-center py-1.5 border-b border-white/[0.03] last:border-0">
-                          <span className="text-xs uppercase text-white font-extrabold">{p.name}</span>
-                          <span className="text-xs font-mono font-black text-brand-neon">{p.qty}x</span>
+                        <div key={idx} className="flex justify-between items-center py-1.5 border-b border-[#EBEBEB] last:border-0">
+                          <span className="text-xs uppercase text-slate-800 font-extrabold">{p.name}</span>
+                          <span className="text-xs font-mono font-black text-[#111827]">{p.qty}x</span>
                         </div>
                       ))
                     )}
@@ -2307,24 +2400,24 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                 {/* Canceled check */}
                 {activeEventSummary.canceledCount > 0 && (
-                  <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl text-[10px] uppercase font-bold text-red-400">
+                  <div className="bg-red-50 border border-red-200 p-4 rounded-2xl text-[10px] uppercase font-bold text-red-600">
                     Sessão teve {activeEventSummary.canceledCount} estornos realizados (Total de R$ {activeEventSummary.canceledTotal.toFixed(2).replace('.', ',')})
                   </div>
                 )}
               </div>
 
               {/* Share Footer */}
-              <div className="p-6 border-t border-white/5 bg-white/5 shrink-0 flex gap-2">
+              <div className="p-6 border-t border-[#111827]/10 bg-white/50 shrink-0 flex gap-2">
                 <button
                   onClick={handleShareWhatsApp}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-lg active:translate-y-0.5 transition-all text-center"
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 shadow-sm active:translate-y-0.5 transition-all text-center"
                 >
                   <Share2 size={14} />
                   Compartilhar via WhatsApp
                 </button>
                 <button
                   onClick={() => setShowFecharLojaModal(false)}
-                  className="bg-white/5 hover:bg-white/10 text-white px-6 py-4 rounded-xl font-bold uppercase text-xs"
+                  className="bg-white hover:bg-slate-50 border border-[#EBEBEB] text-[#111827] px-6 py-4 rounded-xl font-bold uppercase text-xs shadow-sm"
                 >
                   Fechar
                 </button>
@@ -2347,20 +2440,20 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#1a1a1a] border-2 border-red-500 w-full max-w-sm rounded-[2rem] p-6 text-center shadow-2xl"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md"
             >
               <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
-              <h3 className="text-xl font-display uppercase text-white mb-2 leading-none">Excluir Produto?</h3>
-              <p className="text-white/40 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
+              <h3 className="text-xl font-display uppercase text-[#111827] font-black mb-2 leading-none">Excluir Produto?</h3>
+              <p className="text-slate-500 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
                 Tem certeza que deseja excluir permanentemente o produto do estoque?
               </p>
 
-              <div className="bg-black/30 p-4 rounded-xl border border-red-500/10 text-left mb-6">
-                <p className="text-[8px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Produto Selecionado</p>
-                <p className="text-sm font-extrabold uppercase text-white">
+              <div className="bg-white p-4 rounded-xl border border-[#EBEBEB] text-left mb-6 shadow-sm">
+                <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Produto Selecionado</p>
+                <p className="text-sm font-extrabold uppercase text-slate-800">
                   {productToDelete.name}
                 </p>
-                <p className="text-[#ccff00] text-xs font-mono font-bold mt-1 uppercase">
+                <p className="text-slate-500 text-xs font-mono font-bold mt-1 uppercase">
                   Categoria: {productToDelete.category}
                 </p>
                 <p className="text-xl font-mono text-red-500 font-black mt-2 leading-none">
@@ -2379,7 +2472,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <button
                   type="button"
                   onClick={() => setProductToDelete(null)}
-                  className="w-full py-2.5 text-white/30 hover:text-white uppercase font-black text-[9px] tracking-widest"
+                  className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-widest transition-colors"
                 >
                   Cancelar
                 </button>
@@ -2402,71 +2495,71 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#1a1a1a] border-2 border-brand-neon w-full max-w-lg rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-3xl p-6 shadow-md flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4 shrink-0">
-                <h3 className="text-lg font-display uppercase text-white font-bold">Editar Produto</h3>
-                <button onClick={() => setProductToEdit(null)} className="text-white/40 hover:text-white">
+              <div className="flex items-center justify-between pb-3 border-b border-[#111827]/10 mb-4 shrink-0">
+                <h3 className="text-lg font-display uppercase text-[#111827] font-black">Editar Produto</h3>
+                <button onClick={() => setProductToEdit(null)} className="text-slate-400 hover:text-[#111827]">
                   <X size={20} />
                 </button>
               </div>
 
               <form onSubmit={handleSaveProductEdit} className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1 pb-2 text-left">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Nome do Produto</label>
+                  <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Nome do Produto</label>
                   <input
                     type="text"
                     value={editProdName}
                     onChange={(e) => setEditProdName(e.target.value)}
-                    className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-neon"
+                    className="w-full bg-white border border-[#EBEBEB] rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-[#75BCE8] shadow-sm"
                     placeholder="Nome"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Preço (R$)</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Preço (R$)</label>
                     <input
                       type="text"
                       value={editProdPrice}
                       onChange={(e) => setEditProdPrice(applyCurrencyMask(e.target.value))}
-                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-neon"
+                      className="w-full bg-white border border-[#EBEBEB] rounded-xl px-4 py-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#75BCE8] shadow-sm"
                       placeholder="R$ 0,00"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Categoria</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Categoria</label>
                     <select
                       value={editProdCategory}
                       onChange={(e) => setEditProdCategory(e.target.value as 'VESTUÁRIO' | 'ITENS')}
-                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-neon appearance-none font-bold uppercase"
+                      className="w-full bg-white border border-[#EBEBEB] rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-[#75BCE8] appearance-none font-bold uppercase shadow-sm"
                     >
-                      <option value="VESTUÁRIO" className="bg-[#1a1a1a]">VESTUÁRIO</option>
-                      <option value="ITENS" className="bg-[#1a1a1a]">ITENS</option>
+                      <option value="VESTUÁRIO" className="bg-[#EBEBEB]">VESTUÁRIO</option>
+                      <option value="ITENS" className="bg-[#EBEBEB]">ITENS</option>
                     </select>
                   </div>
                 </div>
 
                 {editProdCategory === 'ITENS' ? (
                   <div className="space-y-1">
-                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Quantidade em Estoque</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Quantidade em Estoque</label>
                     <input
                       type="number"
                       value={editProdQty}
                       onChange={(e) => setEditProdQty(e.target.value)}
-                      className="w-full bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-neon"
+                      className="w-full bg-white border border-[#EBEBEB] rounded-xl px-4 py-3 text-sm text-slate-800 font-mono focus:outline-none focus:border-[#75BCE8] shadow-sm"
                       placeholder="Qtd"
                     />
                   </div>
                 ) : (
                   <div className="space-y-3 pt-2">
-                    <span className="text-[10px] text-[#ccff00] uppercase font-black tracking-wider block">Grade de Quantidades por Tamanho (Clique para Editar)</span>
+                    <span className="text-[10px] text-[#111827] uppercase font-black tracking-wider block">Grade de Quantidades por Tamanho (Clique para Editar)</span>
                     
-                    <div className="space-y-3 max-h-[35vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] custom-scrollbar pr-1 bg-black/30 p-3 rounded-2xl border border-white/5">
+                    <div className="space-y-3 max-h-[35vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] custom-scrollbar pr-1 bg-white p-3 rounded-2xl border border-[#EBEBEB] shadow-sm">
                       {/* INFANTIL */}
                       <div className="space-y-2">
-                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Infantil</span>
+                        <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest block pl-1 font-sans">Grade Infantil</span>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {SIZES_CONFIG.INFANTIL.map(size => {
                             const qty = editSizeQuantities[size] || 0;
@@ -2482,10 +2575,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                   });
                                   setNewSizeQtyInput(qty.toString());
                                 }}
-                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                               >
-                                <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                                <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                               </button>
                             );
                           })}
@@ -2494,7 +2587,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                       {/* BABYLOOK */}
                       <div className="space-y-2 pt-2">
-                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Babylook</span>
+                        <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest block pl-1 font-sans">Grade Babylook</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {SIZES_CONFIG.BABYLOOK.map(size => {
                             const qty = editSizeQuantities[size] || 0;
@@ -2510,12 +2603,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                   });
                                   setNewSizeQtyInput(qty.toString());
                                 }}
-                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-[#ccff00]/10 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                               >
-                                <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                                <span className="text-xs text-slate-500 font-semibold uppercase truncate max-w-[110px]" title={size}>
                                   {size.replace('Babylook ', 'BL ')}
                                 </span>
-                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                               </button>
                             );
                           })}
@@ -2524,7 +2617,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
                       {/* ADULTO */}
                       <div className="space-y-2 pt-2">
-                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest block pl-1 font-sans">Grade Adulto</span>
+                        <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest block pl-1 font-sans">Grade Adulto</span>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {SIZES_CONFIG.ADULTO.map(size => {
                             const qty = editSizeQuantities[size] || 0;
@@ -2540,10 +2633,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                   });
                                   setNewSizeQtyInput(qty.toString());
                                 }}
-                                className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-[#ccff00]/10 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                               >
-                                <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                                <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                                <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                               </button>
                             );
                           })}
@@ -2553,17 +2646,17 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   </div>
                 )}
 
-                <div className="pt-2 flex gap-3 shrink-0">
+                <div className="pt-2 flex gap-3 shrink-0 border-t border-[#111827]/10 mt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-brand-neon hover:bg-[#b0db00] text-black py-3 rounded-xl font-bold uppercase text-xs transition-colors"
+                    className="flex-1 bg-[#111827] hover:bg-[#111827]/90 text-white py-3 rounded-xl font-bold uppercase text-xs transition-colors shadow-sm"
                   >
                     Salvar Alterações
                   </button>
                   <button
                     type="button"
                     onClick={() => setProductToEdit(null)}
-                    className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-[10px] tracking-widest"
+                    className="px-5 py-3 rounded-xl bg-white hover:bg-slate-50 border border-[#EBEBEB] text-[#111827] shadow-sm font-bold uppercase text-[10px] tracking-widest"
                   >
                     Cancelar
                   </button>
@@ -2587,31 +2680,31 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#1a1a1a] border-2 border-white/10 w-full max-w-lg rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-3xl p-6 shadow-md flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-start justify-between pb-3 border-b border-white/5 mb-4 text-left shrink-0">
+              <div className="flex items-start justify-between pb-3 border-b border-[#111827]/10 mb-4 text-left shrink-0">
                 <div>
-                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${productForSizes.category === 'VESTUÁRIO' ? 'bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
+                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${productForSizes.category === 'VESTUÁRIO' ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' : 'bg-brand-pink/10 text-brand-pink border border-brand-pink/20'}`}>
                     {productForSizes.category}
                   </span>
-                  <h3 className="text-xl font-display uppercase text-white font-extrabold mt-1">{productForSizes.name}</h3>
+                  <h3 className="text-xl font-display uppercase text-[#111827] font-extrabold mt-1">{productForSizes.name}</h3>
                 </div>
-                <button onClick={() => setProductForSizes(null)} className="text-white/40 hover:text-white mt-1">
+                <button onClick={() => setProductForSizes(null)} className="text-slate-400 hover:text-[#111827] mt-1">
                   <X size={20} />
                 </button>
               </div>
 
               {/* Informações Gerais */}
-              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center mb-4 shrink-0 text-xs text-white/50 text-left">
+              <div className="bg-white p-3 rounded-xl border border-[#EBEBEB] shadow-sm flex justify-between items-center mb-4 shrink-0 text-xs text-slate-500 text-left">
                 <div>
                   <span className="block text-[8px] uppercase font-bold tracking-wider mb-0.5">Valor Unitário</span>
-                  <span className="text-base text-brand-neon font-bold font-mono">
+                  <span className="text-base text-slate-800 font-bold font-mono">
                     R$ {productForSizes.price.toFixed(2).replace('.', ',')}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="block text-[8px] uppercase font-bold tracking-wider mb-0.5">Estoque Total</span>
-                  <span className="text-base text-white font-bold font-mono">
+                  <span className="text-base text-slate-800 font-bold font-mono">
                     {productForSizes.category === 'VESTUÁRIO' 
                       ? Object.values(sizesModalQuantities).reduce((a: number, b: number) => a + Number(b), 0)
                       : (parseInt(sizesModalQty) || 0)
@@ -2624,14 +2717,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] custom-scrollbar pr-1 pb-4 space-y-4 text-left">
                 {productForSizes.category === 'ITENS' ? (
                   <div className="space-y-2">
-                    <label className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Ajustar Quantidade em Estoque</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Ajustar Quantidade em Estoque</label>
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => {
                           const current = parseInt(sizesModalQty) || 0;
                           setSizesModalQty(Math.max(0, current - 1).toString());
                         }}
-                        className="w-12 h-12 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 rounded-xl font-black text-white text-lg flex items-center justify-center select-none"
+                        className="w-12 h-12 bg-white hover:bg-slate-50 active:scale-95 border border-[#EBEBEB] rounded-xl font-black text-[#111827] text-lg flex items-center justify-center select-none shadow-sm"
                       >
                         -
                       </button>
@@ -2639,14 +2732,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                         type="number"
                         value={sizesModalQty}
                         onChange={(e) => setSizesModalQty(e.target.value)}
-                        className="flex-1 bg-black/45 border border-white/10 rounded-xl px-4 py-3 text-center text-lg text-white font-mono focus:outline-none focus:border-brand-neon"
+                        className="flex-1 bg-white border border-[#EBEBEB] shadow-sm rounded-xl px-4 py-3 text-center text-lg text-slate-800 font-mono font-bold focus:outline-none focus:border-[#75BCE8]"
                       />
                       <button 
                         onClick={() => {
                           const current = parseInt(sizesModalQty) || 0;
                           setSizesModalQty((current + 1).toString());
                         }}
-                        className="w-12 h-12 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 rounded-xl font-black text-[#ccff00] text-lg flex items-center justify-center select-none"
+                        className="w-12 h-12 bg-[#111827] hover:bg-[#111827]/90 active:scale-95 text-white rounded-xl font-black text-lg flex items-center justify-center select-none shadow-sm"
                       >
                         +
                       </button>
@@ -2654,13 +2747,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <span className="text-[10px] text-white/40 uppercase font-black tracking-wider block">Grade de Tamanhos (Clique para Editar)</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">Grade de Tamanhos (Clique para Editar)</span>
 
                     <div className="space-y-4">
                       {/* INFANTIL DISPLAY */}
                       {SIZES_CONFIG.INFANTIL.some(size => sizesModalQuantities[size] !== undefined) && (
                         <div className="space-y-1.5">
-                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Infantil</span>
+                          <span className="text-[9px] text-[#111827] uppercase font-black tracking-widest block pl-1">Grade Infantil</span>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {SIZES_CONFIG.INFANTIL.map(size => {
                               const qty = sizesModalQuantities[size] || 0;
@@ -2672,10 +2765,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });
                                     setNewSizeQtyInput(qty.toString());
                                   }}
-                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                  className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                                 >
-                                  <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                  <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                                  <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                                 </button>
                               );
                             })}
@@ -2686,7 +2779,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                       {/* BABYLOOK DISPLAY */}
                       {SIZES_CONFIG.BABYLOOK.some(size => sizesModalQuantities[size] !== undefined) && (
                         <div className="space-y-1.5 pt-2">
-                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Babylook</span>
+                          <span className="text-[9px] text-[#111827] uppercase font-black tracking-widest block pl-1">Grade Babylook</span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {SIZES_CONFIG.BABYLOOK.map(size => {
                               const qty = sizesModalQuantities[size] || 0;
@@ -2698,12 +2791,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });
                                     setNewSizeQtyInput(qty.toString());
                                   }}
-                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                  className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                                 >
-                                  <span className="text-xs text-white/60 font-semibold uppercase truncate max-w-[110px]" title={size}>
+                                  <span className="text-xs text-slate-500 font-semibold uppercase truncate max-w-[110px]" title={size}>
                                     {size.replace('Babylook ', 'BL ')}
                                   </span>
-                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                  <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                                 </button>
                               );
                             })}
@@ -2714,7 +2807,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                       {/* ADULTO DISPLAY */}
                       {SIZES_CONFIG.ADULTO.some(size => sizesModalQuantities[size] !== undefined) && (
                         <div className="space-y-1.5 pt-2">
-                          <span className="text-[9px] text-[#ccff00] uppercase font-black tracking-widest block pl-1">Grade Adulto</span>
+                          <span className="text-[9px] text-[#111827] uppercase font-black tracking-widest block pl-1">Grade Adulto</span>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {SIZES_CONFIG.ADULTO.map(size => {
                               const qty = sizesModalQuantities[size] || 0;
@@ -2726,10 +2819,10 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                                     setEditingSizeCell({ product: productForSizes, size, curQty: qty });
                                     setNewSizeQtyInput(qty.toString());
                                   }}
-                                  className="w-full bg-white/5 hover:bg-white/10 hover:border-[#6192FC]/40 border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98]"
+                                  className="w-full bg-white hover:bg-slate-50 hover:border-[#75BCE8] border border-[#EBEBEB] rounded-xl p-2.5 flex items-center justify-between text-left transition-all active:scale-[0.98] shadow-sm"
                                 >
-                                  <span className="text-xs text-white/60 font-semibold uppercase">{size}</span>
-                                  <span className="text-xs font-mono font-black text-[#C7EF66] shrink-0">{qty} un</span>
+                                  <span className="text-xs text-slate-500 font-semibold uppercase">{size}</span>
+                                  <span className="text-xs font-mono font-black text-[#111827] shrink-0">{qty} un</span>
                                 </button>
                               );
                             })}
@@ -2742,19 +2835,19 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               </div>
 
               {/* Botões do Rodapé */}
-              <div className="pt-4 border-t border-white/5 flex gap-3 shrink-0">
+              <div className="pt-4 border-t border-[#111827]/10 flex gap-3 shrink-0">
                 {productForSizes.category === 'ITENS' ? (
                   <>
                     <button
                       onClick={handleSaveProductSizes}
-                      className="flex-1 h-11 bg-[#C7EF66] hover:bg-[#C7EF66]/90 text-[#11358B] rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                      className="flex-1 h-11 bg-[#111827] hover:bg-[#111827]/90 text-white rounded-xl font-bold uppercase text-xs tracking-wider transition-all shadow-sm"
                     >
                       Salvar Alterações
                     </button>
                     <button
                       type="button"
                       onClick={() => setProductForSizes(null)}
-                      className="px-5 h-11 bg-[#EFF0F4] hover:bg-slate-200 text-[#11358B] rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                      className="px-5 h-11 bg-white hover:bg-slate-50 border border-[#EBEBEB] text-[#111827] rounded-xl font-bold uppercase text-xs tracking-wider transition-all shadow-sm"
                     >
                       Cancelar
                     </button>
@@ -2763,7 +2856,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   <button
                     type="button"
                     onClick={() => setProductForSizes(null)}
-                    className="w-full h-11 bg-[#6192FC] hover:bg-[#11358B] hover:text-[#EFF0F4] text-white rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                    className="w-full h-11 bg-[#111827] hover:bg-[#111827]/90 text-white rounded-xl font-bold uppercase text-xs tracking-wider transition-all shadow-sm"
                   >
                     Fechar Grade de Tamanhos
                   </button>
@@ -2787,33 +2880,33 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#1a1a1a] border-2 border-[#6192FC] w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col text-left"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-3xl p-6 shadow-md flex flex-col text-left"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4 shrink-0">
+              <div className="flex items-center justify-between pb-3 border-b border-[#111827]/10 mb-4 shrink-0">
                 <div>
-                  <p className="text-[8px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Ajustar Saldo de Vestuário</p>
-                  <h4 className="text-base text-white font-extrabold uppercase truncate max-w-[200px]" title={editingSizeCell.product.name}>
+                  <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest leading-none mb-1">Ajustar Saldo de Vestuário</p>
+                  <h4 className="text-base text-[#111827] font-extrabold uppercase truncate max-w-[200px]" title={editingSizeCell.product.name}>
                     {editingSizeCell.product.name}
                   </h4>
                 </div>
                 <button 
                   onClick={() => setEditingSizeCell(null)} 
-                  className="text-white/40 hover:text-white"
+                  className="text-slate-400 hover:text-[#111827]"
                 >
                   <X size={20} />
                 </button>
               </div>
 
               <form onSubmit={handleSaveSizeQtyDirect} className="space-y-4">
-                <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
-                  <span className="text-white/40 uppercase font-black tracking-wider">Tamanho</span>
-                  <span className="font-display font-black text-[#C7EF66] uppercase text-sm bg-[#C7EF66]/10 px-2.5 py-0.5 rounded-lg border border-[#C7EF66]/20">
+                <div className="bg-white p-3 rounded-xl border border-[#EBEBEB] shadow-sm flex justify-between items-center text-xs">
+                  <span className="text-slate-500 uppercase font-black tracking-wider">Tamanho</span>
+                  <span className="font-display font-black text-[#111827] uppercase text-sm bg-[#75BCE8]/20 px-2.5 py-0.5 rounded-lg border border-[#75BCE8]/30">
                     {editingSizeCell.size}
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-white/40 uppercase font-black tracking-wider pl-1 font-sans">Nova quantidade</label>
+                  <label className="text-[10px] text-slate-500 uppercase font-black tracking-wider pl-1 font-sans">Nova quantidade</label>
                   <input
                     type="number"
                     min="0"
@@ -2821,7 +2914,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     required
                     value={newSizeQtyInput}
                     onChange={(e) => setNewSizeQtyInput(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-[#ccff00] font-mono font-bold focus:outline-none focus:border-[#6192FC]"
+                    className="w-full bg-white border border-[#EBEBEB] shadow-sm rounded-xl px-4 py-3 text-sm text-slate-800 font-mono font-bold focus:outline-none focus:border-[#75BCE8]"
                     placeholder="Ex: 10"
                     autoFocus
                   />
@@ -2830,7 +2923,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <div className="pt-2 flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-[#6192FC] hover:bg-[#11358B] hover:text-[#EFF0F4] text-white font-bold uppercase text-xs h-11 rounded-xl transition-colors"
+                    className="flex-1 bg-[#111827] hover:bg-[#111827]/90 text-white font-bold uppercase text-xs h-11 rounded-xl transition-colors shadow-sm"
                   >
                     Salvar
                   </button>
@@ -2848,6 +2941,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         )}
 
       </AnimatePresence>
+
+      </div>
+      </main>
 
       {/* Floating Toast Notification Container */}
       <div className="fixed top-5 right-5 z-[99999] flex flex-col gap-2 pointer-events-none max-w-sm w-full">

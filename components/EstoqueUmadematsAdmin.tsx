@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Tag, Plus, X, Check, Trash2, DollarSign, 
   Smartphone, Calendar, TrendingUp, Share2, Power, Store, 
-  ChevronRight, ArrowLeft, RefreshCw, Layers, Edit3, ShieldAlert, Copy, CheckCircle2, History, Menu
+  ChevronRight, ArrowLeft, RefreshCw, Layers, Edit3, ShieldAlert, Copy, CheckCircle2, History, Menu, BarChart
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -123,6 +123,7 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [showDetalhesVendasModal, setShowDetalhesVendasModal] = useState(false);
   const [showFecharLojaModal, setShowFecharLojaModal] = useState(false);
   const [showConfirmCancelVenda, setShowConfirmCancelVenda] = useState<EstoqueVenda | null>(null);
+  const [showResumoEventoRealTimeModal, setShowResumoEventoRealTimeModal] = useState(false);
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<EstoqueProduto | null>(null);
   const [productToEdit, setProductToEdit] = useState<EstoqueProduto | null>(null);
@@ -131,7 +132,8 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
 
   // Expanded clothes product sizes and checkout confirmation
   const [expandedProductSizes, setExpandedProductSizes] = useState<string | null>(null);
-  const [confirmVendaData, setConfirmVendaData] = useState<{ produto: EstoqueProduto; size?: string; paymentMethod: 'PIX' | 'CARTÃO' } | null>(null);
+  const [vendaQuantidade, setVendaQuantidade] = useState<number>(1);
+  const [confirmVendaData, setConfirmVendaData] = useState<{ produto: EstoqueProduto; size?: string; paymentMethod: 'PIX' | 'CARTÃO'; quantidade: number } | null>(null);
 
   // Edit Product Form State
   const [editProdName, setEditProdName] = useState('');
@@ -165,7 +167,7 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   // Toast Notification State
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; text: string }>>([]);
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    const id = Math.random().toString(36).substring(2, 9) + '-' + Date.now().toString(36);
     setToasts(prev => [...prev, { id, type, text }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -341,6 +343,9 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
     localStorage.setItem('umademats_estoque_vendas', JSON.stringify(v));
   };
 
+  // Real-time update string status
+  const [lastUpdateTime, setLastUpdateTime] = useState<string>('');
+
   // Sync everything
   const loadData = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -429,13 +434,25 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
       const activeEv = local.eventos.find(ev => ev.status === 'ABERTO');
       setActiveEvento(activeEv || null);
     } finally {
+      setLastUpdateTime(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
+    // Auto atualizacao silenciosa a cada 15 segundos
+    const inv = setInterval(() => {
+      loadData(true);
+    }, 15000);
+    return () => clearInterval(inv);
   }, []);
+
+  useEffect(() => {
+    if (showVendaModal) {
+      setVendaQuantidade(1);
+    }
+  }, [showVendaModal?.produto?.id, showVendaModal?.size]);
 
   const copySQL = () => {
     navigator.clipboard.writeText(SQL_CODE);
@@ -988,12 +1005,51 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
     }
   };
 
+  const handleUpdateQty = (amount: number) => {
+    if (!showVendaModal) return;
+    const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
+      ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
+      : (showVendaModal.produto.initial_quantity || 0);
+
+    setVendaQuantidade(prev => {
+      const newQty = prev + amount;
+      if (newQty < 1) return 1;
+      if (newQty > availableStock) {
+        showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
+        return availableStock;
+      }
+      return newQty;
+    });
+  };
+
+  const handleQtyInputChange = (val: string) => {
+    if (!showVendaModal) return;
+    const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
+      ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
+      : (showVendaModal.produto.initial_quantity || 0);
+
+    if (val === '') {
+      setVendaQuantidade(0);
+      return;
+    }
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed < 1) {
+      setVendaQuantidade(1);
+    } else if (parsed > availableStock) {
+      showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
+      setVendaQuantidade(availableStock);
+    } else {
+      setVendaQuantidade(parsed);
+    }
+  };
+
   // -------------------------------------------------------------
   // SALES TRANSACTIONS (VENDER, BAIXA DIRETA DE ESTOQUE)
   // -------------------------------------------------------------
   const handleRegisterVenda = async (payment_method: 'PIX' | 'CARTÃO') => {
     if (!activeEvento || !showVendaModal) return;
     const { produto, size } = showVendaModal;
+    const chosenQuantity = confirmVendaData?.quantidade || vendaQuantidade || 1;
 
     setLoading(true);
 
@@ -1003,14 +1059,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         let selectedVarId = undefined;
         if (produto.category === 'VESTUÁRIO' && size) {
           const matchedVar = produto.variations?.find(v => v.size === size);
-          if (!matchedVar || matchedVar.quantity <= 0) {
-            showToast("Estoque esgotado para este tamanho!", "error");
+          if (!matchedVar || matchedVar.quantity < chosenQuantity) {
+            showToast(`Estoque insuficiente! Apenas ${matchedVar?.quantity || 0} disponível.`, "error");
             setLoading(false);
             return;
           }
           selectedVarId = matchedVar.id;
-        } else if (produto.category === 'ITENS' && produto.initial_quantity <= 0) {
-          showToast("Estoque esgotado para este item!", "error");
+        } else if (produto.category === 'ITENS' && produto.initial_quantity < chosenQuantity) {
+          showToast(`Estoque insuficiente! Apenas ${produto.initial_quantity || 0} disponível.`, "error");
           setLoading(false);
           return;
         }
@@ -1018,7 +1074,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         // 1. Insert into Sales
         const { data: dbSale, error: saleErr } = await supabase
           .from('estoque_vendas')
-          .insert([{ event_id: activeEvento.id, total_price: produto.price, payment_method, status: 'CONCLUIDA' }])
+          .insert([{ event_id: activeEvento.id, total_price: produto.price * chosenQuantity, payment_method, status: 'CONCLUIDA' }])
           .select()
           .single();
 
@@ -1032,7 +1088,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               sale_id: dbSale.id,
               product_id: produto.id,
               variation_id: selectedVarId,
-              quantity: 1,
+              quantity: chosenQuantity,
               price_at_sale: produto.price,
               size
             }]);
@@ -1041,16 +1097,16 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
           // 3. Subtract stock manually inside Supabase (if trigger is not configured)
           if (produto.category === 'VESTUÁRIO' && selectedVarId) {
-            const currentQty = produto.variations?.find(v => v.id === selectedVarId)?.quantity || 1;
+            const currentQty = produto.variations?.find(v => v.id === selectedVarId)?.quantity || 0;
             await supabase
               .from('estoque_variacoes')
-              .update({ quantity: currentQty - 1 })
+              .update({ quantity: currentQty - chosenQuantity })
               .eq('id', selectedVarId);
           } else {
-            const currentQty = produto.initial_quantity || 1;
+            const currentQty = produto.initial_quantity || 0;
             await supabase
               .from('estoque_produtos')
-              .update({ initial_quantity: currentQty - 1 })
+              .update({ initial_quantity: currentQty - chosenQuantity })
               .eq('id', produto.id);
           }
 
@@ -1060,14 +1116,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               if (p.category === 'VESTUÁRIO') {
                 const updatedVars = (p.variations || []).map(v => {
                   if (v.size === size) {
-                    return { ...v, quantity: Math.max(0, v.quantity - 1) };
+                    return { ...v, quantity: Math.max(0, v.quantity - chosenQuantity) };
                   }
                   return v;
                 });
                 const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
                 return { ...p, variations: updatedVars, initial_quantity: sumQty };
               } else {
-                return { ...p, initial_quantity: Math.max(0, p.initial_quantity - 1) };
+                return { ...p, initial_quantity: Math.max(0, p.initial_quantity - chosenQuantity) };
               }
             }
             return p;
@@ -1076,7 +1132,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           const newSale: EstoqueVenda = {
             id: dbSale.id,
             event_id: activeEvento.id,
-            total_price: produto.price,
+            total_price: produto.price * chosenQuantity,
             payment_method,
             status: 'CONCLUIDA',
             created_at: dbSale.created_at || new Date().toISOString(),
@@ -1084,7 +1140,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
               id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
               sale_id: dbSale.id,
               product_id: produto.id,
-              quantity: 1,
+              quantity: chosenQuantity,
               price_at_sale: produto.price,
               size,
               product_name: produto.name,
@@ -1103,14 +1159,14 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             if (p.category === 'VESTUÁRIO') {
               const updatedVars = (p.variations || []).map(v => {
                 if (v.size === size) {
-                  return { ...v, quantity: Math.max(0, v.quantity - 1) };
+                  return { ...v, quantity: Math.max(0, v.quantity - chosenQuantity) };
                 }
                 return v;
               });
               const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
               return { ...p, variations: updatedVars, initial_quantity: sumQty };
             } else {
-              return { ...p, initial_quantity: Math.max(0, p.initial_quantity - 1) };
+              return { ...p, initial_quantity: Math.max(0, p.initial_quantity - chosenQuantity) };
             }
           }
           return p;
@@ -1121,7 +1177,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         const newSale: EstoqueVenda = {
           id: saleId,
           event_id: activeEvento.id,
-          total_price: produto.price,
+          total_price: produto.price * chosenQuantity,
           payment_method,
           status: 'CONCLUIDA',
           created_at: new Date().toISOString(),
@@ -1129,7 +1185,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             sale_id: saleId,
             product_id: produto.id,
-            quantity: 1,
+            quantity: chosenQuantity,
             price_at_sale: produto.price,
             size,
             product_name: produto.name,
@@ -1445,6 +1501,12 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
 
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto w-full relative bg-[#FAFAFA]">
+        <div className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-full shadow-sm flex items-center gap-2">
+           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+           <span className="text-[9px] uppercase font-bold text-slate-500 tracking-widest hidden sm:inline-block">
+             Update: {lastUpdateTime || '---'}
+           </span>
+        </div>
         <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
 
       {/* SECTION 1: ESTOQUE MANAGEMENT */}
@@ -1542,6 +1604,13 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto ml-auto">
               {activeEvento ? (
                 <>
+                  <button
+                    onClick={() => setShowResumoEventoRealTimeModal(true)}
+                    className="w-full sm:w-auto h-9 bg-white border border-[#111827] hover:bg-slate-50 text-[#111827] px-5 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <BarChart size={14} />
+                    Resumo do Evento
+                  </button>
                   <div className="bg-[#75BCE8]/15 border border-[#75BCE8]/35 px-4 py-2 rounded-xl flex items-center justify-between sm:justify-start gap-4 flex-1">
                     <div className="flex items-center gap-2">
                       <Store size={14} className="text-[#111827] animate-pulse" />
@@ -1553,7 +1622,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   </div>
                   <button
                     onClick={() => handleFecharLojaConfirm()}
-                    className="w-full sm:w-auto h-9 bg-red-600 hover:bg-red-700 text-white px-5 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full sm:w-auto h-9 bg-red-600 hover:bg-red-700 text-white px-5 rounded-lg font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 transition-colors shadow-sm"
                   >
                     <Power size={14} />
                     Fechar Loja
@@ -1795,8 +1864,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                            <p className="text-xs font-bold text-slate-400 py-6 text-center">Nenhum item vendido neste evento.</p>
                         ) : (
                           <div className="space-y-1">
-                             {Object.entries(productCounts).sort((a,b) => b[1].qty - a[1].qty).map(([name, data], idx) => (
-                               <div key={idx} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 px-3 rounded-lg transition-colors">
+                             {Object.entries(productCounts).sort((a,b) => b[1].qty - a[1].qty).map(([name, data]) => (
+                               <div key={name} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 px-3 rounded-lg transition-colors">
                                   <span className="text-sm font-bold text-slate-700">{name} <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold ml-2">x{data.qty}</span></span>
                                   <span className="text-sm font-black text-[#111827]">{applyCurrencyMask((data.total * 100).toString())}</span>
                                </div>
@@ -2070,69 +2139,113 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
         )}
 
         {/* MAKE SALE / CHOOSE PAYMENT INBALCÃO MODAL */}
-        {showVendaModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowVendaModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md">
-              <ShoppingBag size={40} className="mx-auto text-[#111827] mb-4 animate-bounce" />
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
-                <h3 className="text-xl font-montserrat uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
-                {showVendaModal.size && (
-                  <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
-                    Tamanho: {showVendaModal.size}
+        {showVendaModal && (() => {
+          const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
+            ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
+            : (showVendaModal.produto.initial_quantity || 0);
+
+          return (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowVendaModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md">
+                <ShoppingBag size={40} className="mx-auto text-[#111827] mb-4 animate-bounce" />
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
+                  <h3 className="text-xl font-montserrat uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
+                  {showVendaModal.size && (
+                    <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
+                      Tamanho: {showVendaModal.size}
+                    </span>
+                  )}
+                  <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-extrabold mt-2">
+                    Disponível: {availableStock} {availableStock === 1 ? 'unidade' : 'unidades'}
                   </span>
-                )}
-                <div className="font-mono text-3xl text-slate-800 font-black py-4">
-                  R$ {showVendaModal.produto.price.toFixed(2).replace('.', ',')}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-300 space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Meio de Pagamento Utilizado:</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setConfirmVendaData({
-                        produto: showVendaModal.produto,
-                        size: showVendaModal.size,
-                        paymentMethod: 'PIX'
-                      });
-                    }}
-                    className="py-4 bg-white border border-[#EBEBEB] hover:border-[#75BCE8] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm"
-                  >
-                    <Smartphone size={20} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Pix</span>
-                  </motion.button>
-
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setConfirmVendaData({
-                        produto: showVendaModal.produto,
-                        size: showVendaModal.size,
-                        paymentMethod: 'CARTÃO'
-                      });
-                    }}
-                    className="py-4 bg-white border border-[#EBEBEB] hover:border-[#111827] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm"
-                  >
-                    <DollarSign size={20} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Cartão</span>
-                  </motion.button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowVendaModal(null)}
-                  className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-[0.15em] block pt-4 transition-colors"
-                >
-                  Cancelar Venda
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
+                {/* QUANTITY INPUT */}
+                <div className="py-4 border-y border-slate-300/60 my-4 text-center">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Quantidade</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateQty(-1)}
+                      className="w-12 h-12 rounded-xl bg-white border border-slate-300 font-black text-xl text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95 shadow-sm shrink-0"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={availableStock}
+                      value={vendaQuantidade || ''}
+                      onChange={(e) => handleQtyInputChange(e.target.value)}
+                      onBlur={() => { if (!vendaQuantidade || vendaQuantidade < 1) setVendaQuantidade(1); }}
+                      className="w-20 h-12 bg-white border border-slate-300 rounded-xl text-center font-mono font-black text-lg text-[#111827] shadow-inner focus:outline-none focus:border-[#111827] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateQty(1)}
+                      className="w-12 h-12 rounded-xl bg-white border border-slate-300 font-black text-xl text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95 shadow-sm shrink-0"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="font-mono text-3xl text-slate-800 font-black pb-4">
+                  Total: R$ {(showVendaModal.produto.price * (vendaQuantidade || 1)).toFixed(2).replace('.', ',')}
+                </div>
+
+                <div className="pt-4 border-t border-slate-300 space-y-4">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Meio de Pagamento Utilizado:</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      disabled={!vendaQuantidade || vendaQuantidade < 1}
+                      onClick={() => {
+                        setConfirmVendaData({
+                          produto: showVendaModal.produto,
+                          size: showVendaModal.size,
+                          paymentMethod: 'PIX',
+                          quantidade: vendaQuantidade || 1
+                        });
+                      }}
+                      className="py-4 bg-white border border-[#EBEBEB] hover:border-[#75BCE8] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Smartphone size={20} />
+                      <span className="text-xs font-bold uppercase tracking-wider">Pix</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      disabled={!vendaQuantidade || vendaQuantidade < 1}
+                      onClick={() => {
+                        setConfirmVendaData({
+                          produto: showVendaModal.produto,
+                          size: showVendaModal.size,
+                          paymentMethod: 'CARTÃO',
+                          quantidade: vendaQuantidade || 1
+                        });
+                      }}
+                      className="py-4 bg-white border border-[#EBEBEB] hover:border-[#111827] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <DollarSign size={20} />
+                      <span className="text-xs font-bold uppercase tracking-wider">Cartão</span>
+                    </motion.button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowVendaModal(null)}
+                    className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-[0.15em] block pt-4 transition-colors"
+                  >
+                    Cancelar Venda
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
 
         {/* COMPREHENSIVE SALES CONFIRMATION OVERLAY MODAL */}
         {confirmVendaData && (
@@ -2176,8 +2289,18 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 )}
 
                 <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">VALOR</span>
-                  <span className="text-xl font-mono font-black text-slate-800">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">QUANTIDADE</span>
+                  <span className="text-sm font-bold text-slate-800">{confirmVendaData.quantidade}</span>
+                </div>
+
+                <div>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">VALOR UNITÁRIO</span>
+                  <span className="text-sm font-mono font-bold text-slate-800">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
+                </div>
+
+                <div>
+                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">TOTAL</span>
+                  <span className="text-xl font-mono font-black text-slate-800">R$ {(confirmVendaData.produto.price * confirmVendaData.quantidade).toFixed(2).replace('.', ',')}</span>
                 </div>
 
                 <div>
@@ -2217,6 +2340,146 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             </motion.div>
           </div>
         )}
+
+        {/* REAL-TIME RESUMO DO EVENTO MODAL */}
+        {showResumoEventoRealTimeModal && activeEvento && (() => {
+          const activeSales = activeEventSales.filter(v => v.status === 'CONCLUIDA');
+          
+          const totalItemsSold = activeSales.reduce((acc, curr) => {
+             return acc + (curr.items ? curr.items.reduce((sum, item) => sum + item.quantity, 0) : 1);
+          }, 0);
+
+          // Group by pure product name
+          const groupedProducts: Record<string, { qty: number, sizes: Record<string, number> }> = {};
+          activeSales.forEach(s => {
+             if (s.items) {
+               s.items.forEach(item => {
+                 const name = item.product_name || 'Produto';
+                 const size = item.size || 'Único';
+                 
+                 if (!groupedProducts[name]) {
+                   groupedProducts[name] = { qty: 0, sizes: {} };
+                 }
+                 groupedProducts[name].qty += item.quantity;
+                 
+                 if (!groupedProducts[name].sizes[size]) {
+                   groupedProducts[name].sizes[size] = 0;
+                 }
+                 groupedProducts[name].sizes[size] += item.quantity;
+               });
+             }
+          });
+
+          return (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} className="relative bg-[#FAFAFA] border-0 md:border-2 border-[#111827] w-full min-h-screen md:min-h-0 md:h-[85vh] md:max-w-[80vw] md:rounded-3xl shadow-2xl flex flex-col overflow-hidden text-left">
+                {/* Header */}
+                <div className="p-6 bg-[#111827] text-white flex items-center justify-between shrink-0 shadow-lg relative z-20">
+                   <div>
+                     <h3 className="font-montserrat uppercase text-2xl font-black text-[#75BCE8] tracking-widest">Resumo do Evento</h3>
+                     <div className="text-xs uppercase font-bold tracking-wider mt-2 space-y-1">
+                        <p>Evento: <span className="text-white">{activeEvento.event_name}</span></p>
+                        <p className="text-white/60">Iniciado em: {activeEvento.opened_at ? new Date(activeEvento.opened_at).toLocaleString('pt-BR') : '---'}</p>
+                        <p className="text-white/60">Última Atualização: <span className="text-green-400">{lastUpdateTime || '---'}</span></p>
+                     </div>
+                   </div>
+                   <button onClick={() => setShowResumoEventoRealTimeModal(false)} className="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors self-start"><X size={24} /></button>
+                </div>
+
+                {/* Content Tabs / Scrollable Area */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
+                   {/* Financials Row */}
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                       <div className="bg-white border-2 border-[#111827] p-5 rounded-2xl shadow-[4px_4px_0_0_#111827]">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#75BCE8] block mb-2">TOTAL FATURADO</span>
+                          <span className="text-3xl font-mono font-black text-[#111827]">R$ {activeEventSummary.totalSold.toFixed(2).replace('.', ',')}</span>
+                       </div>
+                       <div className="bg-white border border-[#EBEBEB] p-5 rounded-2xl">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">PIX</span>
+                          <span className="text-2xl font-mono font-black text-slate-700">R$ {activeEventSummary.pixTotal.toFixed(2).replace('.', ',')}</span>
+                       </div>
+                       <div className="bg-white border border-[#EBEBEB] p-5 rounded-2xl">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">CARTÃO</span>
+                          <span className="text-2xl font-mono font-black text-slate-700">R$ {activeEventSummary.cardTotal.toFixed(2).replace('.', ',')}</span>
+                       </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                      {/* Resumo de Produtos */}
+                      <div className="lg:col-span-2 space-y-4">
+                         <div className="flex items-center gap-2 border-b-2 border-[#111827] pb-2">
+                            <ShoppingBag className="text-[#111827]" size={20} />
+                            <h4 className="font-montserrat uppercase font-black tracking-widest text-[#111827]">Resumo de Produtos</h4>
+                            <span className="ml-auto text-[10px] font-bold bg-[#111827] text-white px-2 py-1 rounded hidden sm:block">Total de itens: {totalItemsSold}</span>
+                         </div>
+                         
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {Object.entries(groupedProducts).length === 0 && (
+                              <p className="text-xs text-slate-500 font-bold py-4 col-span-2 text-center border-2 border-dashed border-slate-200 rounded-xl">Nenhum produto vendido.</p>
+                            )}
+                            {Object.entries(groupedProducts).sort((a,b) => b[1].qty - a[1].qty).map(([name, data]) => {
+                               const sizeEntries = Object.entries(data.sizes);
+                               const hasMultipleSizes = sizeEntries.length > 1 || (sizeEntries.length === 1 && sizeEntries[0][0] !== 'Único' && sizeEntries[0][0] !== 'undefined');
+                               return (
+                                 <div key={name} className="bg-white rounded-xl border border-[#EBEBEB] p-4 flex flex-col justify-between shadow-sm">
+                                    <div className="flex justify-between items-start mb-2">
+                                       <span className="font-extrabold text-sm text-[#111827] uppercase">{name}</span>
+                                       <span className="font-black text-xs font-mono bg-[#75BCE8]/20 text-[#111827] px-2 py-1 rounded">{data.qty} un</span>
+                                    </div>
+                                    {hasMultipleSizes && (
+                                       <div className="mt-2 pt-2 border-t border-dashed border-slate-200">
+                                          <div className="flex flex-wrap gap-2">
+                                             {sizeEntries.sort((a,b) => b[1] - a[1]).map(([sName, sQty]) => (
+                                                <span key={sName} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded">
+                                                   {sName} - {sQty}
+                                                </span>
+                                             ))}
+                                          </div>
+                                       </div>
+                                    )}
+                                 </div>
+                               );
+                            })}
+                         </div>
+                      </div>
+
+                      {/* Ultimas Vendas */}
+                      <div className="space-y-4">
+                         <div className="flex items-center gap-2 border-b-2 border-[#111827] pb-2">
+                            <History className="text-[#111827]" size={20} />
+                            <h4 className="font-montserrat uppercase font-black tracking-widest text-[#111827]">Últimas Vendas</h4>
+                         </div>
+                         <div className="bg-white rounded-xl border border-[#EBEBEB] divide-y divide-[#EBEBEB] shadow-sm max-h-[500px] overflow-y-auto custom-scrollbar">
+                            {activeEventSales.slice(0, 20).map((sale) => {
+                               const isCanceled = sale.status === 'CANCELADA';
+                               const mappedItem = sale.items && sale.items[0];
+                               const displayName = mappedItem ? mappedItem.product_name + (mappedItem.size ? ` ${mappedItem.size}` : '') : 'Produto Desconhecido';
+                               return (
+                                 <div key={sale.id} className={`p-3 ${isCanceled ? 'bg-red-50/50 opacity-60' : ''}`}>
+                                    <div className="flex items-start justify-between mb-1">
+                                       <span className="text-[9px] font-mono font-bold text-slate-400">{new Date(sale.created_at).toLocaleTimeString('pt-BR')}</span>
+                                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${isCanceled ? 'bg-red-100 text-red-600' : (sale.payment_method === 'PIX' ? 'bg-[#111827]/10 text-[#111827]' : 'bg-[#75BCE8]/20 text-[#111827]')}`}>{isCanceled ? 'CANCELADO' : sale.payment_method}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                       <span className={`text-xs font-bold uppercase truncate pr-2 ${isCanceled ? 'line-through text-slate-400' : 'text-[#111827]'}`}>{displayName}</span>
+                                       <span className={`text-xs font-mono font-black shrink-0 ${isCanceled ? 'text-slate-400' : 'text-[#111827]'}`}>R$ {sale.total_price.toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    {mappedItem && mappedItem.quantity > 1 && (
+                                       <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mt-1">{mappedItem.quantity} unidades</div>
+                                    )}
+                                 </div>
+                               )
+                            })}
+                            {activeEventSales.length === 0 && <div className="p-6 text-center text-[10px] uppercase tracking-widest text-slate-400 font-bold">Sem vendas.</div>}
+                         </div>
+                      </div>
+                   </div>
+
+                </div>
+              </motion.div>
+            </div>
+          )
+        })()}
 
         {/* DETAILS OF REALIZED SALES (CLICK TO DETAIL & CANCEL OPTION) */}
         {showDetalhesVendasModal && (
@@ -2388,8 +2651,8 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                     {activeEventSummary.products.length === 0 ? (
                       <p className="text-center text-[10px] text-slate-400 uppercase italic py-4 font-bold">Nenhum produto vendido nessa seção.</p>
                     ) : (
-                      activeEventSummary.products.map((p, idx) => (
-                        <div key={idx} className="flex justify-between items-center py-1.5 border-b border-[#EBEBEB] last:border-0">
+                      activeEventSummary.products.map((p) => (
+                        <div key={p.name} className="flex justify-between items-center py-1.5 border-b border-[#EBEBEB] last:border-0">
                           <span className="text-xs uppercase text-slate-800 font-extrabold">{p.name}</span>
                           <span className="text-xs font-mono font-black text-[#111827]">{p.qty}x</span>
                         </div>

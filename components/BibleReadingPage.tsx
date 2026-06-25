@@ -770,23 +770,29 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   const visibleAnnouncements: any[] = [];
   const handleDismissAnnouncement = (id: string) => {};
 
-  const getMonthStats = (monthId: number) => {
-    const month = ANNUAL_PLAN[monthId];
-    const total = month.items.length;
-    const completed = month.items.filter(item => completedItems.includes(item.id)).length;
-    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-    return { total, completed, percentage };
-  };
+  const completedItemsSet = useMemo(() => new Set(completedItems), [completedItems]);
+  const isItemCompleteLocal = React.useCallback((id: string) => completedItemsSet.has(id), [completedItemsSet]);
+
+  const monthStats = useMemo(() => {
+    const statsMap: Record<number, { total: number; completed: number; percentage: number }> = {};
+    ANNUAL_PLAN.forEach(month => {
+      const total = month.items.length;
+      const completed = month.items.filter(item => completedItemsSet.has(item.id)).length;
+      const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+      statsMap[month.id] = { total, completed, percentage };
+    });
+    return statsMap;
+  }, [completedItemsSet]);
 
   const totalAnnualProgress = useMemo(() => {
     let totalItems = 0;
     let totalCompleted = 0;
     ANNUAL_PLAN.forEach(m => {
       totalItems += m.items.length;
-      totalCompleted += m.items.filter(i => completedItems.includes(i.id)).length;
+      totalCompleted += m.items.filter(i => completedItemsSet.has(i.id)).length;
     });
     return totalItems === 0 ? 0 : Math.round((totalCompleted / totalItems) * 100);
-  }, [completedItems]);
+  }, [completedItemsSet]);
 
   const handleLogin = async () => {
     localStorage.setItem('return_to_bible', 'true');
@@ -992,7 +998,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                  </div>
                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 pb-12">
                    {ANNUAL_PLAN.map((month) => {
-                     const stats = getMonthStats(month.id);
+                     const stats = monthStats[month.id];
                      const isComplete = stats.percentage === 100;
                      return (
                        <motion.button key={month.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02, translateY: -2 }} whileTap={{ scale: 0.98 }} onClick={() => handleMonthSelect(month.id)} className={`relative overflow-hidden rounded-2xl p-6 aspect-[4/3] flex flex-col justify-between text-left border transition-all duration-300 group ${isComplete ? 'bg-[#f36b2e]/10 border-[#f36b2e] text-white' : 'bg-[#253c96] border-white/5 hover:border-white/20 text-[#c4e7e5]'}`}>
@@ -1017,15 +1023,15 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                <div className="flex flex-col gap-4 p-4 pb-24 max-w-3xl mx-auto w-full">
                  <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div><h2 className="text-[#f59a1e] font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Plano Mensal</h2><h1 className="text-4xl md:text-6xl font-display text-white uppercase leading-none">{ANNUAL_PLAN[selectedMonthId].name}</h1></div>
-                    {getMonthStats(selectedMonthId).percentage === 100 && <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none"><CheckCircle2 size={18} /> Mês Concluído</div>}
+                    {monthStats[selectedMonthId].percentage === 100 && <div className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-xs bg-green-500/20 text-green-500 border border-green-500/50 shadow-lg select-none"><CheckCircle2 size={18} /> Mês Concluído</div>}
                  </div>
                  <div className="mb-8">
-                     <div className="flex justify-between text-xs text-white/50 mb-1 font-mono"><span>{getMonthStats(selectedMonthId).completed} / {getMonthStats(selectedMonthId).total} leituras</span><span>{getMonthStats(selectedMonthId).percentage}%</span></div>
-                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${getMonthStats(selectedMonthId).percentage}%` }} className="h-full bg-[#f36b2e]" /></div>
+                     <div className="flex justify-between text-xs text-white/50 mb-1 font-mono"><span>{monthStats[selectedMonthId].completed} / {monthStats[selectedMonthId].total} leituras</span><span>{monthStats[selectedMonthId].percentage}%</span></div>
+                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${monthStats[selectedMonthId].percentage}%` }} className="h-full bg-[#f36b2e]" /></div>
                  </div>
                  <div className="flex flex-col gap-2">
                     {ANNUAL_PLAN[selectedMonthId].items.map((item, index) => {
-                      const isRead = isItemComplete(item.id);
+                      const isRead = isItemCompleteLocal(item.id);
                       return (
                         <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }} onClick={() => openReading(item)} className={`group relative flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all duration-200 select-none ${isRead ? 'bg-[#253c96] border-[#f36b2e]/30 opacity-60 hover:opacity-100' : 'bg-[#253c96]/40 border-white/5 hover:bg-[#253c96]/60 hover:border-white/20'}`}>
                            <div className="flex items-center gap-4"><div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${isRead ? 'bg-[#f36b2e] border-[#f36b2e]' : 'bg-transparent border-white/20 group-hover:border-white/50'}`}>{isRead ? <Check size={16} className="text-black" strokeWidth={3} /> : <BookOpen size={14} className="text-white/50" />}</div><span className={`font-serif text-lg md:text-xl transition-colors ${isRead ? 'text-white/40 line-through decoration-white/20' : 'text-white'}`}>{item.ref}</span></div>

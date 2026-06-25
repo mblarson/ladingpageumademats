@@ -1417,8 +1417,31 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
   };
 
   const uniqueProdutos = useMemo(() => {
-    return Array.from(new Map(produtos.map(p => [p.id, p])).values());
+    return Array.from(new Map(produtos.map(p => [p.id, p])).values()).map(val => {
+      const p = val as any;
+      const itemsCount = p.category === 'VESTUÁRIO' 
+        ? (p.variations || []).reduce((sum: number, current: any) => sum + current.quantity, 0)
+        : p.initial_quantity;
+      return { ...p, itemsCount };
+    });
   }, [produtos]);
+
+  const closedEventsWithSummaries = useMemo(() => {
+    const closed = eventos.filter(e => e.status === 'FECHADO');
+    return closed
+      .map(ev => {
+        const eventSales = vendas.filter(v => v.event_id === ev.id && v.status === 'CONCLUIDA');
+        const totalGeral = eventSales.reduce((acc, v) => acc + (v.total_price || 0), 0);
+        const dtOpen = ev.opened_at ? new Date(ev.opened_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
+        return {
+          ...ev,
+          salesCount: eventSales.length,
+          totalGeral,
+          dtOpen
+        };
+      })
+      .sort((a, b) => new Date(b.opened_at || 0).getTime() - new Date(a.opened_at || 0).getTime());
+  }, [eventos, vendas]);
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAFAFA] text-slate-800 font-sans overflow-hidden absolute inset-0 z-50">
@@ -1534,9 +1557,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {uniqueProdutos.map(p => {
-                  const itemsCount = p.category === 'VESTUÁRIO' 
-                    ? (p.variations || []).reduce((sum, current) => sum + current.quantity, 0)
-                    : p.initial_quantity;
+                  const itemsCount = (p as any).itemsCount;
 
                   return (
                     <div 
@@ -1675,9 +1696,7 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                 <h3 className="font-montserrat text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {uniqueProdutos.map(p => {
-                    const totalEstoque = p.category === 'VESTUÁRIO'
-                      ? (p.variations || []).reduce((sum, curr) => sum + curr.quantity, 0)
-                      : p.initial_quantity;
+                    const totalEstoque = (p as any).itemsCount;
 
                     return (
                       <div 
@@ -1791,28 +1810,25 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           
           {!selectedPastEventId ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {eventos.filter(e => e.status === 'FECHADO').length === 0 ? (
+              {closedEventsWithSummaries.length === 0 ? (
                  <div className="col-span-full py-16 text-center text-slate-400 font-bold uppercase tracking-wider text-xs">
                    <History size={32} className="mx-auto mb-3 opacity-30" />
                    Nenhum evento encerrado encontrado.
                  </div>
               ) : (
-                eventos.filter(e => e.status === 'FECHADO').sort((a,b) => new Date(b.opened_at || 0).getTime() - new Date(a.opened_at || 0).getTime()).map(ev => {
-                  const eventSales = vendas.filter(v => v.event_id === ev.id && v.status === 'CONCLUIDA');
-                  const totalGeral = eventSales.reduce((acc, v) => acc + (v.total_price || 0), 0);
-                  const dtOpen = ev.opened_at ? new Date(ev.opened_at).toLocaleDateString('pt-BR') : 'Data desconhecida';
+                closedEventsWithSummaries.map(ev => {
                   return (
                     <motion.div key={ev.id} whileHover={{ scale: 1.01 }} className="bg-white border hover:border-[#111827]/30 border-slate-200 rounded-2xl p-5 shadow-sm cursor-pointer transition-all flex flex-col justify-between h-[140px]" onClick={() => setSelectedPastEventId(ev.id)}>
                        <div className="flex items-start justify-between mb-2">
                           <div>
                             <h4 className="text-sm font-bold uppercase text-[#111827] line-clamp-1">{ev.event_name}</h4>
-                            <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">{dtOpen}</p>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">{ev.dtOpen}</p>
                           </div>
                           <div className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[9px] font-bold uppercase shrink-0">Encerrado</div>
                        </div>
                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[10px] uppercase font-bold tracking-widest text-[#111827]/60 flex items-center gap-1.5"><ShoppingBag size={12}/> {eventSales.length} Vendas</span>
-                          <span className="text-sm font-black text-slate-800">{applyCurrencyMask((totalGeral * 100).toString())}</span>
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-[#111827]/60 flex items-center gap-1.5"><ShoppingBag size={12}/> {ev.salesCount} Vendas</span>
+                          <span className="text-sm font-black text-slate-800">{applyCurrencyMask(((ev.totalGeral || 0) * 100).toString())}</span>
                        </div>
                     </motion.div>
                   )

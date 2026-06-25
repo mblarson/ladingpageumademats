@@ -33,6 +33,60 @@ const BibleAdmin: React.FC = () => {
     const [expandedAnnouncementUsers, setExpandedAnnouncementUsers] = useState<Record<string, boolean>>({});
     const [copiedSql, setCopiedSql] = useState(false);
 
+    // --- AUDIT SYSTEM STATES ---
+    const [allAuditLogs, setAllAuditLogs] = useState<any[]>([]);
+    const [selectedAnnouncementForAudit, setSelectedAnnouncementForAudit] = useState<any | null>(null);
+    const [detailedAuditLogs, setDetailedAuditLogs] = useState<any[]>([]);
+    const [detailedAuditLoading, setDetailedAuditLoading] = useState(false);
+
+    const fetchAllAuditLogs = async () => {
+        try {
+            if (isUsingAnnouncementFallback) {
+                const saved = localStorage.getItem('umademats_bible_announcements_audit');
+                setAllAuditLogs(saved ? JSON.parse(saved) : []);
+            } else {
+                const { data, error } = await supabase
+                    .from('bible_announcements_audit')
+                    .select('announcement_id, created_at, user_name, acao');
+                if (error) throw error;
+                setAllAuditLogs(data || []);
+            }
+        } catch (e) {
+            console.warn("Could not load public audit summaries from Supabase, trying local fallback:", e);
+            const saved = localStorage.getItem('umademats_bible_announcements_audit');
+            setAllAuditLogs(saved ? JSON.parse(saved) : []);
+        }
+    };
+
+    const handleOpenAuditModal = async (announcement: any) => {
+        setSelectedAnnouncementForAudit(announcement);
+        setDetailedAuditLoading(true);
+        try {
+            if (isUsingAnnouncementFallback || announcement.id.startsWith('sample-') || announcement.id.startsWith('local-')) {
+                const saved = localStorage.getItem('umademats_bible_announcements_audit');
+                const list = saved ? JSON.parse(saved) : [];
+                const filtered = list.filter((a: any) => a.announcement_id === announcement.id);
+                setDetailedAuditLogs(filtered);
+            } else {
+                const { data, error } = await supabase
+                    .from('bible_announcements_audit')
+                    .select('*')
+                    .eq('announcement_id', announcement.id)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                setDetailedAuditLogs(data || []);
+            }
+        } catch (e) {
+            console.error("Error fetching detailed audit:", e);
+            const saved = localStorage.getItem('umademats_bible_announcements_audit');
+            const list = saved ? JSON.parse(saved) : [];
+            const filtered = list.filter((a: any) => a.announcement_id === announcement.id);
+            setDetailedAuditLogs(filtered);
+        } finally {
+            setDetailedAuditLoading(false);
+        }
+    };
+
     const fetchAnnouncements = async () => {
         setAnnouncementsLoading(true);
         try {
@@ -59,6 +113,8 @@ const BibleAdmin: React.FC = () => {
             }
         } finally {
             setAnnouncementsLoading(false);
+            // Fetch audit summary logs as well
+            fetchAllAuditLogs();
         }
     };
 
@@ -516,7 +572,42 @@ CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements 
                                                                         </span>
                                                                     </div>
                                                                     <h4 className="text-white font-bold text-sm uppercase tracking-wide">{item.title}</h4>
-                                                                    <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                                                    <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap mb-3">{item.content}</p>
+
+                                                                    {/* Métricas de Auditoria e Confirmações do Aviso */}
+                                                                    {(() => {
+                                                                        const logsForItem = allAuditLogs.filter(log => log.announcement_id === item.id);
+                                                                        const numConfirmations = logsForItem.length;
+                                                                        const lastLog = logsForItem.length > 0 
+                                                                            ? logsForItem.reduce((latest, current) => new Date(current.created_at) > new Date(latest.created_at) ? current : latest)
+                                                                            : null;
+                                                                        const lastConfirmationStr = lastLog 
+                                                                            ? `${new Date(lastLog.created_at).toLocaleDateString('pt-BR')} ${new Date(lastLog.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` 
+                                                                            : 'Nenhuma';
+
+                                                                        return (
+                                                                            <div className="flex flex-wrap gap-2 pt-1 text-[10px] text-white/60">
+                                                                                <div className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                                                                                    <span className="font-bold text-white/40 uppercase">Leitor:</span>
+                                                                                    <span className="font-semibold text-white uppercase">{item.user_name}</span>
+                                                                                </div>
+                                                                                <div className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                                                                                    <span className="font-bold text-white/40 uppercase">Confirmações:</span>
+                                                                                    <span className="font-bold text-[#f59a1e]">{numConfirmations}</span>
+                                                                                </div>
+                                                                                <div className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                                                                                    <span className="font-bold text-white/40 uppercase">Última Confirmação:</span>
+                                                                                    <span className="font-semibold text-white">{lastConfirmationStr}</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => handleOpenAuditModal(item)}
+                                                                                    className="bg-[#253c96]/15 hover:bg-[#253c96]/35 border border-[#253c96]/25 text-white/90 hover:text-white px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition-all active:scale-[0.98] font-bold uppercase tracking-wider text-[9px]"
+                                                                                >
+                                                                                    <ClipboardList size={11} className="text-[#f59a1e]" /> Ver Histórico
+                                                                                </button>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </div>
 
                                                                 <div className="flex items-center gap-4 shrink-0 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
@@ -713,6 +804,117 @@ CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements 
                                     className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                                 >
                                     {isAnnouncementSaving ? <RefreshCw className="animate-spin" size={14} /> : 'Publicar'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Modal: Histórico de Auditoria Detalhado */}
+            <AnimatePresence>
+                {selectedAnnouncementForAudit && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setSelectedAnnouncementForAudit(null)} 
+                            className="absolute inset-0 bg-black/85 backdrop-blur-sm" 
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.93, opacity: 0, y: 15 }} 
+                            animate={{ scale: 1, opacity: 1, y: 0 }} 
+                            exit={{ scale: 0.93, opacity: 0, y: 15 }} 
+                            className="relative bg-[#111111] border border-white/15 w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]"
+                        >
+                            {/* Header */}
+                            <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <span className="text-[10px] uppercase font-black tracking-widest text-[#f59a1e] flex items-center gap-1.5">
+                                        <ClipboardList size={12} /> Log de Auditoria
+                                    </span>
+                                    <h3 className="font-display uppercase text-base font-extrabold text-white tracking-wide">
+                                        Histórico de Visualização
+                                    </h3>
+                                </div>
+                                <button 
+                                    onClick={() => setSelectedAnnouncementForAudit(null)} 
+                                    className="text-white/40 hover:text-white p-1.5 rounded-full hover:bg-white/5 transition-all"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Details header for selected announcement */}
+                            <div className="px-6 py-4 bg-white/[0.02] border-b border-white/5 space-y-1.5">
+                                <p className="text-[11px] uppercase font-bold text-white/50">
+                                    Aviso: <span className="text-white">{selectedAnnouncementForAudit.title}</span>
+                                </p>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/40 uppercase font-semibold">
+                                    <span>Destinatário: <strong className="text-white/80">{selectedAnnouncementForAudit.user_name}</strong></span>
+                                    <span>Criado em: <strong className="text-white/80">{new Date(selectedAnnouncementForAudit.created_at).toLocaleDateString('pt-BR')}</strong></span>
+                                </div>
+                            </div>
+
+                            {/* Chronological List of Audits */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-[30vh]">
+                                {detailedAuditLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-16 text-white/20 space-y-2">
+                                        <RefreshCw className="animate-spin text-[#f59a1e]" size={24} />
+                                        <span className="text-xs uppercase font-extrabold tracking-widest">Carregando Auditoria...</span>
+                                    </div>
+                                ) : detailedAuditLogs.length === 0 ? (
+                                    <div className="py-16 text-center border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center space-y-2">
+                                        <ClipboardList size={28} className="text-white/10" />
+                                        <p className="text-white/40 text-xs uppercase font-bold tracking-widest">
+                                            Nenhuma confirmação registrada ainda.
+                                        </p>
+                                        <p className="text-white/20 text-[10px] uppercase font-bold tracking-tight">
+                                            O leitor receberá o aviso na Leitura Bíblica e clicará em "ENTENDI" para confirmar.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">
+                                            Entradas em ordem cronológica reversa ({detailedAuditLogs.length})
+                                        </p>
+                                        <div className="divide-y divide-white/5 border border-white/10 bg-black/30 rounded-2xl overflow-hidden">
+                                            {detailedAuditLogs.map((log, idx) => (
+                                                <div key={log.id || idx} className="p-4 flex items-center justify-between text-xs hover:bg-white/[0.01] transition-colors">
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <User size={12} className="text-white/30" />
+                                                            <span className="font-bold text-white uppercase tracking-wide">
+                                                                {log.user_name}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10px] text-white/40 font-semibold uppercase">
+                                                            ID do Usuário: <span className="font-mono text-white/30">{log.user_id}</span>
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right space-y-1 shrink-0">
+                                                        <span className="bg-green-500/10 text-green-400 border border-green-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
+                                                            {log.acao || 'ENTENDI'}
+                                                        </span>
+                                                        <p className="text-[10px] text-white/40 font-semibold uppercase">
+                                                            {new Date(log.created_at).toLocaleDateString('pt-BR')} às {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="p-6 border-t border-white/10 bg-white/5">
+                                <button 
+                                    onClick={() => setSelectedAnnouncementForAudit(null)}
+                                    className="w-full bg-white/10 hover:bg-white/15 border border-white/10 text-white py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
+                                >
+                                    Fechar
                                 </button>
                             </div>
                         </motion.div>

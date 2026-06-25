@@ -94,3 +94,26 @@ ALTER TABLE public.bible_announcements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Leitura pública de avisos" ON public.bible_announcements FOR SELECT USING (true);
 CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements FOR ALL USING (true);
 
+
+-- ==========================================================
+-- AUDITORIA DE LEITURA DE AVISOS - LEITURA BÍBLICA
+-- ==========================================================
+DROP TABLE IF EXISTS public.bible_announcements_audit;
+
+CREATE TABLE public.bible_announcements_audit (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    announcement_id UUID NOT NULL, -- UUID do aviso correspondente
+    user_id TEXT, -- ID do usuário (Auth) ou email
+    user_name TEXT NOT NULL, -- Nome do destinatário
+    acao TEXT NOT NULL DEFAULT 'ENTENDI' -- Ação registrada
+);
+
+-- Habilitar RLS
+ALTER TABLE public.bible_announcements_audit ENABLE ROW LEVEL SECURITY;
+
+-- Criar Políticas de Acesso Público/Admin para Auditoria
+CREATE POLICY "Leitura pública de auditoria" ON public.bible_announcements_audit FOR SELECT USING (true);
+CREATE POLICY "Inserção pública de auditoria" ON public.bible_announcements_audit FOR INSERT WITH CHECK (true);
+CREATE POLICY "Controle administrativo de auditoria" ON public.bible_announcements_audit FOR ALL USING (true);
+

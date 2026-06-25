@@ -626,15 +626,7 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   // --- ANNOUNCEMENTS STATES ---
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
-  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Load dismissed announcement IDs from localStorage
-    const savedDismissed = localStorage.getItem('umademats_dismissed_announcements');
-    if (savedDismissed) {
-      setDismissedAnnouncements(JSON.parse(savedDismissed));
-    }
-  }, []);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState<number>(-1);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -655,6 +647,9 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
         if (error) throw error;
         if (data) {
           setAnnouncements(data);
+          if (data.length > 0) {
+            setCurrentAnnouncementIndex(0);
+          }
         }
       } catch (e) {
         console.warn("Table bible_announcements not found or error, loading from local fallback:", e);
@@ -663,6 +658,9 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
         if (saved) {
           const list = JSON.parse(saved).filter((a: any) => a.is_active && a.user_name === currentUserName);
           setAnnouncements(list);
+          if (list.length > 0) {
+            setCurrentAnnouncementIndex(0);
+          }
         } else {
           setAnnouncements([]);
         }
@@ -676,17 +674,46 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
     }
   }, [currentUserName, loading]);
 
-  const handleDismissAnnouncement = (id: string) => {
-    const updatedDismissed = [...dismissedAnnouncements, id];
-    setDismissedAnnouncements(updatedDismissed);
-    localStorage.setItem('umademats_dismissed_announcements', JSON.stringify(updatedDismissed));
+  const handleAcknowledgeAnnouncement = async (item: any) => {
+    if (!item) return;
+
+    const auditRecord = {
+      announcement_id: item.id,
+      user_id: user?.id || 'anonymous',
+      user_name: currentUserName,
+      acao: 'ENTENDI',
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      const { error } = await supabase
+        .from('bible_announcements_audit')
+        .insert([auditRecord]);
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Error inserting audit to Supabase, falling back to localStorage:", e);
+      try {
+        const saved = localStorage.getItem('umademats_bible_announcements_audit');
+        const list = saved ? JSON.parse(saved) : [];
+        list.push({
+          id: 'audit-' + Math.random().toString(36).substr(2, 9),
+          ...auditRecord
+        });
+        localStorage.setItem('umademats_bible_announcements_audit', JSON.stringify(list));
+      } catch (err) {
+        console.error("Local storage fallback audit error:", err);
+      }
+    }
+
+    // Advance to next announcement in the queue
+    setCurrentAnnouncementIndex(prev => prev + 1);
   };
 
-  const visibleAnnouncements = useMemo(() => {
-    return announcements.filter(a => !dismissedAnnouncements.includes(a.id));
-  }, [announcements, dismissedAnnouncements]);
-
   const { config } = useSiteConfig();
+
+  // Legacy placeholders to satisfy compiler since the old block is dead/deactivated
+  const visibleAnnouncements: any[] = [];
+  const handleDismissAnnouncement = (id: string) => {};
 
   const getMonthStats = (monthId: number) => {
     const month = ANNUAL_PLAN[monthId];
@@ -742,6 +769,71 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
       <AnimatePresence>
         {showCelebration && <CelebrationModal onClose={() => setShowCelebration(false)} />}
       </AnimatePresence>
+      <AnimatePresence>
+        {currentAnnouncementIndex >= 0 && currentAnnouncementIndex < announcements.length && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="relative w-full max-w-lg bg-gradient-to-b from-[#253c96] to-[#121c4b] border border-white/25 rounded-3xl shadow-2xl p-6 md:p-8 overflow-hidden"
+            >
+              {/* Decorative accent glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-[#f59a1e] to-transparent opacity-80" />
+              
+              <div className="space-y-6 text-center">
+                {/* Header Badge */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-[#f59a1e]/15 flex items-center justify-center text-[#f59a1e] border border-[#f59a1e]/25">
+                    <Megaphone size={28} className="animate-pulse" />
+                  </div>
+                  <span className="text-[10px] uppercase font-black tracking-widest text-[#f59a1e]">
+                    Mensagem da Administração
+                  </span>
+                  <h3 className="text-2xl font-display font-extrabold uppercase text-white tracking-wide">
+                    AVISO IMPORTANTE
+                  </h3>
+                </div>
+
+                {/* Announcement Card with Content */}
+                <div className="bg-black/30 border border-white/10 rounded-2xl p-5 md:p-6 text-left space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <h4 className="text-white font-bold text-sm uppercase tracking-wide">
+                      {announcements[currentAnnouncementIndex].title}
+                    </h4>
+                    <span className="text-[9px] text-white/40 font-bold uppercase whitespace-nowrap">
+                      {new Date(announcements[currentAnnouncementIndex].created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap max-h-[25vh] overflow-y-auto custom-scrollbar pr-1">
+                    {announcements[currentAnnouncementIndex].content}
+                  </p>
+                </div>
+
+                {/* Button Section */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => handleAcknowledgeAnnouncement(announcements[currentAnnouncementIndex])}
+                    className="w-full bg-gradient-to-r from-[#f59a1e] to-[#f36b2e] hover:from-[#f36b2e] hover:to-[#e05a20] text-white py-4 px-6 rounded-2xl text-xs font-extrabold uppercase tracking-widest shadow-lg hover:shadow-[#f36b2e]/10 active:scale-[0.98] transition-all duration-200"
+                  >
+                    ENTENDI
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <header className="sticky top-0 z-40 bg-[#19244e]/95 backdrop-blur-md border-b border-white/5">
         <div className="px-4 py-4 flex items-center justify-between max-w-6xl mx-auto w-full">
           <div className="flex items-center gap-4">
@@ -776,9 +868,9 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                </div>
 
                {/* --- SEÇÃO DE AVISOS EM TEMPO REAL --- */}
-               {visibleAnnouncements.length > 0 && (
-                 <div className="px-4 mb-4 space-y-3">
-                   <AnimatePresence initial={false}>
+               {false && (
+                 <div>
+                   <AnimatePresence>
                      {visibleAnnouncements.map((item) => {
                        let borderAccent = 'border-l-4 border-l-blue-500';
                        let iconColor = 'text-blue-400';

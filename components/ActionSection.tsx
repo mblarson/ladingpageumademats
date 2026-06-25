@@ -69,17 +69,13 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
         <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-6 w-full lg:max-w-3xl mx-auto">
           
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.4, delay: 0.1 }}
             onMouseEnter={() => setHoveredCard('games')}
             onMouseLeave={() => setHoveredCard(null)}
-            onClick={() => onNavigate('missao')}
+            onClick={() => window.open('https://www.umadegames.com.br', '_blank', 'noopener,noreferrer')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
             className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.2/1] overflow-hidden cursor-pointer border-2 border-white/10 hover:border-brand-neon group shadow-2xl transition-all"
-            style={{ willChange: 'transform, opacity' }}
+            style={{ willChange: 'transform' }}
           >
               {/* Mobile View: Cloudinary Image ONLY */}
               <img 
@@ -131,17 +127,13 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.4, delay: 0.2 }}
             onMouseEnter={() => setHoveredCard('lidera')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => onNavigate('lidera')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
             className="col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer border-2 border-white/10 hover:border-brand-green group shadow-2xl transition-all"
-            style={{ willChange: 'transform, opacity' }}
+            style={{ willChange: 'transform' }}
           >
               <img 
                 src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_57_10_py3coi.png" 
@@ -185,17 +177,13 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.4, delay: 0.3 }}
             onMouseEnter={() => setHoveredCard('devocional')}
             onMouseLeave={() => setHoveredCard(null)}
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
             className="col-span-2 md:col-span-1 order-1 md:order-3 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 hover:border-brand-neon transition-all"
-            style={{ willChange: 'transform, opacity' }}
+            style={{ willChange: 'transform' }}
           >
               <img 
                 src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_56_52_jr56qo.png" 

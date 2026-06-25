@@ -32,70 +32,69 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
   onClick,
   showHighlight = false,
   enableDrag = false
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 50 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-50px" }}
-    whileHover={{ scale: 1.03, rotate: 0 }}
-    whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
-    {...(enableDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 } } : {})}
-    onClick={onClick}
-    className={`
-        relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 lg:p-3 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
-        ${onClick ? 'cursor-pointer' : ''}
-        ${showHighlight 
-            ? 'bg-white border-4 border-brand-neon shadow-[0_0_30px_rgba(204,255,0,0.5)] hover:shadow-[0_0_50px_rgba(204,255,0,0.8)]' 
-            : 'bg-white border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
-        }
-    `}
-  >
-    {/* Decorative Tape/Sticker */}
-    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 md:w-24 lg:w-16 h-5 md:h-6 lg:h-4 ${color} border-2 border-black rotate-[-2deg] opacity-100 z-20`} />
+}) => {
+  const dragProps = enableDrag ? { drag: true as const, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.05, zIndex: 100, cursor: 'grabbing' } } : {};
+  return (
+    <motion.div
+      {...dragProps}
+      onClick={onClick}
+      className={`
+          relative group rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 lg:p-3 flex flex-col items-center text-center transition-all duration-300 ${rotate} ${className}
+          ${onClick ? 'cursor-pointer' : ''}
+          hover:scale-105 hover:rotate-0
+          ${showHighlight 
+              ? 'bg-white border-4 border-brand-neon shadow-[0_0_30px_rgba(204,255,0,0.5)] hover:shadow-[0_0_50px_rgba(204,255,0,0.8)]' 
+              : 'bg-white border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+          }
+      `}
+    >
+      {/* Decorative Tape/Sticker */}
+      <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 md:w-24 lg:w-16 h-5 md:h-6 lg:h-4 ${color} border-2 border-black rotate-[-2deg] opacity-100 z-20`} />
 
-    {/* Image Container */}
-    <div className={`relative w-full ${imageAspect} rounded-[1.2rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-2 border-black mb-3 md:mb-4 lg:mb-2 bg-gray-100`}>
-      {image ? (
-        <img 
-            src={image} 
-            alt={name} 
-            className={`w-full h-full object-cover ${objectPosition} transition-transform duration-500 group-hover:scale-110`}
-            loading="lazy"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-             <User size={64} className="text-gray-400" />
-        </div>
+      {/* Image Container */}
+      <div className={`relative w-full ${imageAspect} rounded-[1.2rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-2 border-black mb-3 md:mb-4 lg:mb-2 bg-gray-100`}>
+        {image ? (
+          <img 
+              src={image} 
+              alt={name} 
+              className={`w-full h-full object-cover ${objectPosition} transition-transform duration-500 group-hover:scale-110`}
+              loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+               <User size={64} className="text-gray-400" />
+          </div>
+        )}
+        
+        {/* Halftone Overlay Effect on Image */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[size:10px_10px] opacity-10 pointer-events-none" />
+      </div>
+
+      {/* Content */}
+      <div className="w-full flex flex-col items-center gap-1 z-10 pb-1 md:pb-2">
+        <span className={`inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full ${color} border border-black text-[8px] md:text-xs font-bold font-sans uppercase tracking-widest shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap`}>
+          {role}
+        </span>
+        <h3 className="text-base md:text-2xl lg:text-xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
+          {name}
+        </h3>
+      </div>
+
+      {/* Sticker de Destaque (Se ativado) - Posicionado na quina inferior direita, levemente para fora para não cobrir o nome */}
+      {showHighlight && (
+         <div className="absolute -bottom-3 -right-2 md:-bottom-5 md:-right-4 z-40 animate-bounce cursor-pointer pointer-events-none">
+             <div className="bg-brand-neon border-2 border-black px-2 py-1 md:px-3 md:py-1.5 shadow-[3px_3px_0px_rgba(0,0,0,1)] -rotate-12 flex flex-col items-center justify-center hover:scale-110 transition-transform pointer-events-auto">
+                  <div className="flex items-center gap-1">
+                      <MousePointer2 size={14} className="fill-black text-black" />
+                      <span className="font-fun text-[10px] md:text-xs text-black leading-none uppercase">CLIQUE AQUI</span>
+                  </div>
+                  <span className="font-sans text-[8px] font-bold text-black leading-none uppercase tracking-tighter">Para conhecê-los</span>
+             </div>
+         </div>
       )}
-      
-      {/* Halftone Overlay Effect on Image */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[size:10px_10px] opacity-10 pointer-events-none" />
-    </div>
-
-    {/* Content */}
-    <div className="w-full flex flex-col items-center gap-1 z-10 pb-1 md:pb-2">
-      <span className={`inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full ${color} border border-black text-[8px] md:text-xs font-bold font-sans uppercase tracking-widest shadow-[2px_2px_0px_rgba(0,0,0,1)] whitespace-nowrap`}>
-        {role}
-      </span>
-      <h3 className="text-base md:text-2xl lg:text-xl font-display uppercase text-black leading-none mt-1 md:mt-2 drop-shadow-sm">
-        {name}
-      </h3>
-    </div>
-
-    {/* Sticker de Destaque (Se ativado) - Posicionado na quina inferior direita, levemente para fora para não cobrir o nome */}
-    {showHighlight && (
-       <div className="absolute -bottom-3 -right-2 md:-bottom-5 md:-right-4 z-40 animate-bounce cursor-pointer pointer-events-none">
-           <div className="bg-brand-neon border-2 border-black px-2 py-1 md:px-3 md:py-1.5 shadow-[3px_3px_0px_rgba(0,0,0,1)] -rotate-12 flex flex-col items-center justify-center hover:scale-110 transition-transform pointer-events-auto">
-                <div className="flex items-center gap-1">
-                    <MousePointer2 size={14} className="fill-black text-black" />
-                    <span className="font-fun text-[10px] md:text-xs text-black leading-none uppercase">CLIQUE AQUI</span>
-                </div>
-                <span className="font-sans text-[8px] font-bold text-black leading-none uppercase tracking-tighter">Para conhecê-los</span>
-           </div>
-       </div>
-    )}
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 interface AboutSectionProps {
   previewConfig?: SiteConfig;
@@ -137,12 +136,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
              {/* Decorative Background for Title */}
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-white/5 blur-3xl rounded-full z-0" />
              
-             <motion.div
-               initial={{ scale: 0.8, opacity: 0 }}
-               whileInView={{ scale: 1, opacity: 1 }}
-               viewport={{ once: true }}
-               className="relative z-10"
-             >
+             <div className="relative z-10">
                 <h2 className="text-[15vw] md:text-7xl lg:text-5xl font-fun text-white text-center leading-[0.8] drop-shadow-[5px_5px_0px_#000] tracking-wide select-none">
                     {activeConfig.about_title}
                 </h2>
@@ -154,7 +148,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 <div className="absolute -bottom-2 -left-2 md:-left-12 text-brand-purple">
                     <Star size={30} className="md:w-12 md:h-12 fill-current" />
                 </div>
-             </motion.div>
+             </div>
 
              <p className="mt-6 text-white/70 font-sans text-sm md:text-lg max-w-2xl text-center uppercase tracking-wider font-bold">
                 Conheça quem faz a obra acontecer
@@ -165,9 +159,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
         {/* IEADMS Banner Image & Text */}
         <div className="w-full flex flex-col items-center mb-10 md:mb-16 lg:mb-8">
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+
+
+
                 className="w-full md:max-w-4xl lg:max-w-3xl aspect-video rounded-[1rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] md:shadow-[8px_8px_0_0_rgba(0,0,0,1)] bg-white relative z-10"
             >
                 <img 
@@ -179,10 +173,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
             </motion.div>
 
             <motion.p 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+
+
+
+
               className="mt-6 text-white text-center font-sans text-sm md:text-lg font-medium max-w-4xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
             >
               {activeConfig.about_text}

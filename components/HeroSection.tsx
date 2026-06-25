@@ -113,9 +113,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   ];
 
   const slideVariants = {
-    enter: { x: "100%" },
-    center: { x: 0 },
-    exit: { x: "-100%" }
+    enter: { x: "100%", opacity: 0 },
+    center: { x: 0, opacity: 1 },
+    exit: { x: "-100%", opacity: 0 }
   };
 
   const handleDragEndContent = (e: any, info: any) => {
@@ -192,8 +192,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
       {/* Mascot - RENDERIZADO IMEDIATAMENTE */}
       <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-        <motion.div className="w-[2px] bg-white/20" animate={{ height: [100, 200, 100] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'height' }} />
-        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 lg:w-56 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
+        <div className="w-[2px] h-[150px] bg-white/20" />
+        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 lg:w-56 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-8, 8, -8] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
       </div>
 
       {/* Container fix: always render the section to prevent layout jumping */}
@@ -220,11 +220,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           <AnimatePresence initial={false}>
             <motion.div
                key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
-               initial={{ x: "100%" }}
-               animate={{ x: 0 }}
-               exit={{ x: "-100%" }}
-               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-               className="absolute inset-0 z-0"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               transition={{ duration: 0.35, ease: "easeInOut" }}
+               className="absolute inset-0 z-0 bg-black"
+               style={{ willChange: "opacity" }}
             >
               {currentSlide.image_desktop_url ? (
                 <>
@@ -260,7 +261,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ x: { type: "spring", stiffness: 300, damping: 30 } }}
+              transition={{ x: { type: "tween", duration: 0.35, ease: "easeInOut" }, opacity: { duration: 0.25 } }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -270,6 +271,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                  handleDragEndContent(e, info);
               }}
               className="absolute inset-0 flex flex-col items-center justify-start pt-[30%] md:pt-0 px-4 pb-12 cursor-pointer z-10 active:cursor-grabbing"
+              style={{ willChange: "transform, opacity" }}
               onClick={() => handleSlideClick(currentSlide)}
             >
               {/* Grid Background Effect (only if no image) */}

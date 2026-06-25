@@ -49,20 +49,13 @@ export const StoreSection: React.FC = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 mb-8 md:mb-12 lg:mb-6 relative z-10">
-        <motion.div 
-          initial={{ x: 100, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ willChange: "transform, opacity" }}
-          className="flex flex-col items-start gap-1 text-left"
-        >
+        <div className="flex flex-col items-start gap-1 text-left">
           <div className="bg-indigo-900/90 px-5 py-2 border-2 border-black transform -rotate-1 shadow-lg">
             <h2 className="text-4xl md:text-6xl lg:text-3xl font-fun font-black tracking-[0.1em] text-white">
               Loja Umademats
             </h2>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <div className="relative flex w-full z-10 py-4 lg:py-2 overflow-hidden">
@@ -78,10 +71,9 @@ export const StoreSection: React.FC = () => {
           style={{ willChange: "transform" }}
         >
           {DUPLICATED_PRODUCTS.map((product, idx) => (
-            <motion.div 
+            <div 
               key={`${product.id}-${idx}`}
-              whileHover={{ scale: 1.05 }}
-              className="flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] bg-gradient-to-br from-indigo-800 to-black rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-transform duration-500 ease-out"
+              className="flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] bg-gradient-to-br from-indigo-800 to-black rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105"
               style={{ willChange: "transform" }}
             >
               <div className="relative w-full h-full">
@@ -104,7 +96,7 @@ export const StoreSection: React.FC = () => {
                 {/* Shine effect on hover - keeping it very subtle and bright */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-tr from-white/20 via-transparent to-transparent transition-opacity" style={{ willChange: "opacity" }} />
               </div>
-            </motion.div>
+            </div>
           ))}
         </motion.div>
       </div>

@@ -71,3 +71,26 @@ CREATE POLICY "Acesso público para leitura e exclusão" ON public.pedidos_camis
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_pedidos_camisetas_created_at ON public.pedidos_camisetas(created_at);
 
+
+-- ==========================================================
+-- SISTEMA DE AVISOS INDIVIDUAIS - LEITURA BÍBLICA
+-- ==========================================================
+DROP TABLE IF EXISTS public.bible_announcements;
+
+CREATE TABLE public.bible_announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'info', -- 'info', 'warning', 'success', 'important'
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    user_name TEXT NOT NULL -- Destinatário obrigatório do aviso (Leitor)
+);
+
+-- Habilitar RLS
+ALTER TABLE public.bible_announcements ENABLE ROW LEVEL SECURITY;
+
+-- Criar Políticas de Acesso Público
+CREATE POLICY "Leitura pública de avisos" ON public.bible_announcements FOR SELECT USING (true);
+CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements FOR ALL USING (true);
+

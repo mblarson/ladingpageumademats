@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star, Camera, Share2 } from 'lucide-react';
+import { ChevronRight, Check, ArrowLeft, Calendar, Trash2, AlertCircle, ShieldCheck, CheckCircle2, BarChart3, User, BookOpen, X, Loader2, Zap, Star, Camera, Share2, Bell, Megaphone } from 'lucide-react';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { useSiteConfig } from '../hooks/useSiteConfig';
 import { supabase } from '../lib/supabaseClient';
@@ -621,6 +621,71 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   const [showCelebration, setShowCelebration] = useState(false);
   
   const { completedItems, toggleItemCompletion, resetProgress, isItemComplete, user, loading } = useReadingProgress();
+  const currentUserName = user?.user_metadata?.full_name || user?.email || '';
+
+  // --- ANNOUNCEMENTS STATES ---
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load dismissed announcement IDs from localStorage
+    const savedDismissed = localStorage.getItem('umademats_dismissed_announcements');
+    if (savedDismissed) {
+      setDismissedAnnouncements(JSON.parse(savedDismissed));
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      if (!currentUserName) {
+        setAnnouncements([]);
+        setAnnouncementsLoading(false);
+        return;
+      }
+      setAnnouncementsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('bible_announcements')
+          .select('*')
+          .eq('is_active', true)
+          .eq('user_name', currentUserName)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        if (data) {
+          setAnnouncements(data);
+        }
+      } catch (e) {
+        console.warn("Table bible_announcements not found or error, loading from local fallback:", e);
+        // Fallback to local storage
+        const saved = localStorage.getItem('umademats_bible_announcements');
+        if (saved) {
+          const list = JSON.parse(saved).filter((a: any) => a.is_active && a.user_name === currentUserName);
+          setAnnouncements(list);
+        } else {
+          setAnnouncements([]);
+        }
+      } finally {
+        setAnnouncementsLoading(false);
+      }
+    };
+
+    if (!loading) {
+      fetchAnnouncements();
+    }
+  }, [currentUserName, loading]);
+
+  const handleDismissAnnouncement = (id: string) => {
+    const updatedDismissed = [...dismissedAnnouncements, id];
+    setDismissedAnnouncements(updatedDismissed);
+    localStorage.setItem('umademats_dismissed_announcements', JSON.stringify(updatedDismissed));
+  };
+
+  const visibleAnnouncements = useMemo(() => {
+    return announcements.filter(a => !dismissedAnnouncements.includes(a.id));
+  }, [announcements, dismissedAnnouncements]);
+
   const { config } = useSiteConfig();
 
   const getMonthStats = (monthId: number) => {
@@ -709,6 +774,65 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
                   <h2 className="text-3xl font-display uppercase text-white">Selecione o Mês</h2>
                   <p className="text-white/50 text-sm">Visualize o plano completo de leitura.</p>
                </div>
+
+               {/* --- SEÇÃO DE AVISOS EM TEMPO REAL --- */}
+               {visibleAnnouncements.length > 0 && (
+                 <div className="px-4 mb-4 space-y-3">
+                   <AnimatePresence initial={false}>
+                     {visibleAnnouncements.map((item) => {
+                       let borderAccent = 'border-l-4 border-l-blue-500';
+                       let iconColor = 'text-blue-400';
+                       let icon = <Bell size={18} className={iconColor} />;
+
+                       if (item.type === 'success') {
+                         borderAccent = 'border-l-4 border-l-green-500';
+                         iconColor = 'text-green-400';
+                         icon = <CheckCircle2 size={18} className={iconColor} />;
+                       } else if (item.type === 'warning') {
+                         borderAccent = 'border-l-4 border-l-[#f59a1e]';
+                         iconColor = 'text-[#f59a1e]';
+                         icon = <AlertCircle size={18} className={iconColor} />;
+                       } else if (item.type === 'important') {
+                         borderAccent = 'border-l-4 border-l-[#f36b2e]';
+                         iconColor = 'text-[#f36b2e]';
+                         icon = <Megaphone size={18} className={iconColor} />;
+                       }
+
+                       return (
+                         <motion.div
+                           key={item.id}
+                           initial={{ opacity: 0, height: 0, y: -20 }}
+                           animate={{ opacity: 1, height: 'auto', y: 0 }}
+                           exit={{ opacity: 0, height: 0, y: -20 }}
+                           transition={{ duration: 0.25 }}
+                           className={`bg-[#253c96] border border-white/10 rounded-xl overflow-hidden shadow-lg ${borderAccent} flex items-start p-4 gap-4`}
+                         >
+                           <div className="shrink-0 p-1.5 rounded-lg bg-white/5 mt-0.5">
+                             {icon}
+                           </div>
+                           <div className="flex-1 space-y-1">
+                             <div className="flex items-center justify-between gap-2">
+                               <h4 className="text-white font-bold text-sm uppercase tracking-wide">{item.title}</h4>
+                               <span className="text-[9px] text-white/30 font-bold uppercase whitespace-nowrap">
+                                 {new Date(item.created_at).toLocaleDateString('pt-BR')}
+                                </span>
+                             </div>
+                             <p className="text-white/70 text-xs leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                           </div>
+                           <button
+                             onClick={() => handleDismissAnnouncement(item.id)}
+                             className="shrink-0 text-white/40 hover:text-white hover:bg-white/5 p-1 rounded-lg transition-colors"
+                             title="Dispensar aviso"
+                           >
+                             <X size={16} />
+                           </button>
+                         </motion.div>
+                       );
+                     })}
+                   </AnimatePresence>
+                 </div>
+               )}
+
                <div className="flex flex-col w-full">
                  <div className="px-4 mb-6">
                    <div className="bg-[#253c96] rounded-xl p-4 border border-white/10 flex items-center gap-4">

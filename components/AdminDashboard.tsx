@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter, ShoppingBag } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter, ShoppingBag, Megaphone, Bell } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -22,6 +22,193 @@ const BibleAdmin: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showReadersModal, setShowReadersModal] = useState(false);
 
+    // --- ANNOUNCEMENTS STATES ---
+    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+    const [showNewAnnouncementModal, setShowNewAnnouncementModal] = useState(false);
+    const [isAnnouncementSaving, setIsAnnouncementSaving] = useState(false);
+    const [isUsingAnnouncementFallback, setIsUsingAnnouncementFallback] = useState(false);
+    const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '', type: 'info', is_active: true, user_name: '' });
+    const [recipientSearch, setRecipientSearch] = useState('');
+    const [expandedAnnouncementUsers, setExpandedAnnouncementUsers] = useState<Record<string, boolean>>({});
+    const [copiedSql, setCopiedSql] = useState(false);
+
+    const fetchAnnouncements = async () => {
+        setAnnouncementsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('bible_announcements')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            if (data) {
+                setAnnouncements(data);
+                setIsUsingAnnouncementFallback(false);
+            }
+        } catch (e: any) {
+            console.warn("Table bible_announcements not found or other error, falling back to localStorage:", e);
+            setIsUsingAnnouncementFallback(true);
+            const saved = localStorage.getItem('umademats_bible_announcements');
+            if (saved) {
+                setAnnouncements(JSON.parse(saved));
+            } else {
+                // Initialize empty because all announcements must be strictly individual to a user.
+                setAnnouncements([]);
+                localStorage.setItem('umademats_bible_announcements', JSON.stringify([]));
+            }
+        } finally {
+            setAnnouncementsLoading(false);
+        }
+    };
+
+    const handleSaveAnnouncement = async () => {
+        if (!newAnnouncement.user_name) {
+            alert('Por favor, selecione o destinatário (leitor) para este aviso!');
+            return;
+        }
+        if (!newAnnouncement.title || !newAnnouncement.content) {
+            alert('Por favor, preencha o título e o conteúdo!');
+            return;
+        }
+
+        setIsAnnouncementSaving(true);
+        try {
+            if (isUsingAnnouncementFallback) {
+                const item = {
+                    id: 'local-' + Date.now(),
+                    ...newAnnouncement,
+                    created_at: new Date().toISOString()
+                };
+                const updatedList = [item, ...announcements];
+                setAnnouncements(updatedList);
+                localStorage.setItem('umademats_bible_announcements', JSON.stringify(updatedList));
+                setShowNewAnnouncementModal(false);
+                setNewAnnouncement({ title: '', content: '', type: 'info', is_active: true, user_name: '' });
+                setRecipientSearch('');
+            } else {
+                const { error } = await supabase
+                    .from('bible_announcements')
+                    .insert([newAnnouncement]);
+                
+                if (error) throw error;
+                await fetchAnnouncements();
+                setShowNewAnnouncementModal(false);
+                setNewAnnouncement({ title: '', content: '', type: 'info', is_active: true, user_name: '' });
+                setRecipientSearch('');
+            }
+        } catch (e: any) {
+            console.error("Error saving announcement:", e);
+            let userFriendlyMsg = e.message || 'Ocorreu um erro inesperado.';
+            if (userFriendlyMsg.includes('user_name') || userFriendlyMsg.includes('column') || userFriendlyMsg.includes('relation') || userFriendlyMsg.includes('violates')) {
+                userFriendlyMsg += '\n\n⚠️ Dica: Parece que a tabela "bible_announcements" não possui a coluna obrigatória "user_name" no Supabase, ou a tabela precisa ser criada.\n\nPor favor, copie o Script SQL fornecido no painel de avisos e execute-o no console SQL do Supabase para adicionar a coluna ou recriar a tabela!';
+            }
+            alert('Erro ao salvar aviso: ' + userFriendlyMsg);
+        } finally {
+            setIsAnnouncementSaving(false);
+        }
+    };
+
+    const handleToggleAnnouncementActive = async (id: string, currentStatus: boolean) => {
+        try {
+            if (isUsingAnnouncementFallback || id.startsWith('sample-') || id.startsWith('local-')) {
+                const updatedList = announcements.map(a => a.id === id ? { ...a, is_active: !currentStatus } : a);
+                setAnnouncements(updatedList);
+                localStorage.setItem('umademats_bible_announcements', JSON.stringify(updatedList));
+            } else {
+                const { error } = await supabase
+                    .from('bible_announcements')
+                    .update({ is_active: !currentStatus })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                await fetchAnnouncements();
+            }
+        } catch (e: any) {
+            console.error("Error toggling announcement active state:", e);
+            alert('Erro ao alterar status: ' + e.message);
+        }
+    };
+
+    const handleDeleteAnnouncement = async (id: string) => {
+        if (!confirm('Tem certeza que deseja excluir este aviso?')) return;
+        try {
+            if (isUsingAnnouncementFallback || id.startsWith('sample-') || id.startsWith('local-')) {
+                const updatedList = announcements.filter(a => a.id !== id);
+                setAnnouncements(updatedList);
+                localStorage.setItem('umademats_bible_announcements', JSON.stringify(updatedList));
+            } else {
+                const { error } = await supabase
+                    .from('bible_announcements')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                await fetchAnnouncements();
+            }
+        } catch (e: any) {
+            console.error("Error deleting announcement:", e);
+            alert('Erro ao excluir aviso: ' + e.message);
+        }
+    };
+
+    const groupedAnnouncements = useMemo(() => {
+        const groups: Record<string, { active: any[], inactive: any[], all: any[] }> = {};
+        announcements.forEach(item => {
+            const recipient = item.user_name || 'Desconhecido';
+            if (!groups[recipient]) {
+                groups[recipient] = { active: [], inactive: [], all: [] };
+            }
+            groups[recipient].all.push(item);
+            if (item.is_active) {
+                groups[recipient].active.push(item);
+            } else {
+                groups[recipient].inactive.push(item);
+            }
+        });
+        return Object.entries(groups).sort((a, b) => b[1].active.length - a[1].active.length);
+    }, [announcements]);
+
+    const handleCopySql = () => {
+        const sql = `-- ==========================================================
+-- OPÇÃO 1: SE VOCÊ JÁ TEM A TABELA E PRECISA APENAS DA COLUNA user_name
+-- ==========================================================
+ALTER TABLE public.bible_announcements ADD COLUMN IF NOT EXISTS user_name TEXT;
+
+-- Atualizar registros antigos para que não violem a restrição (opcional)
+-- UPDATE public.bible_announcements SET user_name = 'Leitor Padrão' WHERE user_name IS NULL;
+
+-- Tornar a coluna obrigatória
+ALTER TABLE public.bible_announcements ALTER COLUMN user_name SET NOT NULL;
+
+
+-- ==========================================================
+-- OPÇÃO 2: SE DESEJA RECRIAR A TABELA DO ZERO (DELETA OS AVISOS ANTERIORES)
+-- ==========================================================
+DROP TABLE IF EXISTS public.bible_announcements;
+
+CREATE TABLE public.bible_announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'info', -- 'info', 'warning', 'success', 'important'
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    user_name TEXT NOT NULL -- Destinatário obrigatório do aviso (Leitor)
+);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE public.bible_announcements ENABLE ROW LEVEL SECURITY;
+
+-- Criar Políticas de Acesso Público/Admin
+CREATE POLICY "Leitura pública de avisos" ON public.bible_announcements FOR SELECT USING (true);
+CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements FOR ALL USING (true);`;
+        
+        navigator.clipboard.writeText(sql);
+        setCopiedSql(true);
+        setTimeout(() => setCopiedSql(false), 2000);
+    };
+
     useEffect(() => {
         const fetchProgress = async () => {
             setLoading(true);
@@ -40,6 +227,7 @@ const BibleAdmin: React.FC = () => {
             }
         };
         fetchProgress();
+        fetchAnnouncements();
     }, []);
 
     const handleToggleCampaign = () => {
@@ -180,6 +368,358 @@ const BibleAdmin: React.FC = () => {
                     ) : <div className="py-8 text-center"><p className="text-white/20 text-[10px] uppercase font-bold tracking-widest">Aguardando leitores atingirem a sequência de 3 dias.</p></div>}
                 </div>
             </div>
+
+            {/* --- SEÇÃO: SISTEMA DE AVISOS PARA LEITORES --- */}
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-lg space-y-6">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Megaphone size={18} className="text-[#f59a1e]" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest">Avisos para os Leitores</h3>
+                    </div>
+                    <button 
+                        onClick={() => setShowNewAnnouncementModal(true)} 
+                        className="bg-brand-purple hover:bg-brand-purple/80 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95"
+                    >
+                        <Plus size={14} /> Novo Aviso
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                    {!isUsingAnnouncementFallback ? (
+                        <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <span className="text-[10px] uppercase font-black tracking-widest text-green-400 flex items-center gap-1">
+                                    <Database size={12} /> Sincronização em Nuvem Ativa
+                                </span>
+                                <p className="text-xs text-white/70">
+                                    Os avisos estão sendo salvos e lidos em tempo real na tabela <code className="bg-white/10 px-1 py-0.5 rounded text-green-300">bible_announcements</code> do Supabase.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                                <button 
+                                    onClick={handleCopySql} 
+                                    className="flex-1 md:flex-none bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                                >
+                                    {copiedSql ? 'Copiado! 📋' : 'Visualizar SQL 📋'}
+                                </button>
+                                <button
+                                    onClick={() => setIsUsingAnnouncementFallback(true)}
+                                    className="flex-1 md:flex-none bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/20 text-[#f59a1e] text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                                    title="Alternar temporariamente para salvar offline em localStorage"
+                                >
+                                    Forçar Local
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <span className="text-[10px] uppercase font-black tracking-widest text-amber-500 flex items-center gap-1">
+                                    <Database size={12} /> Modo Persistência Local Ativo
+                                </span>
+                                <p className="text-xs text-white/70">
+                                    A tabela <code className="bg-white/10 px-1 py-0.5 rounded text-amber-300">bible_announcements</code> não possui a coluna <code className="bg-white/10 px-1 py-0.5 rounded text-amber-300">user_name</code> ou não existe no Supabase. Os avisos estão sendo salvos localmente neste navegador. Para habilitar a sincronização em nuvem global, execute o script SQL.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                                <button 
+                                    onClick={handleCopySql} 
+                                    className="flex-1 md:flex-none bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                                >
+                                    {copiedSql ? 'Copiado! 📋' : 'Copiar Script SQL 📋'}
+                                </button>
+                                <button
+                                    onClick={fetchAnnouncements}
+                                    className="flex-1 md:flex-none bg-green-500/15 hover:bg-green-500/25 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                                >
+                                    Tentar Conectar
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {announcementsLoading ? (
+                        <div className="flex items-center justify-center py-12 text-white/20">
+                            <RefreshCw className="animate-spin mr-2" size={18} />
+                            <span className="text-xs uppercase font-bold tracking-widest">Buscando Avisos...</span>
+                        </div>
+                    ) : announcements.length === 0 ? (
+                        <div className="py-12 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                            <Bell size={32} className="text-white/10 mx-auto mb-3" />
+                            <p className="text-white/30 text-xs uppercase font-bold tracking-widest">Nenhum aviso publicado até o momento.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {groupedAnnouncements.map(([recipient, groupData]) => {
+                                const activeCount = groupData.active.length;
+                                const isExpanded = !!expandedAnnouncementUsers[recipient];
+                                
+                                return (
+                                    <div key={recipient} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all hover:border-white/15">
+                                        {/* Row Representing Recipient */}
+                                        <button 
+                                            onClick={() => setExpandedAnnouncementUsers(prev => ({ ...prev, [recipient]: !prev[recipient] }))}
+                                            className="w-full text-left p-5 flex items-center justify-between hover:bg-white/5 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-[#253c96]/20 flex items-center justify-center text-[#253c96]">
+                                                    <User size={18} />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white font-bold text-sm uppercase tracking-wide">
+                                                            {recipient}
+                                                        </span>
+                                                        {activeCount > 0 && (
+                                                            <span className="bg-[#f59a1e]/15 text-[#f59a1e] text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-[#f59a1e]/20">
+                                                                {activeCount}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[10px] text-white/40 uppercase font-semibold">
+                                                        Total: {groupData.all.length} aviso(s) • Ativos: {activeCount}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">
+                                                    {isExpanded ? 'Ocultar' : 'Ver avisos'}
+                                                </span>
+                                                {isExpanded ? <ChevronUp size={16} className="text-white/30" /> : <ChevronDown size={16} className="text-white/30" />}
+                                            </div>
+                                        </button>
+
+                                        {/* Announcement list for this recipient */}
+                                        <AnimatePresence initial={false}>
+                                            {isExpanded && (
+                                                <motion.div 
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="border-t border-white/5 bg-black/20 divide-y divide-white/5 overflow-hidden"
+                                                >
+                                                    {groupData.all.map((item) => {
+                                                        let badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                                                        if (item.type === 'success') badgeColor = 'bg-green-500/10 text-green-400 border-green-500/20';
+                                                        if (item.type === 'warning') badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                                                        if (item.type === 'important') badgeColor = 'bg-red-500/10 text-red-400 border-red-500/20';
+
+                                                        return (
+                                                            <div key={item.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                                <div className="space-y-1.5 flex-1">
+                                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                                        <span className={`text-[9px] uppercase font-bold tracking-widest border px-2 py-0.5 rounded-md ${badgeColor}`}>
+                                                                            {item.type}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-white/30 font-bold uppercase">
+                                                                            {new Date(item.created_at).toLocaleDateString('pt-BR')} às {new Date(item.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="text-white font-bold text-sm uppercase tracking-wide">{item.title}</h4>
+                                                                    <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-4 shrink-0 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
+                                                                    {/* Status Toggle */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Ativo</span>
+                                                                        <button 
+                                                                            onClick={() => handleToggleAnnouncementActive(item.id, item.is_active)}
+                                                                            className={`w-10 h-5 rounded-full relative p-0.5 transition-colors ${item.is_active ? 'bg-green-500' : 'bg-white/10'}`}
+                                                                        >
+                                                                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${item.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* Delete Button */}
+                                                                    <button 
+                                                                        onClick={() => handleDeleteAnnouncement(item.id)}
+                                                                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-xl transition-colors active:scale-95"
+                                                                        title="Excluir Aviso"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modal: Novo Aviso */}
+            <AnimatePresence>
+                {showNewAnnouncementModal && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowNewAnnouncementModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-[#111111] border border-white/10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                            {/* Header */}
+                            <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-brand-purple">
+                                    <Megaphone size={20} />
+                                    <h3 className="font-display uppercase text-lg font-bold tracking-wider">Criar Novo Aviso</h3>
+                                </div>
+                                <button onClick={() => setShowNewAnnouncementModal(false)} className="text-white/30 hover:text-white p-1 rounded-full hover:bg-white/5 transition-all"><X size={22} /></button>
+                            </div>
+
+                            {/* Form Body */}
+                            <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar">
+                                {/* DESTINATÁRIO - Campo pesquisável */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Destinatário (Obrigatório)</label>
+                                    
+                                    {newAnnouncement.user_name ? (
+                                        <div className="flex items-center justify-between p-3 bg-[#253c96]/15 border border-[#253c96]/30 rounded-xl">
+                                            <div className="flex items-center gap-2">
+                                                <User size={14} className="text-[#f59a1e]" />
+                                                <div>
+                                                    <p className="text-xs font-bold text-white uppercase">{newAnnouncement.user_name.includes('@') ? newAnnouncement.user_name.split('@')[0] : newAnnouncement.user_name}</p>
+                                                    {newAnnouncement.user_name.includes('@') && (
+                                                        <p className="text-[10px] text-white/40">{newAnnouncement.user_name}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setNewAnnouncement(prev => ({ ...prev, user_name: '' }))}
+                                                className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 transition-colors"
+                                            >
+                                                Trocar
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <input 
+                                                type="text" 
+                                                value={recipientSearch}
+                                                onChange={(e) => setRecipientSearch(e.target.value)}
+                                                placeholder="Pesquise o leitor pelo nome..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:border-brand-purple focus:outline-none transition-colors"
+                                            />
+                                            <div className="max-h-36 overflow-y-auto border border-white/5 rounded-xl bg-black/40 divide-y divide-white/5 custom-scrollbar">
+                                                {userStats.length === 0 ? (
+                                                    <div className="p-3 text-center text-[10px] uppercase font-bold text-white/30 tracking-widest">Nenhum leitor registrado no progresso</div>
+                                                ) : (
+                                                    userStats
+                                                        .map(([name]) => name)
+                                                        .filter(name => name.toLowerCase().includes(recipientSearch.toLowerCase()))
+                                                        .map((name) => {
+                                                            const isEmail = name.includes('@');
+                                                            const dispName = isEmail ? name.split('@')[0] : name;
+                                                            return (
+                                                                <button
+                                                                    key={name}
+                                                                    type="button"
+                                                                    onClick={() => setNewAnnouncement(prev => ({ ...prev, user_name: name }))}
+                                                                    className="w-full p-2.5 text-left text-xs uppercase hover:bg-white/5 font-bold tracking-wide text-white/70 hover:text-white flex items-center justify-between transition-colors"
+                                                                >
+                                                                    <div>
+                                                                        <span>{dispName}</span>
+                                                                        {isEmail && <span className="block text-[9px] text-white/30 lowercase font-medium">{name}</span>}
+                                                                    </div>
+                                                                    <Plus size={12} className="text-white/20" />
+                                                                </button>
+                                                            );
+                                                        })
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Title */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Título do Aviso</label>
+                                    <input 
+                                        type="text" 
+                                        value={newAnnouncement.title}
+                                        onChange={(e) => setNewAnnouncement(prev => ({ ...prev, title: e.target.value }))}
+                                        placeholder="Ex: Campanha de Julho Iniciada!"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:border-brand-purple focus:outline-none transition-colors"
+                                    />
+                                </div>
+
+                                {/* Content */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Conteúdo do Aviso</label>
+                                    <textarea 
+                                        value={newAnnouncement.content}
+                                        onChange={(e) => setNewAnnouncement(prev => ({ ...prev, content: e.target.value }))}
+                                        placeholder="Digite os detalhes do aviso..."
+                                        rows={4}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:border-brand-purple focus:outline-none transition-colors resize-none"
+                                    />
+                                </div>
+
+                                {/* Type selection */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">Estilo / Importância</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            { id: 'info', name: 'Informativo', color: 'border-blue-500/20 text-blue-400 bg-blue-500/5' },
+                                            { id: 'success', name: 'Novidade / Sucesso', color: 'border-green-500/20 text-green-400 bg-green-500/5' },
+                                            { id: 'warning', name: 'Alerta / Atenção', color: 'border-amber-500/20 text-amber-400 bg-amber-500/5' },
+                                            { id: 'important', name: 'Importante', color: 'border-red-500/20 text-red-400 bg-red-500/5' }
+                                        ].map((t) => (
+                                            <button
+                                                key={t.id}
+                                                type="button"
+                                                onClick={() => setNewAnnouncement(prev => ({ ...prev, type: t.id }))}
+                                                className={`p-3 rounded-xl border text-xs font-bold text-left uppercase transition-all ${newAnnouncement.type === t.id ? 'border-brand-purple text-brand-purple ring-1 ring-brand-purple/50 bg-brand-purple/5' : 'border-white/10 text-white/60 hover:border-white/20 bg-transparent'}`}
+                                            >
+                                                <span className={t.color + ' px-1.5 py-0.5 rounded text-[10px] border mr-2 block w-max mb-1'}>
+                                                    {t.id}
+                                                </span>
+                                                {t.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Active toggle */}
+                                <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-white uppercase">Publicar Imediatamente</span>
+                                        <span className="text-[10px] text-white/40 uppercase">O aviso ficará visível para os leitores na tela inicial</span>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setNewAnnouncement(prev => ({ ...prev, is_active: !prev.is_active }))}
+                                        className={`w-12 h-6 rounded-full relative p-0.5 transition-colors ${newAnnouncement.is_active ? 'bg-green-500' : 'bg-white/10'}`}
+                                    >
+                                        <div className={`w-5 h-5 rounded-full bg-white transition-transform ${newAnnouncement.is_active ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="p-6 border-t border-white/5 bg-white/5 flex gap-3">
+                                <button 
+                                    onClick={() => setShowNewAnnouncementModal(false)}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    onClick={handleSaveAnnouncement}
+                                    disabled={isAnnouncementSaving || !newAnnouncement.user_name}
+                                    className="flex-1 bg-brand-purple hover:bg-brand-purple/90 text-white py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                                >
+                                    {isAnnouncementSaving ? <RefreshCw className="animate-spin" size={14} /> : 'Publicar'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>
                 {showReadersModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">

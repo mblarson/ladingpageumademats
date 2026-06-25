@@ -84,8 +84,12 @@ CREATE TABLE public.bible_announcements (
     content TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'info', -- 'info', 'warning', 'success', 'important'
     is_active BOOLEAN NOT NULL DEFAULT true,
-    user_name TEXT NOT NULL -- Destinatário obrigatório do aviso (Leitor)
+    user_name TEXT NOT NULL, -- Destinatário obrigatório do aviso (Leitor)
+    last_acknowledged_at TIMESTAMPTZ NULL -- Última confirmação do aviso (ENTENDI)
 );
+
+-- Execução do alter se a tabela já existir
+ALTER TABLE public.bible_announcements ADD COLUMN IF NOT EXISTS last_acknowledged_at TIMESTAMPTZ NULL;
 
 -- Habilitar RLS
 ALTER TABLE public.bible_announcements ENABLE ROW LEVEL SECURITY;

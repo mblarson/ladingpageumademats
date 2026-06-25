@@ -677,14 +677,16 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   const handleAcknowledgeAnnouncement = async (item: any) => {
     if (!item) return;
 
+    const nowIso = new Date().toISOString();
     const auditRecord = {
       announcement_id: item.id,
       user_id: user?.id || 'anonymous',
       user_name: currentUserName,
       acao: 'ENTENDI',
-      created_at: new Date().toISOString()
+      created_at: nowIso
     };
 
+    // 1. Register audit entry
     try {
       const { error } = await supabase
         .from('bible_announcements_audit')
@@ -704,6 +706,32 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
         console.error("Local storage fallback audit error:", err);
       }
     }
+
+    // 2. Update last_acknowledged_at on bible_announcements table
+    try {
+      const { error } = await supabase
+        .from('bible_announcements')
+        .update({ last_acknowledged_at: nowIso })
+        .eq('id', item.id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Could not update last_acknowledged_at on Supabase, falling back to localStorage:", e);
+    }
+
+    // Always update local storage umademats_bible_announcements fallback/cache
+    try {
+      const saved = localStorage.getItem('umademats_bible_announcements');
+      if (saved) {
+        const list = JSON.parse(saved);
+        const updated = list.map((a: any) => a.id === item.id ? { ...a, last_acknowledged_at: nowIso } : a);
+        localStorage.setItem('umademats_bible_announcements', JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.error("Local storage bible_announcements update error:", err);
+    }
+
+    // Update current in-memory list
+    setAnnouncements(prev => prev.map(a => a.id === item.id ? { ...a, last_acknowledged_at: nowIso } : a));
 
     // Advance to next announcement in the queue
     setCurrentAnnouncementIndex(prev => prev + 1);

@@ -230,6 +230,7 @@ const BibleAdmin: React.FC = () => {
 -- OPÇÃO 1: SE VOCÊ JÁ TEM A TABELA E PRECISA APENAS DA COLUNA user_name
 -- ==========================================================
 ALTER TABLE public.bible_announcements ADD COLUMN IF NOT EXISTS user_name TEXT;
+ALTER TABLE public.bible_announcements ADD COLUMN IF NOT EXISTS last_acknowledged_at TIMESTAMPTZ NULL;
 
 -- Atualizar registros antigos para que não violem a restrição (opcional)
 -- UPDATE public.bible_announcements SET user_name = 'Leitor Padrão' WHERE user_name IS NULL;
@@ -250,7 +251,8 @@ CREATE TABLE public.bible_announcements (
     content TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'info', -- 'info', 'warning', 'success', 'important'
     is_active BOOLEAN NOT NULL DEFAULT true,
-    user_name TEXT NOT NULL -- Destinatário obrigatório do aviso (Leitor)
+    user_name TEXT NOT NULL, -- Destinatário obrigatório do aviso (Leitor)
+    last_acknowledged_at TIMESTAMPTZ NULL -- Última confirmação do aviso (ENTENDI)
 );
 
 -- Habilitar Row Level Security (RLS)
@@ -597,7 +599,11 @@ CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements 
                                                                                 </div>
                                                                                 <div className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
                                                                                     <span className="font-bold text-white/40 uppercase">Última Confirmação:</span>
-                                                                                    <span className="font-semibold text-white">{lastConfirmationStr}</span>
+                                                                                    <span className="font-semibold text-white">
+                                                                                        {item.last_acknowledged_at 
+                                                                                            ? `${new Date(item.last_acknowledged_at).toLocaleDateString('pt-BR')} ${new Date(item.last_acknowledged_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` 
+                                                                                            : 'Nunca confirmado'}
+                                                                                    </span>
                                                                                 </div>
                                                                                 <button
                                                                                     onClick={() => handleOpenAuditModal(item)}

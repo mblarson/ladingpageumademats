@@ -675,9 +675,15 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
   }, [currentUserName, loading]);
 
   const handleAcknowledgeAnnouncement = async (item: any) => {
-    if (!item) return;
+    console.log("[DIAGNOSTIC] 1. Clique recebido no botão 'ENTENDI'. Item:", item);
+    if (!item) {
+      console.error("[DIAGNOSTIC] Item de aviso está nulo ou indefinido!");
+      return;
+    }
 
     const nowIso = new Date().toISOString();
+    console.log("[DIAGNOSTIC] 2. Função executada. Hora atual ISO:", nowIso);
+
     const auditRecord = {
       announcement_id: item.id,
       user_id: user?.id || 'anonymous',
@@ -685,15 +691,23 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
       acao: 'ENTENDI',
       created_at: nowIso
     };
+    console.log("[DIAGNOSTIC] 3. Payload de auditoria montado:", auditRecord);
 
     // 1. Register audit entry
     try {
-      const { error } = await supabase
+      console.log("[DIAGNOSTIC] Enviando inserção de auditoria para o Supabase...");
+      const { data, error } = await supabase
         .from('bible_announcements_audit')
-        .insert([auditRecord]);
-      if (error) throw error;
-    } catch (e) {
-      console.warn("Error inserting audit to Supabase, falling back to localStorage:", e);
+        .insert([auditRecord])
+        .select();
+      
+      if (error) {
+        console.error("[DIAGNOSTIC] Erro ao inserir auditoria no Supabase:", error);
+        throw error;
+      }
+      console.log("[DIAGNOSTIC] Resposta do Supabase para auditoria (Sucesso):", data);
+    } catch (e: any) {
+      console.warn("[DIAGNOSTIC] Erro capturado na inserção da auditoria, caindo para localStorage:", e);
       try {
         const saved = localStorage.getItem('umademats_bible_announcements_audit');
         const list = saved ? JSON.parse(saved) : [];
@@ -702,20 +716,32 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
           ...auditRecord
         });
         localStorage.setItem('umademats_bible_announcements_audit', JSON.stringify(list));
+        console.log("[DIAGNOSTIC] Auditoria gravada localmente com sucesso.");
       } catch (err) {
-        console.error("Local storage fallback audit error:", err);
+        console.error("[DIAGNOSTIC] Erro ao gravar auditoria localmente:", err);
       }
     }
 
     // 2. Update last_acknowledged_at on bible_announcements table
     try {
-      const { error } = await supabase
+      console.log("[DIAGNOSTIC] 4. Enviando UPDATE para a tabela bible_announcements...");
+      console.log("[DIAGNOSTIC] ID do aviso:", item.id);
+      console.log("[DIAGNOSTIC] Novo valor de last_acknowledged_at:", nowIso);
+      
+      const { data: updateData, error: updateError } = await supabase
         .from('bible_announcements')
         .update({ last_acknowledged_at: nowIso })
-        .eq('id', item.id);
-      if (error) throw error;
-    } catch (e) {
-      console.warn("Could not update last_acknowledged_at on Supabase, falling back to localStorage:", e);
+        .eq('id', item.id)
+        .select();
+
+      if (updateError) {
+        console.error("[DIAGNOSTIC] 5/6. Erro retornado pelo Supabase no UPDATE:", updateError);
+        throw updateError;
+      }
+      console.log("[DIAGNOSTIC] 5/6. Resposta do Supabase para o UPDATE (Sucesso):", updateData);
+    } catch (e: any) {
+      console.error("[DIAGNOSTIC] Exceção capturada no fluxo de UPDATE:", e);
+      console.warn("[DIAGNOSTIC] Could not update last_acknowledged_at on Supabase, falling back to localStorage:", e);
     }
 
     // Always update local storage umademats_bible_announcements fallback/cache
@@ -725,9 +751,10 @@ export const BibleReadingPage: React.FC<BibleReadingPageProps> = ({ onBack, onIn
         const list = JSON.parse(saved);
         const updated = list.map((a: any) => a.id === item.id ? { ...a, last_acknowledged_at: nowIso } : a);
         localStorage.setItem('umademats_bible_announcements', JSON.stringify(updated));
+        console.log("[DIAGNOSTIC] Cache local umademats_bible_announcements atualizado.");
       }
     } catch (err) {
-      console.error("Local storage bible_announcements update error:", err);
+      console.error("[DIAGNOSTIC] Erro ao atualizar cache local de avisos:", err);
     }
 
     // Update current in-memory list

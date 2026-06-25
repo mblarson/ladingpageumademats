@@ -15,7 +15,6 @@ import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 const BibleReadingPage = lazy(() => import('./components/BibleReadingPage').then(m => ({ default: m.BibleReadingPage })));
 const LideraPortal = lazy(() => import('./components/LideraPortal').then(m => ({ default: m.LideraPortal })));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const OrganizationPortal = lazy(() => import('./components/OrganizationPortal').then(m => ({ default: m.OrganizationPortal })));
 const ShirtRequestPage = lazy(() => import('./components/ShirtRequestPage').then(m => ({ default: m.ShirtRequestPage })));
 const TshirtOrderPage = lazy(() => import('./components/TshirtOrderPage').then(m => ({ default: m.TshirtOrderPage })));
 
@@ -25,7 +24,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'organization' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza' | 'missao';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza' | 'missao';
 
 export default function App() {
   useSiteAnalytics();
@@ -46,7 +45,6 @@ export default function App() {
         if (path === '/pedircamiseta') return 'shirt_request';
         if (path === '/camisetas') return 'tshirt_order';
         if (path === '/admin') return 'admin';
-        if (path === '/admin/organizacao' || path === '/admin/organizacao/') return 'organization';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
         
@@ -74,7 +72,6 @@ export default function App() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('page') === 'bible') return 'bible';
         if (params.get('page') === 'lidera') return 'lidera';
-        if (params.get('page') === 'organization') return 'organization';
 
       } catch (e) {
         console.warn("Error reading initial route:", e);
@@ -114,7 +111,6 @@ export default function App() {
       bible: '/biblia',
       admin: '/admin',
       lidera: '/lideraumademats',
-      organization: '/admin/organizacao',
       shirt_request: '/pedircamiseta',
       tshirt_order: '/camisetas',
       sulamita: '/sulamita',
@@ -159,11 +155,7 @@ export default function App() {
   }
 
   if (currentPage === 'admin') {
-    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} onNavigateOrg={() => handleNavigate('organization')} /></Suspense>;
-  }
-
-  if (currentPage === 'organization') {
-    return <Suspense fallback={<LoadingFallback />}><OrganizationPortal onBack={() => handleNavigate('admin')} /></Suspense>;
+    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} /></Suspense>;
   }
 
   if (currentPage === 'bible') {

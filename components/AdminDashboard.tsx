@@ -1729,8 +1729,8 @@ const ShirtRequestsAdmin: React.FC = () => {
 };
 
 
-interface AdminDashboardProps { onBack: () => void; onNavigateOrg?: () => void; }
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNavigateOrg }) => {
+interface AdminDashboardProps { onBack: () => void; }
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
@@ -1770,7 +1770,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
         <div className="flex flex-col gap-3 w-full max-w-sm">
           <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Gestão Umademats</button>
           <button onClick={() => setAdminView('estoque')} className="w-full bg-[#ccff00] hover:bg-[#b5e000] text-black border-2 border-transparent p-6 rounded-lg text-lg font-bold uppercase transition-all text-center flex items-center justify-center gap-2"><ShoppingBag size={22} strokeWidth={2.5} /> Estoque Umademats</button>
-          <button onClick={() => onNavigateOrg?.()} className="w-full bg-brand-purple border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center flex items-center justify-center gap-3"><LayoutGrid size={24} /> ORGANIZAÇÃO UMADEMATS</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
         <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>

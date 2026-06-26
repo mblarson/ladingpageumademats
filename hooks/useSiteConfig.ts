@@ -91,7 +91,19 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
 };
 
 export const useSiteConfig = () => {
-  const [config, setConfig] = useState<SiteConfig>(DEFAULT_SITE_CONFIG);
+  const [config, setConfig] = useState<SiteConfig>(() => {
+    let initialTheme: 'default' | 'copa' = 'default';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('umademats_system_theme');
+      if (saved === 'default' || saved === 'copa') {
+        initialTheme = saved as 'default' | 'copa';
+      }
+    }
+    return {
+      ...DEFAULT_SITE_CONFIG,
+      system_theme: initialTheme
+    };
+  });
   const [loading, setLoading] = useState(true);
 
   // Carregar configurações ao iniciar
@@ -110,7 +122,13 @@ export const useSiteConfig = () => {
 
       if (data) {
         // Merge com defaults para garantir que novos campos não quebrem
-        setConfig({ ...DEFAULT_SITE_CONFIG, ...data.value });
+        const mergedConfig = { ...DEFAULT_SITE_CONFIG, ...data.value };
+        setConfig(mergedConfig);
+        
+        // Sincronizar o tema com o localStorage para que acessos futuros carreguem instantaneamente
+        if (typeof window !== 'undefined' && mergedConfig.system_theme) {
+          localStorage.setItem('umademats_system_theme', mergedConfig.system_theme);
+        }
       }
     } catch (e) {
       console.warn("Using default config (Table not found or empty)");
@@ -123,6 +141,11 @@ export const useSiteConfig = () => {
     try {
       // Otimistic Update
       setConfig(newConfig);
+      
+      // Salvar imediatamente no localStorage para evitar qualquer atraso visual
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('umademats_system_theme', newConfig.system_theme);
+      }
       
       const { error } = await supabase
         .from('site_config')

@@ -17,20 +17,21 @@ interface HeroSectionProps {
   onNavigate: (page: PageType) => void;
   onDimensionsDetected?: (width: number, height: number) => void;
   theme?: 'default' | 'copa';
+  initialSlides?: HeroSlide[];
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate, onDimensionsDetected, theme = 'default' }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate, onDimensionsDetected, theme = 'default', initialSlides }) => {
   const { config: storedConfig, loading: configLoading } = useSiteConfig();
   const activeConfig = previewConfig || (configLoading ? DEFAULT_SITE_CONFIG : storedConfig);
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -50, left: -50, right: 50, bottom: 50 }, dragElastic: 0.1 } : {};
   const dragFreeProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -200, left: -200, right: 200, bottom: 200 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 100 } } : {};
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [slides, setSlides] = useState<HeroSlide[]>(initialSlides || []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPhotosInfoModal, setShowPhotosInfoModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialSlides || initialSlides.length === 0);
 
   const isCopa = theme === 'copa';
   const accentColor = isCopa ? '#ffdf00' : activeConfig.hero_accentColor;
@@ -64,6 +65,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
   // Busca Slides
   useEffect(() => {
+    if (initialSlides && initialSlides.length > 0) {
+      setSlides(initialSlides);
+      setLoading(false);
+      return;
+    }
+
     const fetchSlides = async () => {
       try {
         const { data, error } = await supabase
@@ -91,7 +98,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       }
     };
     fetchSlides();
-  }, []);
+  }, [initialSlides]);
 
   // Timer do Slider
   useEffect(() => {
@@ -162,21 +169,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   };
 
   const currentSlide = slides[currentIndex];
-  // Usa uma flag ou um item vazio pro TS não reclamar, mas o loading trata isso
-  const HERO_PRELOAD_URL = "https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776888819/SLIDEEMP%C3%89_faxad2.webp";
 
   return (
     <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[85vh] overflow-hidden bg-black">
-      {/* Background Pre-render for the very first load/preload match */}
-      <div 
-        className="absolute inset-0 z-[1] pointer-events-none transition-opacity duration-1000"
-        style={{ 
-          backgroundImage: `url(${HERO_PRELOAD_URL})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: slides.length > 0 ? 0 : 1 // Sempre escondido assim que os slides carregam (causa do bug de repetição)
-        }}
-      />
+      {/* O fundo preto padrão (bg-black) serve como base neutra e elegante antes do primeiro slide correto renderizar */}
+
 
       {/* Nav Menu renderizado imediatamente */}
       <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[110px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">

@@ -11,6 +11,8 @@ import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
 import { useSiteConfig } from './hooks/useSiteConfig';
+import { GlobalLoadingScreen } from './components/GlobalLoadingScreen';
+import { HeroSlide } from './types';
 
 // Lazy Load Secondary Pages
 const BibleReadingPage = lazy(() => import('./components/BibleReadingPage').then(m => ({ default: m.BibleReadingPage })));
@@ -29,7 +31,7 @@ export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'shirt_request' |
 
 export default function App() {
   useSiteAnalytics();
-  const { config, saveConfig } = useSiteConfig();
+  const { config, loading, saveConfig } = useSiteConfig();
 
   const systemTheme = config.system_theme || 'default';
 
@@ -38,6 +40,39 @@ export default function App() {
   };
 
   const [tourUser, setTourUser] = useState<string | null>(null);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(true);
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [slidesLoading, setSlidesLoading] = useState(true);
+
+  const fetchSlides = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hero_slides')
+        .select('*')
+        .eq('is_active', true)
+        .order('order', { ascending: true });
+      
+      if (!error && data && data.length > 0) {
+        setSlides(data);
+      } else {
+        setSlides([
+          { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
+          { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
+          { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
+          { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
+          { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
+        ]);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar slides:", e);
+    } finally {
+      setSlidesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSlides();
+  }, []);
 
   const [currentPage, setCurrentPage] = useState<PageType>(() => {
     if (typeof window !== 'undefined') {
@@ -103,6 +138,9 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (currentPage === 'home') {
+      fetchSlides();
+    }
   }, [currentPage]);
 
   const safePushState = (path: string) => {
@@ -129,87 +167,112 @@ export default function App() {
     setCurrentPage(page);
   };
 
-  if (currentPage === 'missao') {
+  const renderPageContent = () => {
+    if (currentPage === 'missao') {
+      return (
+        <main className="w-full bg-[#0b0b1e] min-h-screen relative overflow-hidden flex flex-col justify-start">
+          {/* Playful Float Floating Back Button overlay */}
+          <div className="absolute top-4 left-4 z-[100] pointer-events-auto">
+            <button 
+              onClick={() => handleNavigate('home')} 
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-black bg-white hover:bg-zinc-100 text-black font-semibold text-xs uppercase tracking-wider shadow-[4px_4px_0px_#000000] active:translate-y-0.5 active:shadow-[2px_2px_0px_#000000] transition-all"
+            >
+              <ArrowLeft size={14} strokeWidth={2.5} />
+              <span>Portal</span>
+            </button>
+          </div>
+
+          {/* The Game itself rendered in a clean iframe container */}
+          <iframe 
+            src="/missao/index.html" 
+            className="w-full h-screen border-none"
+            title="Missão Bíblica: 30 Segundos"
+            referrerPolicy="no-referrer"
+          />
+        </main>
+      );
+    }
+
+    if (currentPage === 'shirt_request') {
+      return <Suspense fallback={<LoadingFallback />}><ShirtRequestPage onBack={() => handleNavigate('home')} /></Suspense>;
+    }
+
+    if (currentPage === 'tshirt_order') {
+      return <Suspense fallback={<LoadingFallback />}><TshirtOrderPage onBack={() => handleNavigate('home')} /></Suspense>;
+    }
+
+    if (currentPage === 'admin') {
+      return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} systemTheme={systemTheme} setSystemTheme={setSystemTheme} /></Suspense>;
+    }
+
+    if (currentPage === 'bible') {
+      return (
+        <main className="w-full bg-brand-dark min-h-screen text-white relative">
+            <Suspense fallback={<LoadingFallback />}><BibleReadingPage onBack={() => handleNavigate('home')} /></Suspense>
+        </main>
+      );
+    }
+
+    if (currentPage === 'lidera') {
+      return (
+        <main className="w-full bg-brand-dark min-h-screen text-white relative">
+            <Suspense fallback={<LoadingFallback />}><LideraPortal onBack={() => handleNavigate('home')} /></Suspense>
+        </main>
+      );
+    }
+
     return (
-      <main className="w-full bg-[#0b0b1e] min-h-screen relative overflow-hidden flex flex-col justify-start">
-        {/* Playful Float Floating Back Button overlay */}
-        <div className="absolute top-4 left-4 z-[100] pointer-events-auto">
-          <button 
-            onClick={() => handleNavigate('home')} 
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-black bg-white hover:bg-zinc-100 text-black font-semibold text-xs uppercase tracking-wider shadow-[4px_4px_0px_#000000] active:translate-y-0.5 active:shadow-[2px_2px_0px_#000000] transition-all"
-          >
-            <ArrowLeft size={14} strokeWidth={2.5} />
-            <span>Portal</span>
-          </button>
+      <main className="w-full relative bg-brand-dark min-h-screen text-white overflow-hidden">
+        <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-brand-neon origin-left z-[100]" style={{ scaleX }} />
+        <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[50vh] w-[2px] bg-white/10 rounded-full z-[90] hidden md:block pointer-events-none">
+            <motion.div style={{ top: yPath }} className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"><Zap size={12} className="fill-black text-black" /></motion.div>
         </div>
+        <HeroSection onNavigate={handleNavigate} theme={systemTheme} initialSlides={slides} />
+        <StoreSection theme={systemTheme} />
+        <JesusReinaBanner theme={systemTheme} />
+        <ActionSection onNavigate={handleNavigate} theme={systemTheme} />
+        <AboutSection theme={systemTheme} />
+        
+        <AnimatePresence>
+          {tourUser && (
+            <WelcomeExperience 
+              name={tourUser} 
+              onFinish={() => setTourUser(null)} 
+            />
+          )}
+        </AnimatePresence>
 
-        {/* The Game itself rendered in a clean iframe container */}
-        <iframe 
-          src="/missao/index.html" 
-          className="w-full h-screen border-none"
-          title="Missão Bíblica: 30 Segundos"
-          referrerPolicy="no-referrer"
-        />
+        <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
+          <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
+          <p className="mt-2 text-[10px] opacity-30">Desenvolvido para o Reino.</p>
+          <button onClick={() => handleNavigate('admin')} className="absolute bottom-4 right-4 opacity-50 hover:opacity-100 transition-opacity text-white font-bold p-2 text-[10px]" title="Área Administrativa">
+             <Lock size={14} />
+          </button>
+        </footer>
       </main>
     );
-  }
-
-  if (currentPage === 'shirt_request') {
-    return <Suspense fallback={<LoadingFallback />}><ShirtRequestPage onBack={() => handleNavigate('home')} /></Suspense>;
-  }
-
-  if (currentPage === 'tshirt_order') {
-    return <Suspense fallback={<LoadingFallback />}><TshirtOrderPage onBack={() => handleNavigate('home')} /></Suspense>;
-  }
-
-  if (currentPage === 'admin') {
-    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} systemTheme={systemTheme} setSystemTheme={setSystemTheme} /></Suspense>;
-  }
-
-  if (currentPage === 'bible') {
-    return (
-      <main className="w-full bg-brand-dark min-h-screen text-white relative">
-          <Suspense fallback={<LoadingFallback />}><BibleReadingPage onBack={() => handleNavigate('home')} /></Suspense>
-      </main>
-    );
-  }
-
-  if (currentPage === 'lidera') {
-    return (
-      <main className="w-full bg-brand-dark min-h-screen text-white relative">
-          <Suspense fallback={<LoadingFallback />}><LideraPortal onBack={() => handleNavigate('home')} /></Suspense>
-      </main>
-    );
-  }
+  };
 
   return (
-    <main className="w-full relative bg-brand-dark min-h-screen text-white overflow-hidden">
-      <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-brand-neon origin-left z-[100]" style={{ scaleX }} />
-      <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[50vh] w-[2px] bg-white/10 rounded-full z-[90] hidden md:block pointer-events-none">
-          <motion.div style={{ top: yPath }} className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"><Zap size={12} className="fill-black text-black" /></motion.div>
-      </div>
-      <HeroSection onNavigate={handleNavigate} theme={systemTheme} />
-      <StoreSection theme={systemTheme} />
-      <JesusReinaBanner theme={systemTheme} />
-      <ActionSection onNavigate={handleNavigate} theme={systemTheme} />
-      <AboutSection theme={systemTheme} />
-      
-      <AnimatePresence>
-        {tourUser && (
-          <WelcomeExperience 
-            name={tourUser} 
-            onFinish={() => setTourUser(null)} 
-          />
-        )}
-      </AnimatePresence>
-
-      <footer className="py-12 bg-black text-center text-gray-500 font-sans uppercase tracking-widest text-xs border-t border-white/5 relative">
-        <p>© 2026 UMADEMATS. Todos os direitos reservados.</p>
-        <p className="mt-2 text-[10px] opacity-30">Desenvolvido para o Reino.</p>
-        <button onClick={() => handleNavigate('admin')} className="absolute bottom-4 right-4 opacity-50 hover:opacity-100 transition-opacity text-white font-bold p-2 text-[10px]" title="Área Administrativa">
-           <Lock size={14} />
-        </button>
-      </footer>
-    </main>
+    <AnimatePresence mode="wait">
+      {isGlobalLoading ? (
+        <GlobalLoadingScreen 
+          key="global-loader"
+          loading={loading || slidesLoading} 
+          theme={systemTheme} 
+          onComplete={() => setIsGlobalLoading(false)} 
+        />
+      ) : (
+        <motion.div
+          key="app-main-content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="w-full min-h-screen"
+        >
+          {renderPageContent()}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

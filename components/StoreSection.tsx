@@ -28,7 +28,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({ theme = 'default' })
   const isCopa = theme === 'copa';
 
   return (
-    <section className={`relative py-8 md:py-14 lg:py-8 ${isCopa ? 'bg-[#009c3b]' : 'bg-[#2563eb]'} overflow-hidden border-b-4 border-black`}>
+    <section className={`relative py-12 md:py-16 lg:py-12 ${isCopa ? 'bg-[#009c3b]' : 'bg-[#2563eb]'} overflow-hidden border-b-4 border-black`}>
       
       {/* Starburst Pattern Background - Replicating Image in Code WITHOUT heavy SVG filters */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden scale-110">
@@ -64,9 +64,9 @@ export const StoreSection: React.FC<StoreSectionProps> = ({ theme = 'default' })
         </div>
       </div>
 
-      <div className="relative flex w-full z-10 py-4 lg:py-2 overflow-hidden">
+      <div className="relative flex items-center w-full z-10 py-6 lg:py-4 overflow-hidden">
         <motion.div 
-          className="flex gap-8 md:gap-12 lg:gap-8 px-6"
+          className="flex items-center gap-8 md:gap-12 lg:gap-8 px-6"
           initial={{ x: 0 }}
           animate={{ x: [0, "-50%"] }}
           transition={{ 
@@ -79,7 +79,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({ theme = 'default' })
           {DUPLICATED_PRODUCTS.map((product, idx) => (
             <div 
               key={`${product.id}-${idx}`}
-              className={`flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] relative ${isCopa ? 'bg-gradient-to-br from-[#002776] to-black hover:border-[#ffdf00]' : 'bg-gradient-to-br from-indigo-800 to-black'} rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105`}
+              className={`flex-shrink-0 w-36 h-64 md:w-56 md:h-[398px] lg:w-44 lg:h-[312px] relative ${isCopa ? 'bg-gradient-to-br from-[#002776] to-black hover:border-[#ffdf00]' : 'bg-gradient-to-br from-indigo-800 to-black'} rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105`}
               style={{ willChange: "transform" }}
             >
               <div className="absolute inset-0 w-full h-full">

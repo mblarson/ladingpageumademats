@@ -79,10 +79,10 @@ export const StoreSection: React.FC<StoreSectionProps> = ({ theme = 'default' })
           {DUPLICATED_PRODUCTS.map((product, idx) => (
             <div 
               key={`${product.id}-${idx}`}
-              className={`flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] ${isCopa ? 'bg-gradient-to-br from-[#002776] to-black hover:border-[#ffdf00]' : 'bg-gradient-to-br from-indigo-800 to-black'} rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105`}
+              className={`flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] relative ${isCopa ? 'bg-gradient-to-br from-[#002776] to-black hover:border-[#ffdf00]' : 'bg-gradient-to-br from-indigo-800 to-black'} rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105`}
               style={{ willChange: "transform" }}
             >
-              <div className="relative w-full h-full">
+              <div className="absolute inset-0 w-full h-full">
                 <img 
                   src={product.image} 
                   alt={product.name}

@@ -1,5 +1,6 @@
 {
-  "name": "PORTAL UMADEMATS.",
-  "description": "A vibrant, animated landing page for the UMADEMATS event featuring Jubilee details and registration portals.",
-  "requestFramePermissions": []
+  "name": "Portal Umademats",
+  "description": "Portal Umademats com Copa do Mundo tema, Estoque independente persistente e visualização animada de alto desempenho.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

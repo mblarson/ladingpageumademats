@@ -98,9 +98,10 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
 
 interface AboutSectionProps {
   previewConfig?: SiteConfig;
+  theme?: 'default' | 'copa';
 }
 
-export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => {
+export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig, theme = 'default' }) => {
   const { config: storedConfig, loading } = useSiteConfig();
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
 
@@ -111,13 +112,17 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
     setShowLeadersModal(false);
   };
 
+  const isCopa = theme === 'copa';
+  const bgColorClass = isCopa ? 'bg-[#0a3118]' : 'bg-[#0a0a2a]';
+  const halftoneColor = isCopa ? '#05180c' : '#1e1b4b';
+
   return (
-    <section id="about-section" className="relative w-full bg-[#0a0a2a] pt-24 pb-32 lg:pt-14 lg:pb-16 overflow-hidden z-20">
+    <section id="about-section" className={`relative w-full ${bgColorClass} pt-24 pb-32 lg:pt-14 lg:pb-16 overflow-hidden z-20`}>
       
       {/* CSS Styles Localizados */}
       <style>{`
         .bg-halftone-blue {
-            background-image: radial-gradient(#1e1b4b 2px, transparent 2px);
+            background-image: radial-gradient(${halftoneColor} 2px, transparent 2px);
             background-size: 30px 30px;
         }
         @keyframes float-mini {
@@ -142,10 +147,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 </h2>
                 
                 {/* Decorative Elements around Title */}
-                <div className="absolute -top-4 -right-4 md:-right-12 text-brand-pink">
+                <div className={`absolute -top-4 -right-4 md:-right-12 ${isCopa ? 'text-[#ffdf00]' : 'text-brand-pink'}`}>
                     <Zap size={40} className="md:w-16 md:h-16 fill-current" />
                 </div>
-                <div className="absolute -bottom-2 -left-2 md:-left-12 text-brand-purple">
+                <div className={`absolute -bottom-2 -left-2 md:-left-12 ${isCopa ? 'text-[#002776]' : 'text-brand-purple'}`}>
                     <Star size={30} className="md:w-12 md:h-12 fill-current" />
                 </div>
              </div>
@@ -153,7 +158,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
              <p className="mt-6 text-white/70 font-sans text-sm md:text-lg max-w-2xl text-center uppercase tracking-wider font-bold">
                 Conheça quem faz a obra acontecer
              </p>
-             <SubtleWaveDivider className="mt-8 opacity-30" width="180px" height="10px" color="#CCFF00" />
+             <SubtleWaveDivider className="mt-8 opacity-30" width="180px" height="10px" color={isCopa ? "#ffdf00" : "#CCFF00"} />
         </div>
 
         {/* IEADMS Banner Image & Text */}
@@ -191,7 +196,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 role="Presidentes IEADMS"
                 name="Pr. Eliel e Jane"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/elieljane.jpg" 
-                color="bg-brand-neon text-black"
+                color={isCopa ? "bg-[#ffdf00] text-[#002776] hover:border-[#ffdf00]" : "bg-brand-neon text-black"}
                 rotate="rotate-[-2deg]"
                 imageAspect="aspect-[4/5]"
                 enableDrag={activeConfig.ui_allowDrag}
@@ -202,7 +207,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 role="Presidentes Executivos"
                 name="Pr. Felipe e Hyanna"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/felipehyanna.jpg" 
-                color="bg-brand-neon text-black"
+                color={isCopa ? "bg-[#ffdf00] text-[#002776] hover:border-[#ffdf00]" : "bg-brand-neon text-black"}
                 rotate="rotate-[2deg]"
                 imageAspect="aspect-[4/5]"
                 enableDrag={activeConfig.ui_allowDrag}
@@ -213,7 +218,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
                 role="Líderes UMADEMATS"
                 name="Pr. Joelson e Mariana"
                 image="https://raw.githubusercontent.com/mblarson/imagens/main/IMG_0043.jpeg" 
-                color="bg-brand-purple text-white"
+                color={isCopa ? "bg-[#002776] text-white hover:border-[#ffdf00]" : "bg-brand-purple text-white"}
                 rotate="rotate-[-1deg]"
                 className="col-span-2 md:col-span-1"
                 imageAspect="aspect-[16/9] md:aspect-[4/5]"
@@ -230,7 +235,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig }) => 
 
       {/* BOTTOM DIVIDER (Transition to Footer/Black) */}
       <div className="absolute bottom-0 left-0 right-0 w-full z-10">
-        <DividerCreative variant="particles" color="text-brand-purple" lineColor="bg-brand-purple" opacity={0.3} />
+        <DividerCreative variant="particles" color={isCopa ? "text-[#009c3b]" : "text-brand-purple"} lineColor={isCopa ? "bg-[#009c3b]" : "bg-brand-purple"} opacity={0.3} />
       </div>
 
       {/* --- MODAL DE SELEÇÃO DE INSTAGRAM --- */}

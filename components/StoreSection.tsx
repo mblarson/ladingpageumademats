@@ -20,22 +20,28 @@ const PRODUCTS: Product[] = [
 // Double the items to ensure seamless loop
 const DUPLICATED_PRODUCTS = [...PRODUCTS, ...PRODUCTS];
 
-export const StoreSection: React.FC = () => {
+interface StoreSectionProps {
+  theme?: 'default' | 'copa';
+}
+
+export const StoreSection: React.FC<StoreSectionProps> = ({ theme = 'default' }) => {
+  const isCopa = theme === 'copa';
+
   return (
-    <section className="relative py-8 md:py-14 lg:py-8 bg-[#2563eb] overflow-hidden border-b-4 border-black">
+    <section className={`relative py-8 md:py-14 lg:py-8 ${isCopa ? 'bg-[#009c3b]' : 'bg-[#2563eb]'} overflow-hidden border-b-4 border-black`}>
       
       {/* Starburst Pattern Background - Replicating Image in Code WITHOUT heavy SVG filters */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden scale-110">
         <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="w-full h-full opacity-60">
-          {/* Base Background (Mid Blue) */}
-          <rect width="100" height="100" fill="#1e40af" /> 
+          {/* Base Background */}
+          <rect width="100" height="100" fill={isCopa ? "#007a2e" : "#1e40af"} /> 
           
-          {/* Layered Starburst Rings in Blue and Beige tones (Optimized: No filters) */}
-          <circle cx="50" cy="50" r="50" fill="#3b82f6" />
-          <circle cx="50" cy="50" r="42" fill="#fff8be" />
-          <circle cx="50" cy="50" r="34" fill="#2563eb" />
-          <circle cx="50" cy="50" r="26" fill="#fff8be" />
-          <circle cx="50" cy="50" r="18" fill="#1d4ed8" />
+          {/* Layered Starburst Rings in Blue and Beige tones / Copa flag tones */}
+          <circle cx="50" cy="50" r="50" fill={isCopa ? "#009c3b" : "#3b82f6"} />
+          <circle cx="50" cy="50" r="42" fill={isCopa ? "#ffdf00" : "#fff8be"} />
+          <circle cx="50" cy="50" r="34" fill={isCopa ? "#002776" : "#2563eb"} />
+          <circle cx="50" cy="50" r="26" fill={isCopa ? "#ffdf00" : "#fff8be"} />
+          <circle cx="50" cy="50" r="18" fill={isCopa ? "#001c54" : "#1d4ed8"} />
         </svg>
       </div>
 
@@ -50,7 +56,7 @@ export const StoreSection: React.FC = () => {
 
       <div className="max-w-6xl mx-auto px-4 mb-8 md:mb-12 lg:mb-6 relative z-10">
         <div className="flex flex-col items-start gap-1 text-left">
-          <div className="bg-indigo-900/90 px-5 py-2 border-2 border-black transform -rotate-1 shadow-lg">
+          <div className={`${isCopa ? 'bg-[#002776]/95' : 'bg-indigo-900/90'} px-5 py-2 border-2 border-black transform -rotate-1 shadow-lg`}>
             <h2 className="text-4xl md:text-6xl lg:text-3xl font-fun font-black tracking-[0.1em] text-white">
               Loja Umademats
             </h2>
@@ -73,7 +79,7 @@ export const StoreSection: React.FC = () => {
           {DUPLICATED_PRODUCTS.map((product, idx) => (
             <div 
               key={`${product.id}-${idx}`}
-              className="flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] bg-gradient-to-br from-indigo-800 to-black rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105"
+              className={`flex-shrink-0 w-36 md:w-56 lg:w-44 aspect-[9/16] ${isCopa ? 'bg-gradient-to-br from-[#002776] to-black hover:border-[#ffdf00]' : 'bg-gradient-to-br from-indigo-800 to-black'} rounded-[2rem] overflow-hidden border-2 border-white/10 group cursor-pointer shadow-xl transition-all duration-300 hover:scale-105`}
               style={{ willChange: "transform" }}
             >
               <div className="relative w-full h-full">
@@ -86,8 +92,8 @@ export const StoreSection: React.FC = () => {
                 
                 <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ccff00] opacity-80" />
-                    <span className="text-xs md:text-sm font-fun font-bold uppercase tracking-widest text-[#ccff00] block" style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.8)" }}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${isCopa ? 'bg-[#ffdf00]' : 'bg-[#ccff00]'} opacity-80`} />
+                    <span className={`text-xs md:text-sm font-fun font-bold uppercase tracking-widest ${isCopa ? 'text-[#ffdf00]' : 'text-[#ccff00]'} block`} style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.8)" }}>
                       {product.name}
                     </span>
                   </div>

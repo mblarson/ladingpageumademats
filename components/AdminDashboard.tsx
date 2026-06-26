@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter, ShoppingBag, Megaphone, Bell } from 'lucide-react';
+import { BarChart3, Clock, Calendar, Users, ArrowLeft, Lock, Layout, Save, RotateCcw, ChevronDown, ChevronRight, Activity, RefreshCw, Presentation, List, PieChart, User, Menu, X, BookOpen, Trophy, Flame, AlertCircle, Database, ChevronUp, MapPin, ClipboardList, GraduationCap, Plus, Trash2, Globe, Eye, Image as ImageIcon, Upload, Terminal, CheckCircle2, Building2, Type, LayoutGrid, Phone, Search, Filter, ShoppingBag, Megaphone, Bell, Palette } from 'lucide-react';
 import { useAnalyticsDashboard } from '../hooks/useSiteAnalytics';
 import { useSiteConfig, SiteConfig, DEFAULT_SITE_CONFIG } from '../hooks/useSiteConfig';
 import { useKeepalive } from '../hooks/useKeepalive';
@@ -1729,18 +1729,46 @@ const ShirtRequestsAdmin: React.FC = () => {
 };
 
 
-interface AdminDashboardProps { onBack: () => void; }
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
+interface AdminDashboardProps { 
+  onBack: () => void; 
+  systemTheme?: 'default' | 'copa';
+  setSystemTheme?: (theme: 'default' | 'copa') => void;
+}
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, systemTheme = 'default', setSystemTheme }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
   const [activeTab, setActiveTab] = useState<'analytics' | 'builder' | 'keepalive' | 'presence' | 'bible' | 'lidera' | 'shirt_requests'>('analytics');
-  const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence' | 'estoque'>('menu');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  const [adminView, setAdminView] = useState<'menu' | 'dashboard' | 'presence' | 'estoque'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('admin_dashboard_view');
+      if (saved === 'menu' || saved === 'dashboard' || saved === 'presence' || saved === 'estoque') {
+        return saved as any;
+      }
+    }
+    return 'menu';
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('admin_dashboard_authenticated') === 'true';
+    }
+    return false;
+  });
+
   const [password, setPassword] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [builderSubTab, setBuilderSubTab] = useState<'hero'>('hero');
   const [heroDimensions, setHeroDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    localStorage.setItem('admin_dashboard_view', adminView);
+  }, [adminView]);
+
+  useEffect(() => {
+    localStorage.setItem('admin_dashboard_authenticated', String(isAuthenticated));
+  }, [isAuthenticated]);
 
   const handleDimensionsDetected = React.useCallback((width: number, height: number) => {
     setHeroDimensions(prev => {
@@ -1772,7 +1800,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           <button onClick={() => setAdminView('estoque')} className="w-full bg-[#ccff00] hover:bg-[#b5e000] text-black border-2 border-transparent p-6 rounded-lg text-lg font-bold uppercase transition-all text-center flex items-center justify-center gap-2"><ShoppingBag size={22} strokeWidth={2.5} /> Estoque Umademats</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
-        <button onClick={onBack} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>
+        <button onClick={() => {
+          localStorage.removeItem('admin_dashboard_authenticated');
+          localStorage.removeItem('admin_dashboard_view');
+          setIsAuthenticated(false);
+          setAdminView('menu');
+          onBack();
+        }} className="text-white/30 hover:text-white uppercase font-bold text-sm tracking-widest flex items-center gap-2"><ArrowLeft size={16} /> Sair do Painel</button>
       </div>
   );
   if (adminView === 'presence') return <PresenceCounter onBack={() => setAdminView('menu')} />;
@@ -1873,7 +1907,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                         <button onClick={() => setAdminView('menu')} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft size={20} /></button>
                         <h2 className="text-xl font-display uppercase text-white">Seção HERO CMS</h2>
                       </div>
-                      <div className="h-full overflow-y-auto no-scrollbar pb-20">
+                      <div className="h-full overflow-y-auto no-scrollbar pb-20 space-y-8">
+                        {/* CARD TEMA DO SISTEMA */}
+                        <div className="bg-[#1a1a1a] border-2 border-white/10 rounded-2xl p-6 shadow-xl">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-[#ccff00] rounded-xl flex items-center justify-center text-black">
+                              <Palette size={20} />
+                            </div>
+                            <div>
+                              <h3 className="font-display uppercase text-lg text-white">Tema do Sistema</h3>
+                              <p className="text-xs text-white/50 font-medium">Personalize o visual comemorativo do portal</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                            <button
+                              onClick={() => {
+                                if (setSystemTheme) {
+                                  setSystemTheme('default');
+                                  localStorage.setItem('umademats_system_theme', 'default');
+                                }
+                              }}
+                              className={`flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
+                                systemTheme === 'default'
+                                  ? 'border-[#ccff00] bg-[#ccff00]/5 text-white'
+                                  : 'border-white/10 hover:border-white/20 text-white/70'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full mb-2">
+                                <span className="font-bold text-sm uppercase tracking-wide">Tema Atual (Padrão)</span>
+                                {systemTheme === 'default' && <div className="w-2 h-2 rounded-full bg-[#ccff00]" />}
+                              </div>
+                              <span className="text-xs text-white/40">Visual roxo/neon padrão do jubileu de ouro</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (setSystemTheme) {
+                                  setSystemTheme('copa');
+                                  localStorage.setItem('umademats_system_theme', 'copa');
+                                }
+                              }}
+                              className={`flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
+                                systemTheme === 'copa'
+                                  ? 'border-[#009c3b] bg-[#009c3b]/10 text-white'
+                                  : 'border-white/10 hover:border-white/20 text-white/70'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full mb-2">
+                                <span className="font-bold text-sm uppercase tracking-wide text-white">Tema Copa do Mundo</span>
+                                {systemTheme === 'copa' && <div className="w-2 h-2 rounded-full bg-[#009c3b]" />}
+                              </div>
+                              <span className="text-xs text-white/40">Visual comemorativo nas cores Verde, Amarelo e Azul</span>
+                            </button>
+                          </div>
+                        </div>
+
                         <HeroCMS heroDimensions={heroDimensions} />
                       </div>
                    </motion.div>

@@ -16,9 +16,10 @@ interface HeroSectionProps {
   previewConfig?: SiteConfig; 
   onNavigate: (page: PageType) => void;
   onDimensionsDetected?: (width: number, height: number) => void;
+  theme?: 'default' | 'copa';
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate, onDimensionsDetected }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavigate, onDimensionsDetected, theme = 'default' }) => {
   const { config: storedConfig, loading: configLoading } = useSiteConfig();
   const activeConfig = previewConfig || (configLoading ? DEFAULT_SITE_CONFIG : storedConfig);
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -50, left: -50, right: 50, bottom: 50 }, dragElastic: 0.1 } : {};
@@ -30,6 +31,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPhotosInfoModal, setShowPhotosInfoModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const isCopa = theme === 'copa';
+  const accentColor = isCopa ? '#ffdf00' : activeConfig.hero_accentColor;
+  const secondaryColor = isCopa ? '#002776' : activeConfig.hero_secondaryColor;
 
   // Detecção de Dimensões
   const lastDimensions = useRef({ width: 0, height: 0 });
@@ -175,14 +180,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
       {/* Nav Menu renderizado imediatamente */}
       <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[110px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
-        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: accentColor }}>
              <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
 
       {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: accentColor }}>
          <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ willChange: 'transform' }}>
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
@@ -199,7 +204,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       {/* Container fix: always render the section to prevent layout jumping */}
       {!currentSlide ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-10 h-10 border-4 border-brand-neon border-t-transparent rounded-full animate-spin" />
+            <div className={`w-10 h-10 border-4 ${isCopa ? 'border-[#ffdf00]' : 'border-brand-neon'} border-t-transparent rounded-full animate-spin`} />
         </div>
       ) : (
         <>
@@ -247,7 +252,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               ) : (
                 <div 
                   className="w-full h-full" 
-                  style={{ backgroundColor: (currentIndex === 0 || currentIndex === 2) ? '#000000' : activeConfig.hero_bgColor }} 
+                  style={{ backgroundColor: (currentIndex === 0 || currentIndex === 2) ? (isCopa ? '#004b1c' : '#000000') : (isCopa ? '#006c2c' : activeConfig.hero_bgColor) }} 
                 />
               )}
             </motion.div>
@@ -297,15 +302,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                   ) : currentSlide.id === '2' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
                      // Original Main Slide
                      <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
-                       <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: activeConfig.hero_accentColor }}>MATS</span></h1>
-                       <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={activeConfig.hero_accentColor} /></div>
+                       <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: accentColor }}>MATS</span></h1>
+                       <div className="absolute bottom-[10%] md:bottom-[15%] left-1/2 -translate-x-1/2 w-full flex justify-center"><SubtleWaveDivider className="opacity-40" width="300px" height="15px" color={accentColor} /></div>
                      </motion.div>
                   ) : (
                     // CMS Component Style
                     <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
                       <h2 className="hero-secondary-title text-[15vw] md:text-[5vw] xl:text-[6vw] leading-[0.85] font-display italic uppercase text-white text-center drop-shadow-2xl">{currentSlide.title}</h2>
                       {currentSlide.subtitle && (
-                        <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-[-1deg] transform relative flex items-center gap-4 group hover:scale-105 transition-all" style={{ backgroundColor: activeConfig.hero_accentColor }}>
+                        <div className="mt-6 md:mt-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] px-8 py-5 md:px-10 md:py-4 rotate-[-1deg] transform relative flex items-center gap-4 group hover:scale-105 transition-all" style={{ backgroundColor: accentColor }}>
                           <h3 className="hero-box-title text-[9vw] md:text-[3.5vw] xl:text-[4vw] leading-none font-fun text-black uppercase tracking-tight">{currentSlide.subtitle}</h3>
                           {currentSlide.link && <ExternalLink size={24} className="text-black" />}
                         </div>
@@ -326,7 +331,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
                     transition={{ duration: 5, ease: "linear" }}
-                    className="h-full bg-brand-neon"
+                    className={`h-full ${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-neon'}`}
                   />
                 )}
               </div>
@@ -337,7 +342,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
 
       {/* Divider Transition to ActionSection */}
       <div className="absolute bottom-0 left-0 right-0 w-full z-20">
-        <DividerCreative variant="particles" color="text-brand-neon" lineColor="bg-brand-neon" opacity={0.4} />
+        <DividerCreative variant="particles" color={isCopa ? "text-[#ffdf00]" : "text-brand-neon"} lineColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"} opacity={0.4} />
       </div>
 
       <MarqueeBanner 
@@ -345,8 +350,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           { text: "Aqui Jesus Reina", icon: Zap },
           { text: "Aqui Jesus Reina", icon: Star }
         ]}
-        bgColor="bg-brand-green"
-        textColor="text-white"
+        bgColor={isCopa ? "bg-[#002776]" : "bg-brand-green"}
+        textColor={isCopa ? "text-[#ffdf00]" : "text-white"}
         rotate={1}
         zIndex={60}
       />

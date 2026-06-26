@@ -11,15 +11,20 @@ import { PageType } from '../App';
 interface ActionSectionProps {
   onNavigate: (page: PageType) => void;
   previewConfig?: SiteConfig;
+  theme?: 'default' | 'copa';
 }
 
-export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previewConfig }) => {
+export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previewConfig, theme = 'default' }) => {
   const { config: storedConfig, loading } = useSiteConfig();
   const activeConfig = previewConfig || (loading ? DEFAULT_SITE_CONFIG : storedConfig);
   const dragProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -20, left: -20, right: 20, bottom: 20 }, whileDrag: { scale: 1.05, cursor: 'grabbing', zIndex: 100 } } : {};
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
+
+  const isCopa = theme === 'copa';
+  const bgColor = isCopa ? '#fffbc2' : '#fceed1';
+  const checkColor = isCopa ? '#006c2c' : '#00376b';
 
   const handleCardClick = (url: string) => {
     if (url.startsWith('http')) {
@@ -35,8 +40,8 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
       id="action-section" 
       className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 lg:pt-10 lg:pb-12 overflow-hidden z-20"
       style={{
-        backgroundColor: '#fceed1',
-        backgroundImage: 'conic-gradient(#00376b 90deg, #fceed1 90deg 180deg, #00376b 180deg 270deg, #fceed1 270deg)',
+        backgroundColor: bgColor,
+        backgroundImage: `conic-gradient(${checkColor} 90deg, ${bgColor} 90deg 180deg, ${checkColor} 180deg 270deg, ${bgColor} 270deg)`,
         backgroundSize: '100px 100px'
       }}
     >
@@ -56,14 +61,14 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
         
         <div className="flex flex-col items-center justify-center mb-12 md:mb-16 lg:mb-8 text-center">
             <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 lg:px-8 lg:py-5 mb-4">
-              <div className="absolute inset-0 bg-[#00376b] border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] -rotate-1" />
+              <div className={`absolute inset-0 ${isCopa ? 'bg-[#002776]' : 'bg-[#00376b]'} border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] -rotate-1`} />
               <h2 className="relative z-10 text-[12vw] md:text-6xl lg:text-3xl font-display uppercase text-white leading-[0.85] tracking-tighter drop-shadow-lg">
                 {activeConfig.action_title1}
                 <br />
-                <span className="italic font-serif font-light text-brand-neon text-[10vw] md:text-5xl lg:text-2xl block mt-2">{activeConfig.action_title2}</span>
+                <span className={`italic font-serif font-light ${isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'} text-[10vw] md:text-5xl lg:text-2xl block mt-2`}>{activeConfig.action_title2}</span>
               </h2>
             </div>
-            <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color="#CCFF00" />
+            <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color={isCopa ? "#ffdf00" : "#CCFF00"} />
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-6 w-full lg:max-w-3xl mx-auto">
@@ -74,7 +79,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => window.open('https://www.umadegames.com.br', '_blank', 'noopener,noreferrer')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className="col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.2/1] overflow-hidden cursor-pointer border-2 border-white/10 hover:border-brand-neon group shadow-2xl transition-all"
+            className={`col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.2/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
               {/* Mobile View: Cloudinary Image ONLY */}
@@ -108,7 +113,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                       <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
                           Games
                           <br/>
-                          <span className="text-brand-neon">Umademats</span>
+                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'}>Umademats</span>
                       </h3>
                       <p className="text-gray-300 font-sans text-xs max-w-xs leading-relaxed drop-shadow-md">
                           Participe das competições e divirta-se.
@@ -118,7 +123,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                   <div className="absolute bottom-6 right-8 z-10">
                       <motion.div 
                         animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
-                        className="bg-brand-neon p-3 rounded-full text-black shadow-lg"
+                        className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-neon'} p-3 rounded-full text-black shadow-lg`}
                       >
                           <ArrowRight className="w-5 h-5" />
                       </motion.div>
@@ -132,7 +137,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('lidera')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className="col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer border-2 border-white/10 hover:border-brand-green group shadow-2xl transition-all"
+            className={`col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-green'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
@@ -150,13 +155,13 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
                   <div className="relative z-10 flex flex-col justify-between h-full p-8">
                     <div>
-                      <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
+                      <div className={`w-10 h-10 ${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-green'} rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg`}>
                           <Users className="text-black w-6 h-6" />
                       </div>
                       <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
                           Lidera
                           <br/>
-                          <span className="text-brand-green">Umademats</span>
+                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-green'}>Umademats</span>
                       </h3>
                       <p className="text-gray-400 font-sans text-xs max-w-xs leading-relaxed">
                           Portal exclusivo para líderes e oficiais.
@@ -164,10 +169,10 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <span className="text-brand-green font-bold font-sans tracking-widest text-[10px] uppercase">ACESSAR PORTAL</span>
+                        <span className={`${isCopa ? 'text-[#ffdf00]' : 'text-brand-green'} font-bold font-sans tracking-widest text-[10px] uppercase`}>ACESSAR PORTAL</span>
                         <motion.div 
                           animate={{ x: hoveredCard === 'lidera' ? 5 : 0 }}
-                          className="bg-brand-green p-3 rounded-full text-black shadow-lg"
+                          className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-green'} p-3 rounded-full text-black shadow-lg`}
                         >
                             <ArrowRight className="w-5 h-5" />
                         </motion.div>
@@ -182,7 +187,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className="col-span-2 md:col-span-1 order-1 md:order-3 relative bg-brand-purple rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 hover:border-brand-neon transition-all"
+            className={`col-span-2 md:col-span-1 order-1 md:order-3 relative ${isCopa ? 'bg-[#002776]' : 'bg-brand-purple'} rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
@@ -200,18 +205,18 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                         alt="Mascote Bíblia"
                         className="w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-all duration-700 ease-out"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-brand-purple via-brand-purple/40 to-transparent opacity-80" />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${isCopa ? 'from-[#002776] via-[#002776]/40' : 'from-brand-purple via-brand-purple/40'} to-transparent opacity-80`} />
                   </div>
 
                   <div className="relative z-10 flex flex-col justify-between h-full p-8">
                     <div>
                       <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                          <Book className="text-brand-purple w-6 h-6" />
+                          <Book className={`${isCopa ? 'text-[#002776]' : 'text-brand-purple'} w-6 h-6`} />
                       </div>
                       <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
                           Plano de
                           <br/>
-                          <span className="text-brand-neon">Leitura</span>
+                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'}>Leitura</span>
                       </h3>
                       <p className="text-white/80 font-sans text-xs max-w-xs leading-relaxed font-medium">
                           Acompanhe o devocional diário.
@@ -219,10 +224,10 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <span className="text-brand-neon font-bold font-sans tracking-widest text-[10px] uppercase">LER AGORA</span>
+                        <span className={`${isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'} font-bold font-sans tracking-widest text-[10px] uppercase`}>LER AGORA</span>
                         <motion.div 
                           animate={{ x: hoveredCard === 'devocional' ? 5 : 0 }}
-                          className="bg-brand-neon p-3 rounded-full text-black shadow-lg"
+                          className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-neon'} p-3 rounded-full text-black shadow-lg`}
                         >
                             <ArrowRight className="w-5 h-5" />
                         </motion.div>
@@ -239,8 +244,8 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
           { text: "CONGRESSO 2026", icon: Zap },
           { text: "EXPERIÊNCIA ÚNICA", icon: Star }
         ]}
-        bgColor="bg-brand-neon"
-        textColor="text-black"
+        bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
+        textColor={isCopa ? "text-[#002776]" : "text-black"}
         rotate={-1}
       />
 

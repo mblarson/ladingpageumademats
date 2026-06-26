@@ -41,11 +41,17 @@ export interface SiteConfig {
 
   // BIBLE CAMPAIGN
   bible_campaign_active: boolean;
+
+  // SYSTEM THEME
+  system_theme: 'default' | 'copa';
 }
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
   // UI
   ui_allowDrag: true,
+
+  // SYSTEM THEME
+  system_theme: 'default',
 
   // HERO
   hero_bgColor: '#4F46E5',

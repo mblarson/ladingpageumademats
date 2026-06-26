@@ -10,6 +10,7 @@ import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'fra
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
+import { useSiteConfig } from './hooks/useSiteConfig';
 
 // Lazy Load Secondary Pages
 const BibleReadingPage = lazy(() => import('./components/BibleReadingPage').then(m => ({ default: m.BibleReadingPage })));
@@ -28,6 +29,13 @@ export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'shirt_request' |
 
 export default function App() {
   useSiteAnalytics();
+  const { config, saveConfig } = useSiteConfig();
+
+  const systemTheme = config.system_theme || 'default';
+
+  const setSystemTheme = (newTheme: 'default' | 'copa') => {
+    saveConfig({ ...config, system_theme: newTheme });
+  };
 
   const [tourUser, setTourUser] = useState<string | null>(null);
 
@@ -155,7 +163,7 @@ export default function App() {
   }
 
   if (currentPage === 'admin') {
-    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} /></Suspense>;
+    return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} systemTheme={systemTheme} setSystemTheme={setSystemTheme} /></Suspense>;
   }
 
   if (currentPage === 'bible') {
@@ -180,11 +188,11 @@ export default function App() {
       <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[50vh] w-[2px] bg-white/10 rounded-full z-[90] hidden md:block pointer-events-none">
           <motion.div style={{ top: yPath }} className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"><Zap size={12} className="fill-black text-black" /></motion.div>
       </div>
-      <HeroSection onNavigate={handleNavigate} />
-      <StoreSection />
-      <JesusReinaBanner />
-      <ActionSection onNavigate={handleNavigate} />
-      <AboutSection />
+      <HeroSection onNavigate={handleNavigate} theme={systemTheme} />
+      <StoreSection theme={systemTheme} />
+      <JesusReinaBanner theme={systemTheme} />
+      <ActionSection onNavigate={handleNavigate} theme={systemTheme} />
+      <AboutSection theme={systemTheme} />
       
       <AnimatePresence>
         {tourUser && (

@@ -19,6 +19,7 @@ const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "
 const BibleAdmin: React.FC = () => {
     const { config, saveConfig } = useSiteConfig();
     const [progressData, setProgressData] = useState<any[]>([]);
+    const [totalReadingsCount, setTotalReadingsCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);
     const [showReadersModal, setShowReadersModal] = useState(false);
 
@@ -271,13 +272,30 @@ CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements 
         const fetchProgress = async () => {
             setLoading(true);
             try {
+                // 1. Buscar a contagem real total de registros na tabela (sem os limites de paginação do select convencional do PostgREST)
+                const { count, error: countError } = await supabase
+                    .from('user_progress')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw countError;
+                if (count !== null) {
+                    setTotalReadingsCount(count);
+                }
+
+                // 2. Buscar os registros para carregar estatísticas, rankings e lista "Em Chamas"
                 const { data, error } = await supabase
                     .from('user_progress')
                     .select('user_name, reading_item_id, created_at')
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
-                if (data) setProgressData(data);
+                if (data) {
+                    setProgressData(data);
+                    // Se por algum motivo o count HEAD falhar ou for nulo, usamos o tamanho dos dados como fallback
+                    if (count === null) {
+                        setTotalReadingsCount(data.length);
+                    }
+                }
             } catch (e) {
                 console.error("Erro ao carregar progresso bíblico:", e);
             } finally {
@@ -364,7 +382,7 @@ CREATE POLICY "Controle administrativo de avisos" ON public.bible_announcements 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5">
                     <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1">Total de Leituras</span>
-                    <span className="text-4xl font-display text-white">{progressData.length}</span>
+                    <span className="text-4xl font-display text-white">{totalReadingsCount}</span>
                 </div>
                 <button onClick={() => setShowReadersModal(true)} className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5 text-left hover:border-[#f36b2e] transition-colors group">
                     <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest block mb-1 group-hover:text-[#f36b2e]">Leitores</span>

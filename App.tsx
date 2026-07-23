@@ -20,6 +20,7 @@ const LideraPortal = lazy(() => import('./components/LideraPortal').then(m => ({
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const ShirtRequestPage = lazy(() => import('./components/ShirtRequestPage').then(m => ({ default: m.ShirtRequestPage })));
 const TshirtOrderPage = lazy(() => import('./components/TshirtOrderPage').then(m => ({ default: m.TshirtOrderPage })));
+const EstoqueUmadematsAdmin = lazy(() => import('./components/EstoqueUmadematsAdmin').then(m => ({ default: m.EstoqueUmadematsAdmin })));
 
 const LoadingFallback = () => (
   <div className="flex bg-black min-h-screen w-full items-center justify-center">
@@ -27,7 +28,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza' | 'missao';
+export type PageType = 'home' | 'bible' | 'admin' | 'lidera' | 'shirt_request' | 'tshirt_order' | 'sulamita' | 'gilmarfiuza' | 'missao' | 'estoque';
 
 export default function App() {
   useSiteAnalytics();
@@ -87,6 +88,7 @@ export default function App() {
         if (path === '/missao' || path === '/missao/') return 'missao';
         if (path === '/pedircamiseta') return 'shirt_request';
         if (path === '/camisetas') return 'tshirt_order';
+        if (path === '/estoque' || path === '/estoque/') return 'estoque';
         if (path === '/admin') return 'admin';
         if (path === '/biblia') return 'bible';
         if (path === '/lideraumademats') return 'lidera';
@@ -161,13 +163,22 @@ export default function App() {
       tshirt_order: '/camisetas',
       sulamita: '/sulamita',
       gilmarfiuza: '/gilmarfiuza',
-      missao: '/missao'
+      missao: '/missao',
+      estoque: '/estoque'
     };
     safePushState(paths[page]);
     setCurrentPage(page);
   };
 
   const renderPageContent = () => {
+    if (currentPage === 'estoque') {
+      return (
+        <Suspense fallback={<LoadingFallback />}>
+          <EstoqueUmadematsAdmin onBack={() => handleNavigate('admin')} />
+        </Suspense>
+      );
+    }
+
     if (currentPage === 'missao') {
       return (
         <main className="w-full bg-[#0b0b1e] min-h-screen relative overflow-hidden flex flex-col justify-start">
@@ -202,7 +213,7 @@ export default function App() {
     }
 
     if (currentPage === 'admin') {
-      return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} systemTheme={systemTheme} setSystemTheme={setSystemTheme} /></Suspense>;
+      return <Suspense fallback={<LoadingFallback />}><AdminDashboard onBack={() => handleNavigate('home')} onNavigate={handleNavigate} systemTheme={systemTheme} setSystemTheme={setSystemTheme} /></Suspense>;
     }
 
     if (currentPage === 'bible') {

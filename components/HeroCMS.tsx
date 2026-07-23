@@ -24,7 +24,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '../lib/supabaseClient';
 import { HeroSlide } from '../types';
-import { getDirectDriveUrl } from '../lib/heroUtils';
+import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
 
 interface HeroCMSProps {
   heroDimensions: { width: number; height: number };
@@ -75,7 +75,11 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
 
         <div className="w-20 h-14 bg-black rounded-lg overflow-hidden border border-white/5 shrink-0 flex items-center justify-center">
           {slide.image_desktop_url ? (
-            <img src={getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
+            isVideoUrl(slide.image_desktop_url) ? (
+              <video src={getDirectDriveUrl(slide.image_desktop_url)} className="w-full h-full object-cover" muted />
+            ) : (
+              <img src={getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
+            )
           ) : (
             <Layout size={16} className="text-white/20" />
           )}
@@ -553,11 +557,22 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                       {/* HERO CONTENT */}
                       <div className="absolute inset-0 z-0">
                          {previewSnapshot.image_desktop_url ? (
-                            <img 
-                              src={getDirectDriveUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url)} 
-                              className="w-full h-full object-cover" 
-                              alt="" 
-                            />
+                            isVideoUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url) ? (
+                               <video 
+                                 src={getDirectDriveUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url)} 
+                                 className="w-full h-full object-cover" 
+                                 autoPlay 
+                                 muted 
+                                 loop 
+                                 playsInline 
+                               />
+                            ) : (
+                               <img 
+                                 src={getDirectDriveUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url)} 
+                                 className="w-full h-full object-cover" 
+                                 alt="" 
+                               />
+                            )
                          ) : (
                             <div className="w-full h-full bg-[#0d0d0d] flex items-center justify-center">
                                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:2rem_2rem]" />

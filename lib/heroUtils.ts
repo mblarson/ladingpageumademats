@@ -34,3 +34,25 @@ export const getDirectDriveUrl = (url: string | null | undefined): string => {
 
   return url;
 };
+
+/**
+ * Verifica se uma determinada URL aponta para um recurso de vídeo
+ */
+export const isVideoUrl = (url?: string | null): boolean => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  const cleanUrl = lower.split('?')[0];
+  return (
+    cleanUrl.endsWith('.mp4') ||
+    cleanUrl.endsWith('.webm') ||
+    cleanUrl.endsWith('.ogg') ||
+    cleanUrl.endsWith('.mov') ||
+    cleanUrl.endsWith('.m4v') ||
+    lower.includes('/video/upload/') ||
+    lower.includes('video/mp4') ||
+    lower.includes('format=mp4') ||
+    lower.includes('.mp4?') ||
+    lower.includes('.webm?') ||
+    lower.includes('.mov?')
+  );
+};

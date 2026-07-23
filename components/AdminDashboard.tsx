@@ -1749,10 +1749,11 @@ const ShirtRequestsAdmin: React.FC = () => {
 
 interface AdminDashboardProps { 
   onBack: () => void; 
+  onNavigate?: (page: any) => void;
   systemTheme?: 'default' | 'copa';
   setSystemTheme?: (theme: 'default' | 'copa') => void;
 }
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, systemTheme = 'default', setSystemTheme }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNavigate, systemTheme = 'default', setSystemTheme }) => {
   const stats = useAnalyticsDashboard();
   const { config, saveConfig } = useSiteConfig();
   const [draftConfig, setDraftConfig] = useState<SiteConfig>(config);
@@ -1815,7 +1816,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, systemTh
         <h2 className="text-3xl font-display uppercase text-white tracking-widest">Controle Administrativo</h2>
         <div className="flex flex-col gap-3 w-full max-w-sm">
           <button onClick={() => setAdminView('dashboard')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Gestão Umademats</button>
-          <button onClick={() => setAdminView('estoque')} className="w-full bg-[#ccff00] hover:bg-[#b5e000] text-black border-2 border-transparent p-6 rounded-lg text-lg font-bold uppercase transition-all text-center flex items-center justify-center gap-2"><ShoppingBag size={22} strokeWidth={2.5} /> Estoque Umademats</button>
+          <button onClick={() => {
+            if (onNavigate) {
+              onNavigate('estoque');
+            } else {
+              setAdminView('estoque');
+            }
+          }} className="w-full bg-[#ccff00] hover:bg-[#b5e000] text-black border-2 border-transparent p-6 rounded-lg text-lg font-bold uppercase transition-all text-center flex items-center justify-center gap-2"><ShoppingBag size={22} strokeWidth={2.5} /> Estoque Umademats</button>
           <button onClick={() => setAdminView('presence')} className="w-full bg-[#1a1a1a] border-2 border-white/10 hover:border-brand-neon p-6 rounded-lg text-lg font-bold uppercase text-white transition-all text-center">Contador de Culto</button>
         </div>
         <button onClick={() => {

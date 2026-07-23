@@ -10,7 +10,83 @@ import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSite
 import { PageType } from '../App';
 import { supabase } from '../lib/supabaseClient';
 import { HeroSlide } from '../types';
-import { getDirectDriveUrl } from '../lib/heroUtils';
+import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
+
+interface HeroVideoProps {
+  desktopUrl: string;
+  mobileUrl?: string;
+  useMobileImage?: boolean;
+  altTitle?: string;
+  isActive: boolean;
+}
+
+const HeroVideoBackground: React.FC<HeroVideoProps> = ({
+  desktopUrl,
+  mobileUrl,
+  useMobileImage,
+  altTitle,
+  isActive
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const videoSrc = useMobileImage && isMobile && mobileUrl ? getDirectDriveUrl(mobileUrl) : getDirectDriveUrl(desktopUrl);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isActive) {
+      video.currentTime = 0;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+      }
+    } else {
+      video.pause();
+      video.currentTime = 0;
+    }
+
+    return () => {
+      if (video) {
+        video.pause();
+        try {
+          video.currentTime = 0;
+        } catch (e) {}
+      }
+    };
+  }, [isActive, videoSrc]);
+
+  return (
+    <video
+      ref={videoRef}
+      key={videoSrc}
+      src={videoSrc}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-label={altTitle}
+      className="w-full h-full object-cover pointer-events-none"
+      onLoadedMetadata={() => {
+        if (videoRef.current && isActive) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.play().catch(() => {});
+        }
+      }}
+    />
+  );
+};
+
 
 interface HeroSectionProps {
   previewConfig?: SiteConfig; 
@@ -218,10 +294,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             }
           `}</style>
 
-          {/* Background Image / Color */}
+          {/* Background Image / Color / Video */}
           <AnimatePresence initial={false}>
             <motion.div
-               key={currentSlide.id + (currentSlide.image_desktop_url ? '_img' : '_bg')}
+               key={currentSlide.id + '_' + currentIndex + (currentSlide.image_desktop_url ? '_media' : '_bg')}
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
@@ -231,20 +307,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             >
               {currentSlide.image_desktop_url ? (
                 <>
-                  {/* Desktop Image */}
-                  <picture className="w-full h-full">
-                    {currentSlide.use_mobile_image && currentSlide.image_mobile_url && (
-                       <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
-                    )}
-                    <img 
-                      src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
-                      alt={currentSlide.title} 
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
+                  {isVideoUrl(currentSlide.image_desktop_url) || (currentSlide.use_mobile_image && isVideoUrl(currentSlide.image_mobile_url)) ? (
+                    <HeroVideoBackground
+                      desktopUrl={currentSlide.image_desktop_url}
+                      mobileUrl={currentSlide.image_mobile_url}
+                      useMobileImage={currentSlide.use_mobile_image}
+                      altTitle={currentSlide.title}
+                      isActive={true}
                     />
-                  </picture>
+                  ) : (
+                    /* Desktop / Mobile Image */
+                    <picture className="w-full h-full">
+                      {currentSlide.use_mobile_image && currentSlide.image_mobile_url && (
+                         <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
+                      )}
+                      <img 
+                        src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
+                        alt={currentSlide.title} 
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="async"
+                      />
+                    </picture>
+                  )}
                 </>
               ) : (
                 <div 

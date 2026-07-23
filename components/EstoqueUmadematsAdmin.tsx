@@ -161,6 +161,10 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [editingSizeCell, setEditingSizeCell] = useState<{ product: EstoqueProduto; size: string; curQty: number } | null>(null);
   const [newSizeQtyInput, setNewSizeQtyInput] = useState<string>('');
   
+  // Event deletion state
+  const [eventToDelete, setEventToDelete] = useState<EstoqueEvento | null>(null);
+  const [restoreStockOnDelete, setRestoreStockOnDelete] = useState<boolean>(true);
+
   // Custom Success Modal Message
   const [successModalMessage, setSuccessModalMessage] = useState<string | null>(null);
 
@@ -266,7 +270,36 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_vendas FOR ALL USING (
 DROP POLICY IF EXISTS "Permitir leitura para todos" ON estoque_venda_itens;
 DROP POLICY IF EXISTS "Permitir gravação para todos" ON estoque_venda_itens;
 CREATE POLICY "Permitir leitura para todos" ON estoque_venda_itens FOR SELECT USING (true);
-CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL USING (true);`;
+CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL USING (true);
+
+-- 6. Função RPC para Exclusão de Evento com Estorno de Estoque
+CREATE OR REPLACE FUNCTION delete_stock_event(p_event_id UUID, p_restore_stock BOOLEAN DEFAULT TRUE)
+RETURNS VOID AS $$
+DECLARE
+    v_item RECORD;
+BEGIN
+    IF p_restore_stock THEN
+        FOR v_item IN 
+            SELECT vi.product_id, vi.variation_id, vi.quantity
+            FROM estoque_venda_itens vi
+            JOIN estoque_vendas v ON v.id = vi.sale_id
+            WHERE v.event_id = p_event_id AND v.status = 'CONCLUIDA'
+        LOOP
+            IF v_item.variation_id IS NOT NULL THEN
+                UPDATE estoque_variacoes 
+                SET quantity = quantity + v_item.quantity
+                WHERE id = v_item.variation_id;
+            ELSIF v_item.product_id IS NOT NULL THEN
+                UPDATE estoque_produtos 
+                SET initial_quantity = initial_quantity + v_item.quantity
+                WHERE id = v_item.product_id;
+            END IF;
+        END LOOP;
+    END IF;
+
+    DELETE FROM estoque_eventos WHERE id = p_event_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;`;
 
   // -------------------------------------------------------------
   // CORE SYNC & LOCALSTORAGE LOGIC
@@ -1341,6 +1374,120 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
     }
   };
 
+  // -------------------------------------------------------------
+  // DELETE EVENT WORKFLOW
+  // -------------------------------------------------------------
+  const handleDeleteEvent = async (eventId: string, restoreStock: boolean) => {
+    if (!eventId) return;
+    setLoading(true);
+
+    try {
+      // Find completed sales for this event to calculate restored stock
+      const eventSales = vendas.filter(v => v.event_id === eventId && v.status === 'CONCLUIDA');
+      
+      let updatedProductsList = [...produtos];
+
+      if (restoreStock && eventSales.length > 0) {
+        updatedProductsList = produtos.map(p => {
+          let newProd = { ...p };
+          eventSales.forEach(sale => {
+            (sale.items || []).forEach(item => {
+              if (item.product_id === p.id) {
+                if (p.category === 'VESTUÁRIO' && item.size) {
+                  const updatedVars = (newProd.variations || []).map(v => {
+                    if (v.size === item.size) {
+                      return { ...v, quantity: v.quantity + item.quantity };
+                    }
+                    return v;
+                  });
+                  const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+                  newProd = { ...newProd, variations: updatedVars, initial_quantity: sumQty };
+                } else {
+                  newProd = { ...newProd, initial_quantity: newProd.initial_quantity + item.quantity };
+                }
+              }
+            });
+          });
+          return newProd;
+        });
+      }
+
+      if (dbMode === 'SUPABASE') {
+        // Try calling Supabase RPC first
+        const { error: rpcErr } = await supabase.rpc('delete_stock_event', { 
+          p_event_id: eventId, 
+          p_restore_stock: restoreStock 
+        });
+
+        if (rpcErr) {
+          console.warn("RPC delete_stock_event error, using client fallback queries:", rpcErr.message);
+          
+          if (restoreStock) {
+            for (const sale of eventSales) {
+              for (const item of (sale.items || [])) {
+                if (item.variation_id) {
+                  const { data: curVar } = await supabase
+                    .from('estoque_variacoes')
+                    .select('quantity')
+                    .eq('id', item.variation_id)
+                    .single();
+                  if (curVar) {
+                    await supabase
+                      .from('estoque_variacoes')
+                      .update({ quantity: curVar.quantity + item.quantity })
+                      .eq('id', item.variation_id);
+                  }
+                } else {
+                  const { data: curProd } = await supabase
+                    .from('estoque_produtos')
+                    .select('initial_quantity')
+                    .eq('id', item.product_id)
+                    .single();
+                  if (curProd) {
+                    await supabase
+                      .from('estoque_produtos')
+                      .update({ initial_quantity: curProd.initial_quantity + item.quantity })
+                      .eq('id', item.product_id);
+                  }
+                }
+              }
+            }
+          }
+
+          // Delete sales and sale items manually if cascade is not configured
+          await supabase.from('estoque_vendas').delete().eq('event_id', eventId);
+          const { error: delEventErr } = await supabase.from('estoque_eventos').delete().eq('id', eventId);
+          if (delEventErr) throw delEventErr;
+        }
+      } else {
+        // LOCAL DB WORKFLOW
+        const updatedEvents = eventos.filter(e => e.id !== eventId);
+        const updatedSales = vendas.filter(v => v.event_id !== eventId);
+        saveLocalStorageData(updatedProductsList, updatedEvents, updatedSales);
+      }
+
+      // Instant optimistic state updates
+      setProdutos(updatedProductsList);
+      setEventos(prev => prev.filter(e => e.id !== eventId));
+      setVendas(prev => prev.filter(v => v.event_id !== eventId));
+
+      if (activeEvento?.id === eventId) {
+        setActiveEvento(null);
+      }
+      if (selectedPastEventId === eventId) {
+        setSelectedPastEventId(null);
+      }
+
+      setEventToDelete(null);
+      setSuccessModalMessage("Evento e dependências excluídos com sucesso!");
+      loadData(true);
+    } catch (err: any) {
+      showToast("Erro ao excluir evento: " + err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Calculations for current/last event sales metrics
   const activeEventSales = useMemo(() => {
     // We should fallback to the most recent event, which is at index 0 because we prepend new ones or Supabase orders by DESC.
@@ -1804,7 +1951,21 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <h2 className="text-xl font-montserrat font-bold uppercase tracking-wider text-[#111827]">Últimos Eventos</h2>
             {selectedPastEventId && (
-               <button onClick={() => setSelectedPastEventId(null)} className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#111827] transition-colors"><ArrowLeft size={14}/> Voltar</button>
+               <div className="flex items-center gap-3">
+                 {(() => {
+                   const ev = eventos.find(e => e.id === selectedPastEventId);
+                   if (!ev) return null;
+                   return (
+                     <button 
+                       onClick={() => setEventToDelete(ev)} 
+                       className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold uppercase transition-colors"
+                     >
+                       <Trash2 size={14} /> Excluir Evento
+                     </button>
+                   );
+                 })()}
+                 <button onClick={() => setSelectedPastEventId(null)} className="flex items-center gap-1.5 uppercase font-bold text-xs text-slate-500 hover:text-[#111827] transition-colors"><ArrowLeft size={14}/> Voltar</button>
+               </div>
             )}
           </div>
           
@@ -1824,7 +1985,20 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                             <h4 className="text-sm font-bold uppercase text-[#111827] line-clamp-1">{ev.event_name}</h4>
                             <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">{ev.dtOpen}</p>
                           </div>
-                          <div className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[9px] font-bold uppercase shrink-0">Encerrado</div>
+                          <div className="flex items-center gap-2 shrink-0">
+                             <div className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[9px] font-bold uppercase">Encerrado</div>
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const targetEv = eventos.find(item => item.id === ev.id);
+                                 if (targetEv) setEventToDelete(targetEv);
+                               }}
+                               className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                               title="Excluir Evento"
+                             >
+                               <Trash2 size={16} />
+                             </button>
+                          </div>
                        </div>
                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                           <span className="text-[10px] uppercase font-bold tracking-widest text-[#111827]/60 flex items-center gap-1.5"><ShoppingBag size={12}/> {ev.salesCount} Vendas</span>
@@ -3215,6 +3389,76 @@ CREATE POLICY "Permitir gravação para todos" ON estoque_venda_itens FOR ALL US
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL CONFIRMAÇÃO DE EXCLUSÃO DE EVENTO */}
+        {eventToDelete && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setEventToDelete(null)} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="relative bg-white border-2 border-red-500/30 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-6 text-left"
+            >
+              <div className="flex items-center gap-3 text-red-600 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                  <Trash2 size={20} />
+                </div>
+                <div>
+                  <h3 className="font-montserrat uppercase text-lg text-slate-900 font-black">Excluir Evento</h3>
+                  <p className="text-xs text-slate-500 font-bold uppercase">Esta ação não pode ser desfeita</p>
+                </div>
+              </div>
+
+              <p className="text-slate-600 text-sm mb-4">
+                Tem certeza que deseja excluir permanentemente o evento <strong className="text-slate-900">{eventToDelete.event_name}</strong>?
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={restoreStockOnDelete}
+                    onChange={(e) => setRestoreStockOnDelete(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-red-600 rounded border-slate-300 focus:ring-red-500"
+                  />
+                  <div className="text-xs text-slate-700 font-medium">
+                    <span className="font-bold text-slate-900 block mb-0.5">Devolver itens ao estoque global</span>
+                    Estornar automaticamente a quantidade de produtos vendidos neste evento de volta ao estoque geral.
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button 
+                  onClick={() => setEventToDelete(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs uppercase hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={() => handleDeleteEvent(eventToDelete.id, restoreStockOnDelete)}
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase shadow-md transition-colors flex items-center gap-2"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 size={14} /> Excluir Definitivamente
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

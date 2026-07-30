@@ -16,17 +16,18 @@ export const MarqueeBanner: React.FC<MarqueeBannerProps> = ({
   items,
   bgColor = "bg-brand-neon",
   textColor = "text-black",
-  rotate = -1,
+  rotate = 0,
   className = "",
   zIndex = 50
 }) => {
+  const targetScale = rotate !== 0 ? 1.05 : 1;
   return (
     <div className={`absolute bottom-0 left-0 right-0 pointer-events-none ${className}`} style={{ zIndex }}>
       <motion.div 
         className={`${bgColor} py-2 md:py-3 border-y-2 border-black shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden`}
-        style={{ rotate: `${rotate}deg`, scale: 1.05 }}
+        style={{ rotate: `${rotate}deg`, scale: targetScale }}
         initial={{ scale: 0.8 }}
-        whileInView={{ scale: 1.05 }}
+        whileInView={{ scale: targetScale }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >

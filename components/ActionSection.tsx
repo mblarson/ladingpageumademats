@@ -246,7 +246,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
         ]}
         bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
         textColor={isCopa ? "text-[#002776]" : "text-black"}
-        rotate={-1}
+        rotate={0}
       />
 
       {/* MODAL DE BLOQUEIO DE ACESSO */}

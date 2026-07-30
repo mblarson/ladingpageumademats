@@ -260,7 +260,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       </motion.nav>
 
       {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE */}
-      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: accentColor }}>
+      <div className="absolute top-0 left-0 right-0 z-[100] w-full border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: accentColor }}>
          <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ willChange: 'transform' }}>
             {[...Array(10)].map((_, i) => (
               <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
@@ -435,7 +435,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         ]}
         bgColor={isCopa ? "bg-[#002776]" : "bg-brand-green"}
         textColor={isCopa ? "text-[#ffdf00]" : "text-white"}
-        rotate={1}
+        rotate={0}
         zIndex={60}
       />
 

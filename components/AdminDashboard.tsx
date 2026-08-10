@@ -12,6 +12,7 @@ import { AboutSection } from './AboutSection';
 import { PresenceCounter } from './PresenceCounter';
 import { supabase } from '../lib/supabaseClient';
 import { EstoqueUmadematsAdmin } from './EstoqueUmadematsAdmin';
+import { getDirectDriveUrl } from '../lib/heroUtils';
 
 const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "M", "N", "VISITANTE"];
 
@@ -1933,60 +1934,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
                         <h2 className="text-xl font-display uppercase text-white">Seção HERO CMS</h2>
                       </div>
                       <div className="h-full overflow-y-auto no-scrollbar pb-20 space-y-8">
-                        {/* CARD TEMA DO SISTEMA */}
+                        {/* CONFIGURAÇÃO DA SEÇÃO HERO */}
+                        <HeroCMS heroDimensions={heroDimensions} />
+
+                        {/* CARD SEÇÃO 2 - PRÓXIMOS ENCONTROS */}
                         <div className="bg-[#1a1a1a] border-2 border-white/10 rounded-2xl p-6 shadow-xl">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-[#ccff00] rounded-xl flex items-center justify-center text-black">
-                              <Palette size={20} />
-                            </div>
-                            <div>
-                              <h3 className="font-display uppercase text-lg text-white">Tema do Sistema</h3>
-                              <p className="text-xs text-white/50 font-medium">Personalize o visual comemorativo do portal</p>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-[#70D4CC] rounded-xl flex items-center justify-center text-black">
+                                <ImageIcon size={20} />
+                              </div>
+                              <div>
+                                <h3 className="font-display uppercase text-lg text-white">Seção 2 - Próximos Encontros</h3>
+                                <p className="text-xs text-white/50 font-medium">Configuração da imagem principal do carrossel (Primeiro Slide)</p>
+                              </div>
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                            <button
-                              onClick={() => {
-                                if (setSystemTheme) {
-                                  setSystemTheme('default');
-                                  localStorage.setItem('umademats_system_theme', 'default');
-                                }
-                              }}
-                              className={`flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
-                                systemTheme === 'default'
-                                  ? 'border-[#ccff00] bg-[#ccff00]/5 text-white'
-                                  : 'border-white/10 hover:border-white/20 text-white/70'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between w-full mb-2">
-                                <span className="font-bold text-sm uppercase tracking-wide">Tema Atual (Padrão)</span>
-                                {systemTheme === 'default' && <div className="w-2 h-2 rounded-full bg-[#ccff00]" />}
+
+                          <div className="space-y-4 mt-6">
+                            <div>
+                              <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-2">
+                                Imagem da Seção 2 (Primeiro Slide)
+                              </label>
+                              <div className="flex flex-col sm:flex-row gap-3">
+                                <input
+                                  type="text"
+                                  value={draftConfig.section2_first_image_url || ''}
+                                  onChange={(e) => setDraftConfig({ ...draftConfig, section2_first_image_url: e.target.value })}
+                                  placeholder="https://exemplo.com/imagem.jpg ou Link do Google Drive"
+                                  className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D6F200]"
+                                />
+                                <button
+                                  onClick={async () => {
+                                    await saveConfig(draftConfig);
+                                    alert('Imagem da Seção 2 salva com sucesso!');
+                                  }}
+                                  className="bg-[#D6F200] hover:bg-[#bce000] text-black font-extrabold uppercase px-6 py-3 rounded-xl text-xs tracking-wider flex items-center justify-center gap-2 transition-colors shadow-lg active:scale-95 shrink-0"
+                                >
+                                  <Save size={16} />
+                                  <span>Salvar Configuração</span>
+                                </button>
                               </div>
-                              <span className="text-xs text-white/40">Visual roxo/neon padrão do jubileu de ouro</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (setSystemTheme) {
-                                  setSystemTheme('copa');
-                                  localStorage.setItem('umademats_system_theme', 'copa');
-                                }
-                              }}
-                              className={`flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
-                                systemTheme === 'copa'
-                                  ? 'border-[#009c3b] bg-[#009c3b]/10 text-white'
-                                  : 'border-white/10 hover:border-white/20 text-white/70'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between w-full mb-2">
-                                <span className="font-bold text-sm uppercase tracking-wide text-white">Tema Copa do Mundo</span>
-                                {systemTheme === 'copa' && <div className="w-2 h-2 rounded-full bg-[#009c3b]" />}
-                              </div>
-                              <span className="text-xs text-white/40">Visual comemorativo nas cores Verde, Amarelo e Azul</span>
-                            </button>
+                              <p className="text-[11px] text-white/40 mt-2">
+                                Coloque a URL direta da imagem ou link de compartilhamento do Google Drive. Ela será aplicada imediatamente ao primeiro slide do carrossel na página inicial.
+                              </p>
+
+                              {draftConfig.section2_first_image_url && (
+                                <div className="mt-4 p-3 bg-black/50 border border-white/10 rounded-xl flex items-center gap-4">
+                                  <div className="w-24 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 border border-white/10">
+                                    <img
+                                      src={getDirectDriveUrl(draftConfig.section2_first_image_url)}
+                                      alt="Prévia primeiro slide"
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        (e.target as HTMLElement).style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="text-xs">
+                                    <span className="text-[#D6F200] font-bold uppercase block mb-0.5">Imagem Configurada</span>
+                                    <span className="text-white/60 text-[11px] break-all line-clamp-1">{draftConfig.section2_first_image_url}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                        <HeroCMS heroDimensions={heroDimensions} />
                       </div>
                    </motion.div>
                 )}

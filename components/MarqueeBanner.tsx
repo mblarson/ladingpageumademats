@@ -10,24 +10,27 @@ interface MarqueeBannerProps {
   rotate?: number;
   className?: string;
   zIndex?: number;
+  position?: 'top' | 'bottom';
 }
 
 export const MarqueeBanner: React.FC<MarqueeBannerProps> = ({
   items,
   bgColor = "bg-brand-neon",
   textColor = "text-black",
-  rotate = 0,
+  rotate = -1,
   className = "",
-  zIndex = 50
+  zIndex = 50,
+  position = "bottom"
 }) => {
-  const targetScale = rotate !== 0 ? 1.05 : 1;
+  const posClass = position === 'top' ? 'top-0 -translate-y-1/2' : 'bottom-0';
+
   return (
-    <div className={`absolute bottom-0 left-0 right-0 pointer-events-none ${className}`} style={{ zIndex }}>
+    <div className={`absolute ${posClass} left-0 right-0 pointer-events-none ${className}`} style={{ zIndex }}>
       <motion.div 
         className={`${bgColor} py-2 md:py-3 border-y-2 border-black shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden`}
-        style={{ rotate: `${rotate}deg`, scale: targetScale }}
+        style={{ rotate: `${rotate}deg`, scale: 1.05 }}
         initial={{ scale: 0.8 }}
-        whileInView={{ scale: targetScale }}
+        whileInView={{ scale: 1.05 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >

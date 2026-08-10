@@ -87,3 +87,19 @@ body {
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Continuous smooth floating animation for Seção 2 card */
+@keyframes floatSmooth {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-float {
+  animation: floatSmooth 4s ease-in-out infinite;
+  will-change: transform;
+}
+

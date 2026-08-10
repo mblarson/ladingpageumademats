@@ -42,6 +42,9 @@ export interface SiteConfig {
   // BIBLE CAMPAIGN
   bible_campaign_active: boolean;
 
+  // SECTION 2 (PROXIMOS ENCONTROS)
+  section2_first_image_url?: string;
+
   // SYSTEM THEME
   system_theme: 'default' | 'copa';
 }
@@ -49,6 +52,9 @@ export interface SiteConfig {
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
   // UI
   ui_allowDrag: true,
+
+  // SECTION 2
+  section2_first_image_url: '',
 
   // SYSTEM THEME
   system_theme: 'default',

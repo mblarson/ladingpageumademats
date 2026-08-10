@@ -38,13 +38,24 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
   return (
     <section 
       id="action-section" 
-      className="relative w-full pt-12 pb-24 md:pt-16 md:pb-20 lg:pt-10 lg:pb-12 overflow-hidden z-20"
+      className="relative w-full pt-16 pb-16 md:pt-20 md:pb-20 lg:pt-10 lg:pb-8 z-20"
       style={{
         backgroundColor: bgColor,
         backgroundImage: `conic-gradient(${checkColor} 90deg, ${bgColor} 90deg 180deg, ${checkColor} 180deg 270deg, ${bgColor} 270deg)`,
         backgroundSize: '100px 100px'
       }}
     >
+      <MarqueeBanner 
+        items={[
+          { text: "CONGRESSO 2026", icon: Zap },
+          { text: "EXPERIÊNCIA ÚNICA", icon: Star }
+        ]}
+        bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
+        textColor={isCopa ? "text-[#002776]" : "text-black"}
+        rotate={-1}
+        position="top"
+        zIndex={30}
+      />
       
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Subtle halftone overlay to add texture to the checkerboard without using images */}
@@ -59,8 +70,8 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
       <div className="max-container max-w-6xl mx-auto px-4 relative z-10">
         
-        <div className="flex flex-col items-center justify-center mb-12 md:mb-16 lg:mb-8 text-center">
-            <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 lg:px-8 lg:py-5 mb-4">
+        <div className="flex flex-col items-center justify-center mb-12 md:mb-16 lg:mb-6 text-center">
+            <div className="relative inline-block px-8 py-6 md:px-12 md:py-8 lg:px-6 lg:py-4 mb-4">
               <div className={`absolute inset-0 ${isCopa ? 'bg-[#002776]' : 'bg-[#00376b]'} border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] -rotate-1`} />
               <h2 className="relative z-10 text-[12vw] md:text-6xl lg:text-3xl font-display uppercase text-white leading-[0.85] tracking-tighter drop-shadow-lg">
                 {activeConfig.action_title1}
@@ -71,7 +82,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color={isCopa ? "#ffdf00" : "#CCFF00"} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-6 w-full lg:max-w-3xl mx-auto">
+        <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-4 w-full lg:max-w-3xl mx-auto">
           
           <motion.div
             onMouseEnter={() => setHoveredCard('games')}
@@ -79,7 +90,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => window.open('https://www.umadegames.com.br', '_blank', 'noopener,noreferrer')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.2/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} group shadow-2xl transition-all`}
+            className={`col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.5/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
               {/* Mobile View: Cloudinary Image ONLY */}
@@ -137,7 +148,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('lidera')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-green'} group shadow-2xl transition-all`}
+            className={`col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.3/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-green'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
@@ -187,7 +198,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 md:col-span-1 order-1 md:order-3 relative ${isCopa ? 'bg-[#002776]' : 'bg-brand-purple'} rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.1/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} transition-all`}
+            className={`col-span-2 md:col-span-1 order-1 md:order-3 relative ${isCopa ? 'bg-[#002776]' : 'bg-brand-purple'} rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.3/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
@@ -238,16 +249,6 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
 
         </div>
       </div>
-
-      <MarqueeBanner 
-        items={[
-          { text: "CONGRESSO 2026", icon: Zap },
-          { text: "EXPERIÊNCIA ÚNICA", icon: Star }
-        ]}
-        bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
-        textColor={isCopa ? "text-[#002776]" : "text-black"}
-        rotate={0}
-      />
 
       {/* MODAL DE BLOQUEIO DE ACESSO */}
       <AnimatePresence>

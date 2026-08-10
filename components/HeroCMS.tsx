@@ -538,7 +538,7 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                    <div className={`relative bg-black shadow-[0_0_100px_rgba(204,255,0,0.1)] transition-all duration-500 overflow-hidden border border-white/10 ${previewMode === 'desktop' ? 'w-full h-full' : 'w-[360px] h-full mx-auto rounded-[3rem] border-8 border-[#222]'}`}>
                       
                       {/* SITE MOCK: MARQUEE */}
-                      <div className="absolute top-0 left-0 right-0 z-[100] w-full border-b-2 border-black py-2 bg-brand-neon shadow-xl overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 z-[100] -rotate-1 scale-110 border-b-2 border-black py-2 bg-brand-neon shadow-xl overflow-hidden">
                          <div className="flex whitespace-nowrap font-fun text-xs text-black uppercase tracking-wide">
                             {[...Array(20)].map((_, i) => (
                               <span key={i} className="mx-4 flex items-center gap-2">CONGRESSO UMADEMATS 2026 •</span>

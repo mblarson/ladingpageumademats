@@ -247,31 +247,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const currentSlide = slides[currentIndex];
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[85vh] overflow-hidden bg-black">
+    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[75vh] overflow-hidden bg-black">
       {/* O fundo preto padrão (bg-black) serve como base neutra e elegante antes do primeiro slide correto renderizar */}
 
 
       {/* Nav Menu renderizado imediatamente */}
-      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[110px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
-        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: accentColor }}>
-             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-2xl text-black tracking-tight uppercase">UMADEMATS</span></div>
+      <motion.nav className="hero-nav-menu absolute top-[12%] md:top-[10%] lg:top-[90px] left-1/2 -translate-x-1/2 w-[85%] max-w-md z-[110]">
+        <button onClick={() => setIsMenuOpen(true)} className="w-full rounded-full px-5 py-2 md:px-5 md:py-2.5 lg:py-2 flex items-center justify-between border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] relative overflow-hidden group transition-transform active:scale-95" style={{ backgroundColor: accentColor }}>
+             <div className="flex items-center gap-2 z-10"><span className="font-display italic text-xl md:text-2xl lg:text-xl text-black tracking-tight uppercase">UMADEMATS</span></div>
              <div className="z-10 w-8 h-8 md:w-8 md:h-8 flex items-center justify-center rounded-full group-hover:bg-black/10"><Menu className="text-black w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} /></div>
         </button>
       </motion.nav>
 
       {/* Marquee Superior - RENDERIZADO IMEDIATAMENTE */}
-      <div className="absolute top-0 left-0 right-0 z-[100] w-full border-b-2 md:border-b-4 border-black py-2 md:py-2.5 shadow-lg" style={{ backgroundColor: accentColor }}>
-         <motion.div className="flex whitespace-nowrap font-fun text-xl md:text-2xl text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ willChange: 'transform' }}>
+      <div className="absolute top-0 left-0 right-0 z-[100] border-b-2 md:border-b-4 border-black py-2 md:py-2.5 lg:py-1.5 shadow-lg" style={{ backgroundColor: accentColor }}>
+         <motion.div className="flex whitespace-nowrap font-montserrat font-normal text-lg md:text-2xl lg:text-lg text-black uppercase tracking-wide" animate={{ x: ["-50%", "0%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} style={{ willChange: 'transform' }}>
             {[...Array(10)].map((_, i) => (
-              <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">{activeConfig.hero_marqueeText}</span>
+              <span key={i} className="mx-4 md:mx-6 flex items-center gap-4">UMADEMATS 2026 - IEADMS</span>
             ))}
          </motion.div>
       </div>
 
       {/* Mascot - RENDERIZADO IMEDIATAMENTE */}
       <div className="absolute top-0 right-[5%] md:right-[10%] z-[115] pointer-events-none flex flex-col items-center">
-        <div className="w-[2px] h-[150px] bg-white/20" />
-        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 lg:w-56 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-8, 8, -8] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
+        <div className="w-[2px] h-[150px] lg:h-[120px] bg-white/20" />
+        <motion.img src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotearanha.png" className="w-44 md:w-72 lg:w-44 object-contain pointer-events-auto cursor-grab active:cursor-grabbing" animate={{ y: [-8, 8, -8] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} style={{ willChange: 'transform' }} {...dragFreeProps} />
       </div>
 
       {/* Container fix: always render the section to prevent layout jumping */}
@@ -287,10 +287,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               .hero-secondary-title { font-size: clamp(2.5rem, calc(4vw * ${activeConfig.hero_desktopFontSizeFactor}), 5rem) !important; }
               .hero-box-title { font-size: clamp(1.5rem, calc(2.5vw * ${activeConfig.hero_desktopFontSizeFactor}), 3.5rem) !important; }
             }
+            @media (min-width: 1024px) {
+              .hero-main-title { font-size: clamp(3rem, calc(5vw * ${activeConfig.hero_desktopFontSizeFactor}), 5.5rem) !important; }
+              .hero-secondary-title { font-size: clamp(2rem, calc(3vw * ${activeConfig.hero_desktopFontSizeFactor}), 4rem) !important; }
+              .hero-box-title { font-size: clamp(1.2rem, calc(2vw * ${activeConfig.hero_desktopFontSizeFactor}), 2.5rem) !important; }
+            }
             @media (min-width: 1601px) {
-              .hero-main-title { font-size: 8rem !important; }
-              .hero-secondary-title { font-size: 5.5rem !important; }
-              .hero-box-title { font-size: 3.5rem !important; }
+              .hero-main-title { font-size: 7rem !important; }
+              .hero-secondary-title { font-size: 5rem !important; }
+              .hero-box-title { font-size: 3rem !important; }
             }
           `}</style>
 
@@ -422,22 +427,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           </div>
         </>
       )}
-
-      {/* Divider Transition to ActionSection */}
-      <div className="absolute bottom-0 left-0 right-0 w-full z-20">
-        <DividerCreative variant="particles" color={isCopa ? "text-[#ffdf00]" : "text-brand-neon"} lineColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"} opacity={0.4} />
-      </div>
-
-      <MarqueeBanner 
-        items={[
-          { text: "Aqui Jesus Reina", icon: Zap },
-          { text: "Aqui Jesus Reina", icon: Star }
-        ]}
-        bgColor={isCopa ? "bg-[#002776]" : "bg-brand-green"}
-        textColor={isCopa ? "text-[#ffdf00]" : "text-white"}
-        rotate={0}
-        zIndex={60}
-      />
 
       <AnimatePresence>
         {showPhotosInfoModal && (

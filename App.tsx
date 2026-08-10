@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { HeroSection } from './components/HeroSection';
+import { UpcomingEventsSection } from './components/UpcomingEventsSection';
 import { AboutSection } from './components/AboutSection';
 import { ActionSection } from './components/ActionSection';
 import { StoreSection } from './components/StoreSection';
@@ -239,9 +240,10 @@ export default function App() {
             <motion.div style={{ top: yPath }} className="absolute -left-[11px] w-6 h-6 bg-brand-neon rounded-full border-2 border-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.6)]"><Zap size={12} className="fill-black text-black" /></motion.div>
         </div>
         <HeroSection onNavigate={handleNavigate} theme={systemTheme} initialSlides={slides} />
-        <StoreSection theme={systemTheme} />
-        <JesusReinaBanner theme={systemTheme} />
+        <UpcomingEventsSection firstImageUrl={config.section2_first_image_url} />
         <ActionSection onNavigate={handleNavigate} theme={systemTheme} />
+        <JesusReinaBanner theme={systemTheme} />
+        <StoreSection theme={systemTheme} />
         <AboutSection theme={systemTheme} />
         
         <AnimatePresence>

@@ -14,9 +14,9 @@ export const JesusReinaBanner: React.FC<JesusReinaBannerProps> = ({ theme = 'def
   const iconColor = isCopa ? 'fill-[#002776] text-[#002776]' : 'fill-black text-black';
 
   return (
-    <div className={`relative w-full ${bgColor} py-2 md:py-3 border-y-2 border-black overflow-hidden z-20`}>
+    <div className={`relative w-full ${bgColor} py-2 md:py-3 lg:py-2 border-y-2 border-black overflow-hidden z-20`}>
       <motion.div 
-        className={`flex whitespace-nowrap items-center font-display uppercase text-lg md:text-2xl ${textColor} italic tracking-tighter`}
+        className={`flex whitespace-nowrap items-center font-display uppercase text-lg md:text-2xl lg:text-xl ${textColor} italic tracking-tighter`}
         animate={{ x: ["0%", "-50%"] }}
         transition={{ 
           duration: 20, 

@@ -162,12 +162,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig, theme
         </div>
 
         {/* IEADMS Banner Image & Text */}
-        <div className="w-full flex flex-col items-center mb-10 md:mb-16 lg:mb-8">
+        <div className="w-full flex flex-col items-center mb-10 md:mb-16 lg:mb-6">
             <motion.div
 
 
 
-                className="w-full md:max-w-4xl lg:max-w-3xl aspect-video rounded-[1rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] md:shadow-[8px_8px_0_0_rgba(0,0,0,1)] bg-white relative z-10"
+                className="w-full md:max-w-4xl lg:max-w-2xl aspect-video rounded-[1rem] md:rounded-[2rem] lg:rounded-[1.5rem] overflow-hidden border-[3px] md:border-4 lg:border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] md:shadow-[8px_8px_0_0_rgba(0,0,0,1)] bg-white relative z-10"
             >
                 <img 
                     src={activeConfig.about_bannerUrl} 
@@ -182,14 +182,14 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ previewConfig, theme
 
 
 
-              className="mt-6 text-white text-center font-sans text-sm md:text-lg font-medium max-w-4xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
+              className="mt-6 text-white text-center font-sans text-sm md:text-lg lg:text-base font-medium max-w-4xl lg:max-w-3xl mx-auto leading-relaxed tracking-wide opacity-90 drop-shadow-md"
             >
               {activeConfig.about_text}
             </motion.p>
         </div>
 
         {/* Cards Grid - Adicionado ID para navegação */}
-        <div id="leaders-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 lg:gap-6 px-2 md:px-0 max-w-5xl mx-auto">
+        <div id="leaders-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-10 lg:gap-4 px-2 md:px-0 max-w-5xl lg:max-w-4xl mx-auto">
             
             {/* Card 1 */}
             <LeaderCard 

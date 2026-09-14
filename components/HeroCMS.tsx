@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Trash2, Edit2, Copy, GripVertical, Eye, EyeOff, Save, X, 
-  Monitor, Smartphone, AlertCircle, Info, ChevronRight, Layout, Menu
+  Monitor, Smartphone, AlertCircle, Info, ChevronRight, Layout, Menu,
+  Upload, CheckCircle2
 } from 'lucide-react';
 import { 
   DndContext, 
@@ -29,6 +30,290 @@ import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
 interface HeroCMSProps {
   heroDimensions: { width: number; height: number };
 }
+
+// --- COMPONENTE DE UPLOAD E CONVERSÃO BASE64 PARA HERO SLIDES ---
+interface HeroSlideImageUploaderProps {
+  currentImage?: string;
+  onImageChange: (base64: string) => void;
+}
+
+const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
+  currentImage,
+  onImageChange,
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [fileMeta, setFileMeta] = useState<{ name: string; size: string; wasCompressed: boolean } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleProcessFile = async (file: File) => {
+    setErrorMessage(null);
+    setSuccessNotice(null);
+
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setErrorMessage('Formato inválido! Selecione uma imagem PNG, JPG, JPEG ou WEBP.');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
+
+      const readAsDataURLAsync = (f: Blob | File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Erro ao ler os dados do arquivo via FileReader.'));
+          reader.readAsDataURL(f);
+        });
+      };
+
+      // Se o arquivo for menor ou igual a 1.5 MB, converte diretamente
+      if (file.size <= MAX_BYTES) {
+        const base64Data = await readAsDataURLAsync(file);
+        onImageChange(base64Data);
+        setFileMeta({
+          name: file.name,
+          size: formatBytes(file.size),
+          wasCompressed: false,
+        });
+        setSuccessNotice(`Imagem convertida em Base64 (${formatBytes(file.size)}).`);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Se exceder 1.5 MB, realiza compressão inteligente assíncrona via Canvas
+      const rawBase64 = await readAsDataURLAsync(file);
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const MAX_DIM = 1920;
+
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              throw new Error('Falha ao inicializar o contexto 2D para compressão.');
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.85;
+            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            let approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
+
+            if (approxBytes > MAX_BYTES) {
+              quality = 0.72;
+              compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+              approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
+            }
+
+            if (approxBytes > MAX_BYTES) {
+              throw new Error(`A imagem ultrapassa 1.5 MB mesmo após otimização (${formatBytes(approxBytes)}). Escolha um arquivo menor.`);
+            }
+
+            onImageChange(compressedDataUrl);
+            setFileMeta({
+              name: file.name,
+              size: `${formatBytes(approxBytes)} (original: ${formatBytes(file.size)})`,
+              wasCompressed: true,
+            });
+            setSuccessNotice(`Imagem otimizada e convertida em Base64 (${formatBytes(approxBytes)}).`);
+            resolve();
+          } catch (err: any) {
+            reject(err);
+          }
+        };
+        img.onerror = () => reject(new Error('Não foi possível carregar o arquivo para compressão.'));
+        img.src = rawBase64;
+      });
+    } catch (err: any) {
+      console.error('Erro no processamento da imagem do slide:', err);
+      setErrorMessage(err?.message || 'Falha ao processar arquivo.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleProcessFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleProcessFile(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    onImageChange('');
+    setFileMeta(null);
+    setSuccessNotice(null);
+    setErrorMessage(null);
+  };
+
+  const hasImage = Boolean(currentImage && currentImage.trim().length > 0);
+  const isBase64 = Boolean(currentImage && currentImage.startsWith('data:image/'));
+
+  return (
+    <div className="space-y-4">
+      {/* Upload Dropzone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+          isDragging
+            ? 'border-brand-neon bg-brand-neon/10 scale-[1.01]'
+            : 'border-white/20 hover:border-brand-neon/60 bg-white/5 hover:bg-white/10'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
+
+        <div className="flex flex-col items-center justify-center gap-2">
+          <div className="w-12 h-12 rounded-2xl bg-brand-neon/10 border border-brand-neon/30 flex items-center justify-center text-brand-neon">
+            <Upload className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">
+              {isProcessing ? 'Convertendo imagem em Base64...' : 'Clique para selecionar imagem ou arraste aqui'}
+            </p>
+            <p className="text-[11px] text-white/50 mt-0.5">
+              PNG, JPG, JPEG, WEBP • Limite: <span className="text-brand-neon font-semibold">1.5 MB</span> (com compressão automática)
+            </p>
+          </div>
+          <button
+            type="button"
+            className="mt-1 px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-bold uppercase tracking-wider text-white transition-all pointer-events-none"
+          >
+            Escolher Arquivo
+          </button>
+        </div>
+      </div>
+
+      {/* Status Messages */}
+      {errorMessage && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2 text-red-400 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {successNotice && (
+        <div className="p-3 bg-brand-neon/10 border border-brand-neon/30 rounded-xl flex items-center gap-2 text-brand-neon text-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{successNotice}</span>
+        </div>
+      )}
+
+      {/* Image Preview */}
+      {hasImage && (
+        <div className="bg-black/60 border border-white/10 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-brand-neon" />
+              Prévia da Imagem do Slide
+            </span>
+            <span
+              className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                isBase64
+                  ? 'bg-brand-neon/15 text-brand-neon border-brand-neon/40'
+                  : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/40'
+              }`}
+            >
+              {isBase64 ? 'Base64 Pronta' : 'URL Legada'}
+            </span>
+          </div>
+
+          <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-white/20 bg-black">
+            <img
+              src={currentImage}
+              alt="Prévia do Slide"
+              className="w-full h-full object-cover"
+              onError={() => {
+                setErrorMessage('Não foi possível exibir a imagem.');
+              }}
+            />
+          </div>
+
+          {fileMeta && (
+            <div className="text-[10px] text-white/60 bg-white/5 p-2 rounded-xl border border-white/10 flex items-center justify-between">
+              <span className="truncate max-w-[200px]">{fileMeta.name}</span>
+              <span className="font-semibold text-brand-neon shrink-0">{fileMeta.size}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 text-[10px] font-bold flex items-center gap-1 transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Remover</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition-colors"
+            >
+              <Upload className="w-3 h-3" />
+              <span>Trocar Arquivo</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface SortableSlideCardProps {
   slide: HeroSlide;
@@ -74,11 +359,11 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         </div>
 
         <div className="w-20 h-14 bg-black rounded-lg overflow-hidden border border-white/5 shrink-0 flex items-center justify-center">
-          {slide.image_desktop_url ? (
-            isVideoUrl(slide.image_desktop_url) ? (
-              <video src={getDirectDriveUrl(slide.image_desktop_url)} className="w-full h-full object-cover" muted />
+          {slide.url_base64 || slide.image_desktop_url ? (
+            isVideoUrl(slide.url_base64 || slide.image_desktop_url) ? (
+              <video src={slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} className="w-full h-full object-cover" muted />
             ) : (
-              <img src={getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
+              <img src={slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
             )
           ) : (
             <Layout size={16} className="text-white/20" />
@@ -139,7 +424,14 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       .from('hero_slides')
       .select('*')
       .order('order', { ascending: true });
-    if (data) setSlides(data);
+    if (data) {
+      const normalized = data.map((s: any) => ({
+        ...s,
+        url_base64: s.url_base64 || s.redirect_url || s.image_desktop_url || '',
+        image_desktop_url: s.url_base64 || s.image_desktop_url || s.redirect_url || '',
+      }));
+      setSlides(normalized);
+    }
     setLoading(false);
   };
 
@@ -180,10 +472,17 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
   };
 
   const handleDuplicate = async (slide: HeroSlide) => {
-    const { id, created_at, updated_at, ...rest } = slide;
+    const { id, created_at, updated_at, redirect_url, ...rest } = slide;
+    const slideData: any = {
+      ...rest,
+      title: `${rest.title} (Cópia)`,
+      order: slides.length,
+      url_base64: slide.url_base64 || slide.image_desktop_url || '',
+      image_desktop_url: slide.url_base64 || slide.image_desktop_url || '',
+    };
     const { data } = await supabase
       .from('hero_slides')
-      .insert([{ ...rest, title: `${rest.title} (Cópia)`, order: slides.length }])
+      .insert([slideData])
       .select();
     if (data) fetchSlides();
   };
@@ -199,11 +498,17 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
     setIsSaving(true);
 
     try {
+      const { id, redirect_url, ...rest } = editingSlide;
+      const slideData: any = {
+        ...rest,
+        url_base64: editingSlide.url_base64 || editingSlide.image_desktop_url || '',
+        image_desktop_url: editingSlide.url_base64 || editingSlide.image_desktop_url || '',
+      };
+
       if (editingSlide.id.startsWith('new_')) {
-        const { id, ...rest } = editingSlide;
-        await supabase.from('hero_slides').insert([{ ...rest, order: slides.length }]);
+        await supabase.from('hero_slides').insert([{ ...slideData, order: slides.length }]);
       } else {
-        await supabase.from('hero_slides').update(editingSlide).eq('id', editingSlide.id);
+        await supabase.from('hero_slides').update(slideData).eq('id', editingSlide.id);
       }
       setEditingSlide(null);
       fetchSlides();
@@ -220,7 +525,7 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       title: '',
       subtitle: '',
       link: '',
-      redirect_url: '',
+      url_base64: '',
       image_desktop_url: '',
       image_mobile_url: '',
       use_mobile_image: false,
@@ -411,62 +716,32 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">Link de Ação do Botão (Opcional)</label>
+                      <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">Link de Destino / Ação (Opcional)</label>
                       <input 
-                        type="url" 
+                        type="text" 
                         value={editingSlide.link} 
                         onChange={(e) => setEditingSlide({...editingSlide, link: e.target.value})}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-brand-neon transition-all"
-                        placeholder="Ex: /lidera ou https://google.com/..."
+                        placeholder="Ex: /lidera, /biblia ou https://..."
                       />
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-brand-neon tracking-widest ml-2 block">URL Redirecionamento (Clique no Slide Inteiro)</label>
-                      <input 
-                        type="text" 
-                        value={editingSlide.redirect_url || ''} 
-                        onChange={(e) => setEditingSlide({...editingSlide, redirect_url: e.target.value})}
-                        className="w-full bg-white/5 border border-brand-neon/30 focus:border-brand-neon rounded-2xl px-5 py-4 text-white focus:outline-none transition-all placeholder-white/20"
-                        placeholder="Ex: /biblia ou https://..."
-                      />
+                      <p className="text-[10px] text-white/30 ml-2">Define para onde o usuário será direcionado ao clicar no slide ou botão.</p>
                    </div>
 
-                   <div className="pt-4 border-t border-white/5 space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">URL Imagem Desktop (Google Drive)</label>
-                        <input 
-                          type="text" 
-                          required
-                          value={editingSlide.image_desktop_url} 
-                          onChange={(e) => setEditingSlide({...editingSlide, image_desktop_url: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-brand-neon transition-all"
-                          placeholder="https://..."
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-3 px-2">
-                        <button 
-                          type="button"
-                          onClick={() => setEditingSlide({...editingSlide, use_mobile_image: !editingSlide.use_mobile_image})}
-                          className={`w-10 h-5 rounded-full relative transition-colors ${editingSlide.use_mobile_image ? 'bg-brand-neon' : 'bg-white/10'}`}
-                        >
-                          <motion.div animate={{ x: editingSlide.use_mobile_image ? 20 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-lg" />
-                        </button>
-                        <span className="text-[10px] uppercase font-black text-white/60 tracking-widest">Usar imagem mobile específica</span>
-                      </div>
-
-                      {editingSlide.use_mobile_image && (
-                         <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-2 block">URL Imagem Mobile</label>
-                            <input 
-                              type="text" 
-                              value={editingSlide.image_mobile_url} 
-                              onChange={(e) => setEditingSlide({...editingSlide, image_mobile_url: e.target.value})}
-                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-brand-neon transition-all"
-                              placeholder="https://..."
-                            />
-                         </div>
-                      )}
+                   <div className="pt-4 border-t border-white/5 space-y-4">
+                      <label className="text-[10px] uppercase font-bold text-brand-neon tracking-widest ml-2 block">
+                        Imagem do Slide (Upload Base64)
+                      </label>
+                      
+                      <HeroSlideImageUploader
+                        currentImage={editingSlide.url_base64 || editingSlide.image_desktop_url}
+                        onImageChange={(base64) => {
+                          setEditingSlide(prev => prev ? ({
+                            ...prev,
+                            url_base64: base64,
+                            image_desktop_url: base64,
+                          }) : null);
+                        }}
+                      />
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -556,10 +831,10 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
 
                       {/* HERO CONTENT */}
                       <div className="absolute inset-0 z-0">
-                         {previewSnapshot.image_desktop_url ? (
-                            isVideoUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url) ? (
+                         {(previewSnapshot.url_base64 || previewSnapshot.image_desktop_url) ? (
+                            isVideoUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : (previewSnapshot.url_base64 || previewSnapshot.image_desktop_url)) ? (
                                <video 
-                                 src={getDirectDriveUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url)} 
+                                 src={(previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? getDirectDriveUrl(previewSnapshot.image_mobile_url) : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
                                  className="w-full h-full object-cover" 
                                  autoPlay 
                                  muted 
@@ -568,7 +843,7 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                                />
                             ) : (
                                <img 
-                                 src={getDirectDriveUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : previewSnapshot.image_desktop_url)} 
+                                 src={(previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? getDirectDriveUrl(previewSnapshot.image_mobile_url) : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
                                  className="w-full h-full object-cover" 
                                  alt="" 
                                />

@@ -108,5 +108,23 @@ CREATE POLICY "Leitura pública de site_config" ON public.site_config FOR SELECT
 DROP POLICY IF EXISTS "Gravação pública/admin de site_config" ON public.site_config;
 CREATE POLICY "Gravação pública/admin de site_config" ON public.site_config FOR ALL USING (true) WITH CHECK (true);
 
+-- ==============================================================================
+-- GESTÃO DE SLIDES DO HERO (MIGRAÇÃO PARA UPLOAD VIA BASE64)
+-- ==============================================================================
+-- 1. Executar no SQL Editor do Supabase para migrar a coluna de armazenamento:
+ALTER TABLE public.hero_slides RENAME COLUMN redirect_url TO url_base64;
+ALTER TABLE public.hero_slides ALTER COLUMN url_base64 TYPE TEXT;
+
+-- 2. Habilitar Row Level Security (RLS) para hero_slides
+ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
+
+-- 3. Políticas de Acesso para hero_slides (Leitura pública e gravação irrestrita/admin)
+DROP POLICY IF EXISTS "Leitura pública de hero_slides" ON public.hero_slides;
+CREATE POLICY "Leitura pública de hero_slides" ON public.hero_slides FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Gravação pública/admin de hero_slides" ON public.hero_slides;
+CREATE POLICY "Gravação pública/admin de hero_slides" ON public.hero_slides FOR ALL USING (true) WITH CHECK (true);
+
+
 
 

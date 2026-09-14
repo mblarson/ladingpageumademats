@@ -156,15 +156,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           .order('order', { ascending: true });
         
         if (!error && data && data.length > 0) {
-          setSlides(data);
+          const normalized = data.map((s: any) => ({
+            ...s,
+            url_base64: s.url_base64 || s.redirect_url || s.image_desktop_url || '',
+            image_desktop_url: s.url_base64 || s.image_desktop_url || s.redirect_url || '',
+          }));
+          setSlides(normalized);
         } else {
           // Fallback slides if none found
           setSlides([
-            { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
-            { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
-            { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
-            { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
-            { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
+            { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', url_base64: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
+            { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', url_base64: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
+            { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', url_base64: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
+            { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', url_base64: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
+            { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', url_base64: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
           ]);
         }
       } catch (e) {
@@ -302,7 +307,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           {/* Background Image / Color / Video */}
           <AnimatePresence initial={false}>
             <motion.div
-               key={currentSlide.id + '_' + currentIndex + (currentSlide.image_desktop_url ? '_media' : '_bg')}
+               key={currentSlide.id + '_' + currentIndex + ((currentSlide.url_base64 || currentSlide.image_desktop_url) ? '_media' : '_bg')}
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
@@ -310,11 +315,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                className="absolute inset-0 z-0 bg-black"
                style={{ willChange: "opacity" }}
             >
-              {currentSlide.image_desktop_url ? (
+              {(currentSlide.url_base64 || currentSlide.image_desktop_url) ? (
                 <>
-                  {isVideoUrl(currentSlide.image_desktop_url) || (currentSlide.use_mobile_image && isVideoUrl(currentSlide.image_mobile_url)) ? (
+                  {isVideoUrl(currentSlide.url_base64 || currentSlide.image_desktop_url) || (currentSlide.use_mobile_image && isVideoUrl(currentSlide.image_mobile_url)) ? (
                     <HeroVideoBackground
-                      desktopUrl={currentSlide.image_desktop_url}
+                      desktopUrl={currentSlide.url_base64 || currentSlide.image_desktop_url}
                       mobileUrl={currentSlide.image_mobile_url}
                       useMobileImage={currentSlide.use_mobile_image}
                       altTitle={currentSlide.title}
@@ -327,7 +332,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                          <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
                       )}
                       <img 
-                        src={getDirectDriveUrl(currentSlide.image_desktop_url)} 
+                        src={currentSlide.url_base64 || getDirectDriveUrl(currentSlide.image_desktop_url)} 
                         alt={currentSlide.title} 
                         className="w-full h-full object-cover"
                         loading="eager"
@@ -368,7 +373,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               onClick={() => handleSlideClick(currentSlide)}
             >
               {/* Grid Background Effect (only if no image) */}
-              {!currentSlide.image_desktop_url && (
+              {!(currentSlide.url_base64 || currentSlide.image_desktop_url) && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
                   <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
                 </div>
@@ -377,7 +382,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
                   {/* Dynamic Content Mapping */}
-                  {currentSlide.id === '1' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                  {currentSlide.id === '1' && slides.length <= 5 && !(currentSlide.url_base64 || currentSlide.image_desktop_url) ? (
                     // Original Photos Slide
                     <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
                       <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
@@ -387,7 +392,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                         <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
                       </div>
                     </motion.div>
-                  ) : currentSlide.id === '2' && slides.length <= 5 && !currentSlide.image_desktop_url ? (
+                  ) : currentSlide.id === '2' && slides.length <= 5 && !(currentSlide.url_base64 || currentSlide.image_desktop_url) ? (
                      // Original Main Slide
                      <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
                        <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: accentColor }}>MATS</span></h1>

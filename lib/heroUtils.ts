@@ -12,6 +12,7 @@
  */
 export const getDirectDriveUrl = (url: string | null | undefined): string => {
   if (!url) return '';
+  if (url.startsWith('data:image/')) return url;
   if (!url.includes('drive.google.com')) return url;
 
   try {

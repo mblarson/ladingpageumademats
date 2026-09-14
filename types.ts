@@ -4,6 +4,7 @@ export interface HeroSlide {
   title: string;
   subtitle: string;
   link: string;
+  url_base64?: string;
   redirect_url?: string;
   image_desktop_url: string;
   image_mobile_url: string;

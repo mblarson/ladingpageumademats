@@ -1747,6 +1747,357 @@ const ShirtRequestsAdmin: React.FC = () => {
     );
 };
 
+// --- COMPONENTE DE UPLOAD E CONVERSÃO BASE64 PARA SEÇÃO 2 ---
+interface Section2ImageUploaderProps {
+  currentImage?: string;
+  onImageChange: (base64: string) => void;
+  onSave: () => Promise<void>;
+}
+
+const Section2ImageUploader: React.FC<Section2ImageUploaderProps> = ({
+  currentImage,
+  onImageChange,
+  onSave,
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [fileMeta, setFileMeta] = useState<{ name: string; size: string; wasCompressed: boolean } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleProcessFile = async (file: File) => {
+    setErrorMessage(null);
+    setSuccessNotice(null);
+
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setErrorMessage('Formato inválido! Por favor selecione uma imagem PNG, JPG, JPEG ou WEBP.');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
+
+      // Leitor assíncrono nativo utilizando a API nativa FileReader (readAsDataURL)
+      const readAsDataURLAsync = (f: Blob | File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Erro ao ler os dados do arquivo via FileReader.'));
+          reader.readAsDataURL(f);
+        });
+      };
+
+      // Se o arquivo for menor ou igual a 1.5 MB, converte diretamente para Base64
+      if (file.size <= MAX_BYTES) {
+        const base64Data = await readAsDataURLAsync(file);
+        onImageChange(base64Data);
+        setFileMeta({
+          name: file.name,
+          size: formatBytes(file.size),
+          wasCompressed: false,
+        });
+        setSuccessNotice(`Imagem convertida em Base64 (${formatBytes(file.size)}). Clique em "Salvar Configuração" para gravar.`);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Se exceder 1.5 MB, realiza compressão inteligente assíncrona via Canvas
+      const rawBase64 = await readAsDataURLAsync(file);
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const MAX_DIM = 1600;
+
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              throw new Error('Falha ao inicializar o contexto 2D para compressão.');
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compressão progressiva JPEG
+            let quality = 0.85;
+            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            let approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
+
+            if (approxBytes > MAX_BYTES) {
+              quality = 0.72;
+              compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+              approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
+            }
+
+            if (approxBytes > MAX_BYTES) {
+              throw new Error(`A imagem ultrapassa o limite de 1.5 MB mesmo após compressão (${formatBytes(approxBytes)}). Escolha um arquivo menor.`);
+            }
+
+            onImageChange(compressedDataUrl);
+            setFileMeta({
+              name: file.name,
+              size: `${formatBytes(approxBytes)} (original: ${formatBytes(file.size)})`,
+              wasCompressed: true,
+            });
+            setSuccessNotice(`Imagem otimizada e convertida em Base64 (${formatBytes(approxBytes)}). Clique em "Salvar Configuração" para gravar.`);
+            resolve();
+          } catch (err: any) {
+            reject(err);
+          }
+        };
+        img.onerror = () => reject(new Error('Não foi possível carregar o arquivo para compressão.'));
+        img.src = rawBase64;
+      });
+    } catch (err: any) {
+      console.error('Erro no processamento da imagem:', err);
+      setErrorMessage(err?.message || 'Falha ao processar arquivo.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleProcessFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleProcessFile(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (confirm('Deseja remover a imagem anexada da Seção 2 e voltar ao Card Padrão Institucional?')) {
+      onImageChange('');
+      setFileMeta(null);
+      setSuccessNotice('Imagem removida do rascunho. O card padrão será exibido. Clique em "Salvar Configuração" para confirmar.');
+      setErrorMessage(null);
+    }
+  };
+
+  const handleSaveClick = async () => {
+    setIsSaving(true);
+    setErrorMessage(null);
+    try {
+      await onSave();
+      setSuccessNotice('Configurações da Seção 2 salvas com sucesso no Supabase! 💾');
+    } catch (err: any) {
+      setErrorMessage('Erro ao salvar no banco: ' + (err?.message || 'Tente novamente.'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const hasImage = Boolean(currentImage && currentImage.trim().length > 0);
+  const isBase64 = Boolean(currentImage && currentImage.startsWith('data:image/'));
+
+  return (
+    <div className="space-y-5">
+      {/* Upload Zone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
+          isDragging
+            ? 'border-[#D6F200] bg-[#D6F200]/10 scale-[1.01]'
+            : 'border-white/20 hover:border-[#D6F200]/60 bg-black/40 hover:bg-black/60'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".png,.jpg,.jpeg,.webp"
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
+
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-[#D6F200]/10 border border-[#D6F200]/30 flex items-center justify-center text-[#D6F200]">
+            <Upload className="w-7 h-7" />
+          </div>
+          <div>
+            <p className="text-sm sm:text-base font-bold text-white">
+              {isProcessing ? 'Processando e convertendo imagem em Base64...' : 'Clique para selecionar ou arraste o arquivo aqui'}
+            </p>
+            <p className="text-xs text-white/50 mt-1">
+              Formatos aceitos: <span className="text-white/80 font-semibold">PNG, JPG, JPEG, WEBP</span> • Limite: <span className="text-[#D6F200] font-semibold">1.5 MB</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            className="mt-1 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold uppercase tracking-wider text-white transition-all pointer-events-none"
+          >
+            Escolher Imagem do Dispositivo
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      {errorMessage && (
+        <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-red-400 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {successNotice && (
+        <div className="p-3.5 bg-[#D6F200]/10 border border-[#D6F200]/30 rounded-xl flex items-center gap-3 text-[#D6F200] text-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{successNotice}</span>
+        </div>
+      )}
+
+      {/* Preview Section */}
+      <div className="bg-black/60 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
+            <Eye className="w-3.5 h-3.5 text-[#D6F200]" />
+            Prévia do Primeiro Slide da Seção 2
+          </span>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+              hasImage
+                ? isBase64
+                  ? 'bg-[#D6F200]/15 text-[#D6F200] border-[#D6F200]/40'
+                  : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/40'
+                : 'bg-white/10 text-white/60 border-white/20'
+            }`}
+          >
+            {hasImage ? (isBase64 ? 'Base64 Pronta' : 'Imagem Configurada') : 'Card Padrão Institucional'}
+          </span>
+        </div>
+
+        {/* Visual Preview Container */}
+        <div className="relative w-full max-w-sm mx-auto aspect-[16/10] sm:aspect-video rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-[#0A0D14]">
+          {hasImage ? (
+            <img
+              src={currentImage}
+              alt="Prévia do Carrossel Seção 2"
+              className="w-full h-full object-cover select-none"
+              onError={() => {
+                setErrorMessage('A imagem não pôde ser carregada.');
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col justify-between p-4 bg-[#0A0D14] select-none">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#D6F200]/20 text-[#D6F200] border border-[#D6F200]/30">
+                  AGENDA FIXA
+                </span>
+                <span className="text-[9px] font-bold text-white/60 tracking-wider">IEADMS</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase text-white/70 tracking-widest">TODO 3º SÁBADO DO MÊS</p>
+                <p className="text-sm font-black uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#D6F200] to-[#70D4CC]">
+                  CULTO DA UMADEMATS
+                </p>
+              </div>
+              <p className="text-[9px] text-white/50">19:30H • Congregações</p>
+            </div>
+          )}
+        </div>
+
+        {/* File Meta info */}
+        {fileMeta && (
+          <div className="text-[11px] text-white/60 bg-white/5 p-3 rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span className="text-white/40">Arquivo:</span> <span className="font-semibold text-white">{fileMeta.name}</span>
+            </div>
+            <div>
+              <span className="text-white/40">Tamanho:</span> <span className="font-semibold text-[#D6F200]">{fileMeta.size}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Control Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/10">
+          <div className="flex items-center gap-2">
+            {hasImage && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Remover Imagem</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>{hasImage ? 'Trocar Imagem' : 'Anexar Imagem'}</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            disabled={isSaving || isProcessing}
+            onClick={handleSaveClick}
+            className="bg-[#D6F200] hover:bg-[#bce000] disabled:opacity-50 text-black font-black uppercase px-6 py-2.5 rounded-xl text-xs tracking-wider flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shrink-0"
+          >
+            {isSaving ? (
+              <>
+                <RotateCcw className="w-4 h-4 animate-spin" />
+                <span>Gravando no Supabase...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Salvar Configuração</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface AdminDashboardProps { 
   onBack: () => void; 
@@ -1946,62 +2297,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onNaviga
                               </div>
                               <div>
                                 <h3 className="font-display uppercase text-lg text-white">Seção 2 - Próximos Encontros</h3>
-                                <p className="text-xs text-white/50 font-medium">Configuração da imagem principal do carrossel (Primeiro Slide)</p>
+                                <p className="text-xs text-white/50 font-medium">Upload da imagem do primeiro slide do carrossel (Base64)</p>
                               </div>
                             </div>
                           </div>
 
-                          <div className="space-y-4 mt-6">
-                            <div>
-                              <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-2">
-                                Imagem da Seção 2 (Primeiro Slide)
-                              </label>
-                              <div className="flex flex-col sm:flex-row gap-3">
-                                <input
-                                  type="text"
-                                  value={draftConfig.section2_first_image_url || ''}
-                                  onChange={(e) => setDraftConfig({ ...draftConfig, section2_first_image_url: e.target.value })}
-                                  placeholder="https://exemplo.com/imagem.jpg ou Link do Google Drive"
-                                  className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D6F200]"
-                                />
-                                <button
-                                  onClick={async () => {
-                                    await saveConfig(draftConfig);
-                                    alert('Imagem da Seção 2 salva com sucesso!');
-                                  }}
-                                  className="bg-[#D6F200] hover:bg-[#bce000] text-black font-extrabold uppercase px-6 py-3 rounded-xl text-xs tracking-wider flex items-center justify-center gap-2 transition-colors shadow-lg active:scale-95 shrink-0"
-                                >
-                                  <Save size={16} />
-                                  <span>Salvar Configuração</span>
-                                </button>
-                              </div>
-                              <p className="text-[11px] text-white/40 mt-2">
-                                Coloque a URL direta da imagem ou link de compartilhamento do Google Drive. Ela será aplicada imediatamente ao primeiro slide do carrossel na página inicial.
-                              </p>
-
-                              {draftConfig.section2_first_image_url && (
-                                <div className="mt-4 p-3 bg-black/50 border border-white/10 rounded-xl flex items-center gap-4">
-                                  <div className="w-24 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 border border-white/10">
-                                    <img
-                                      src={getDirectDriveUrl(draftConfig.section2_first_image_url)}
-                                      alt="Prévia primeiro slide"
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        (e.target as HTMLElement).style.display = 'none';
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="text-xs">
-                                    <span className="text-[#D6F200] font-bold uppercase block mb-0.5">Imagem Configurada</span>
-                                    <span className="text-white/60 text-[11px] break-all line-clamp-1">{draftConfig.section2_first_image_url}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                          <div className="mt-4">
+                            <Section2ImageUploader
+                              currentImage={draftConfig.section2_first_image_url}
+                              onImageChange={(base64) => {
+                                setDraftConfig(prev => ({ ...prev, section2_first_image_url: base64 }));
+                              }}
+                              onSave={async () => {
+                                await saveConfig(draftConfig);
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
-                   </motion.div>
+                    </motion.div>
                 )}
              </div>
           )}

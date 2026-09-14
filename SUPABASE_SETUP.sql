@@ -76,3 +76,37 @@ CREATE POLICY "Leitura pública de auditoria" ON public.bible_announcements_audi
 CREATE POLICY "Inserção pública de auditoria" ON public.bible_announcements_audit FOR INSERT WITH CHECK (true);
 CREATE POLICY "Controle administrativo de auditoria" ON public.bible_announcements_audit FOR ALL USING (true);
 
+
+-- ==========================================================
+-- CONFIGURAÇÕES DO SITE (SEÇÃO 2 E HERO) - BASE64 / JSONB
+-- ==========================================================
+-- A tabela site_config persiste as configurações do site (landing page).
+-- A coluna 'value' deve ser do tipo JSONB (ou TEXT), garantindo capacidade
+-- para armazenar strings Base64 longas de imagem (até 1GB no PostgreSQL)
+-- sem qualquer limitação ou truncamento de caracteres.
+
+CREATE TABLE IF NOT EXISTS public.site_config (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Caso a tabela já exista e a coluna 'value' tenha sido criada com tipo limitado (ex: VARCHAR):
+-- Execute o comando abaixo no SQL Editor do Supabase:
+ALTER TABLE public.site_config ALTER COLUMN value TYPE JSONB USING value::jsonb;
+
+-- Caso utilize coluna TEXT simples em vez de JSONB:
+-- ALTER TABLE public.site_config ALTER COLUMN value TYPE TEXT;
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE public.site_config ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de Acesso: Leitura pública e gravação irrestrita/admin
+DROP POLICY IF EXISTS "Leitura pública de site_config" ON public.site_config;
+CREATE POLICY "Leitura pública de site_config" ON public.site_config FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Gravação pública/admin de site_config" ON public.site_config;
+CREATE POLICY "Gravação pública/admin de site_config" ON public.site_config FOR ALL USING (true) WITH CHECK (true);
+
+
+

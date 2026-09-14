@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Sparkles, Clock, MapPin } from 'lucide-react';
 import { getDirectDriveUrl } from '../lib/heroUtils';
@@ -97,16 +97,23 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    // Resetar falhas anteriores caso uma nova imagem (ou Base64) seja informada
+    setFailedImages({});
+  }, [firstImageUrl]);
+
   const eventsList = useMemo(() => {
     if (!firstImageUrl || !firstImageUrl.trim()) return MOCK_EVENTS;
-    const directUrl = getDirectDriveUrl(firstImageUrl.trim());
-    if (!directUrl || !directUrl.trim()) return MOCK_EVENTS;
+    const trimmed = firstImageUrl.trim();
+    // Se for data URI Base64, utiliza diretamente sem passar por conversor de URL externa
+    const finalImageUrl = trimmed.startsWith('data:image/') ? trimmed : getDirectDriveUrl(trimmed);
+    if (!finalImageUrl || !finalImageUrl.trim()) return MOCK_EVENTS;
 
     return MOCK_EVENTS.map((evt, idx) => {
       if (idx === 0) {
         return {
           ...evt,
-          imageUrl: directUrl.trim(),
+          imageUrl: finalImageUrl.trim(),
           isDefaultCard: false,
         };
       }

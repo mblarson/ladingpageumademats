@@ -109,16 +109,20 @@ DROP POLICY IF EXISTS "Gravação pública/admin de site_config" ON public.site_
 CREATE POLICY "Gravação pública/admin de site_config" ON public.site_config FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
--- GESTÃO DE SLIDES DO HERO (MIGRAÇÃO PARA UPLOAD VIA BASE64)
+-- GESTÃO DE SLIDES DO HERO (MIGRAÇÃO PARA UPLOAD VIA BASE64 - VERTICAL E HORIZONTAL)
 -- ==============================================================================
--- 1. Executar no SQL Editor do Supabase para migrar a coluna de armazenamento:
+-- 1. Executar no SQL Editor do Supabase para migrar a coluna de armazenamento vertical:
 ALTER TABLE public.hero_slides RENAME COLUMN redirect_url TO url_base64;
 ALTER TABLE public.hero_slides ALTER COLUMN url_base64 TYPE TEXT;
 
--- 2. Habilitar Row Level Security (RLS) para hero_slides
+-- 2. Adicionar a coluna para imagem horizontal específica para desktop (16:9):
+ALTER TABLE public.hero_slides 
+ADD COLUMN IF NOT EXISTS url_base64_horizontal TEXT;
+
+-- 3. Habilitar Row Level Security (RLS) para hero_slides
 ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 
--- 3. Políticas de Acesso para hero_slides (Leitura pública e gravação irrestrita/admin)
+-- 4. Políticas de Acesso para hero_slides (Leitura pública e gravação irrestrita/admin)
 DROP POLICY IF EXISTS "Leitura pública de hero_slides" ON public.hero_slides;
 CREATE POLICY "Leitura pública de hero_slides" ON public.hero_slides FOR SELECT USING (true);
 

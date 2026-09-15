@@ -35,11 +35,23 @@ interface HeroCMSProps {
 interface HeroSlideImageUploaderProps {
   currentImage?: string;
   onImageChange: (base64: string) => void;
+  title?: string;
+  description?: string;
+  recommendedRatio?: string;
+  badgeLabel?: string;
+  aspectClass?: string;
+  icon?: React.ReactNode;
 }
 
 const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
   currentImage,
   onImageChange,
+  title,
+  description,
+  recommendedRatio,
+  badgeLabel,
+  aspectClass,
+  icon,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -220,14 +232,19 @@ const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
 
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="w-12 h-12 rounded-2xl bg-brand-neon/10 border border-brand-neon/30 flex items-center justify-center text-brand-neon">
-            <Upload className="w-6 h-6" />
+            {icon || <Upload className="w-6 h-6" />}
           </div>
           <div>
             <p className="text-sm font-bold text-white">
-              {isProcessing ? 'Convertendo imagem em Base64...' : 'Clique para selecionar imagem ou arraste aqui'}
+              {isProcessing ? 'Convertendo imagem em Base64...' : (title || 'Clique para selecionar imagem ou arraste aqui')}
             </p>
             <p className="text-[11px] text-white/50 mt-0.5">
-              PNG, JPG, JPEG, WEBP • Limite: <span className="text-brand-neon font-semibold">1.5 MB</span> (com compressão automática)
+              {description || 'PNG, JPG, JPEG, WEBP • Limite: 1.5 MB (com compressão automática)'}
+              {recommendedRatio && (
+                <span className="block text-brand-neon/90 font-semibold mt-0.5">
+                  Proporção sugerida: {recommendedRatio}
+                </span>
+              )}
             </p>
           </div>
           <button
@@ -260,7 +277,7 @@ const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-1.5">
               <Eye className="w-3.5 h-3.5 text-brand-neon" />
-              Prévia da Imagem do Slide
+              {badgeLabel || 'Prévia da Imagem'}
             </span>
             <span
               className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${
@@ -273,7 +290,7 @@ const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
             </span>
           </div>
 
-          <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-white/20 bg-black">
+          <div className={`relative w-full ${aspectClass || 'aspect-[16/9]'} rounded-xl overflow-hidden border border-white/20 bg-black flex items-center justify-center`}>
             <img
               src={currentImage}
               alt="Prévia do Slide"
@@ -359,11 +376,11 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         </div>
 
         <div className="w-20 h-14 bg-black rounded-lg overflow-hidden border border-white/5 shrink-0 flex items-center justify-center">
-          {slide.url_base64 || slide.image_desktop_url ? (
-            isVideoUrl(slide.url_base64 || slide.image_desktop_url) ? (
-              <video src={slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} className="w-full h-full object-cover" muted />
+          {slide.url_base64_horizontal || slide.url_base64 || slide.image_desktop_url ? (
+            isVideoUrl(slide.url_base64_horizontal || slide.url_base64 || slide.image_desktop_url) ? (
+              <video src={slide.url_base64_horizontal || slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} className="w-full h-full object-cover" muted />
             ) : (
-              <img src={slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
+              <img src={slide.url_base64_horizontal || slide.url_base64 || getDirectDriveUrl(slide.image_desktop_url)} alt="" className="w-full h-full object-cover" />
             )
           ) : (
             <Layout size={16} className="text-white/20" />
@@ -371,10 +388,20 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="bg-brand-neon/20 text-brand-neon px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
                Slide #{index}
             </span>
+            {slide.url_base64 && (
+              <span className="bg-white/10 text-white/70 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
+                Vertical
+              </span>
+            )}
+            {slide.url_base64_horizontal && (
+              <span className="bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
+                Desktop 16:9
+              </span>
+            )}
             <h4 className="text-sm font-bold text-white truncate uppercase tracking-tight leading-none">{slide.title || 'Sem Título'}</h4>
           </div>
           <p className="text-[10px] text-white/40 truncate uppercase tracking-widest">{slide.subtitle || 'Sem Subtítulo'}</p>
@@ -407,10 +434,20 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
+  const [showHorizontalImage, setShowHorizontalImage] = useState(false);
   const [showExternalPreview, setShowExternalPreview] = useState(false);
   const [previewSnapshot, setPreviewSnapshot] = useState<HeroSlide | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+
+  // Sincroniza o toggle de imagem horizontal quando um slide é aberto para edição
+  useEffect(() => {
+    if (editingSlide) {
+      setShowHorizontalImage(Boolean(editingSlide.url_base64_horizontal && editingSlide.url_base64_horizontal.trim().length > 0));
+    } else {
+      setShowHorizontalImage(false);
+    }
+  }, [editingSlide?.id]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -428,7 +465,8 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       const normalized = data.map((s: any) => ({
         ...s,
         url_base64: s.url_base64 || s.redirect_url || s.image_desktop_url || '',
-        image_desktop_url: s.url_base64 || s.image_desktop_url || s.redirect_url || '',
+        url_base64_horizontal: s.url_base64_horizontal || '',
+        image_desktop_url: s.url_base64_horizontal || s.url_base64 || s.image_desktop_url || s.redirect_url || '',
       }));
       setSlides(normalized);
     }
@@ -478,7 +516,8 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       title: `${rest.title} (Cópia)`,
       order: slides.length,
       url_base64: slide.url_base64 || slide.image_desktop_url || '',
-      image_desktop_url: slide.url_base64 || slide.image_desktop_url || '',
+      url_base64_horizontal: slide.url_base64_horizontal || '',
+      image_desktop_url: slide.url_base64_horizontal || slide.url_base64 || slide.image_desktop_url || '',
     };
     const { data } = await supabase
       .from('hero_slides')
@@ -499,10 +538,14 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
 
     try {
       const { id, redirect_url, ...rest } = editingSlide;
+      const verticalImage = editingSlide.url_base64 || editingSlide.image_desktop_url || '';
+      const horizontalImage = showHorizontalImage ? (editingSlide.url_base64_horizontal || '') : '';
+
       const slideData: any = {
         ...rest,
-        url_base64: editingSlide.url_base64 || editingSlide.image_desktop_url || '',
-        image_desktop_url: editingSlide.url_base64 || editingSlide.image_desktop_url || '',
+        url_base64: verticalImage,
+        url_base64_horizontal: horizontalImage,
+        image_desktop_url: horizontalImage || verticalImage,
       };
 
       if (editingSlide.id.startsWith('new_')) {
@@ -526,12 +569,14 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       subtitle: '',
       link: '',
       url_base64: '',
+      url_base64_horizontal: '',
       image_desktop_url: '',
       image_mobile_url: '',
       use_mobile_image: false,
       order: slides.length,
       is_active: true
     });
+    setShowHorizontalImage(false);
   };
 
   const gcd = (a: number, b: number): number => {
@@ -727,21 +772,117 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                       <p className="text-[10px] text-white/30 ml-2">Define para onde o usuário será direcionado ao clicar no slide ou botão.</p>
                    </div>
 
-                   <div className="pt-4 border-t border-white/5 space-y-4">
-                      <label className="text-[10px] uppercase font-bold text-brand-neon tracking-widest ml-2 block">
-                        Imagem do Slide (Upload Base64)
-                      </label>
-                      
-                      <HeroSlideImageUploader
-                        currentImage={editingSlide.url_base64 || editingSlide.image_desktop_url}
-                        onImageChange={(base64) => {
-                          setEditingSlide(prev => prev ? ({
-                            ...prev,
-                            url_base64: base64,
-                            image_desktop_url: base64,
-                          }) : null);
-                        }}
-                      />
+                   <div className="pt-4 border-t border-white/5 space-y-6">
+                      {/* Campo 1: Imagem Vertical / Mobile */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] uppercase font-bold text-brand-neon tracking-widest ml-2 flex items-center gap-1.5">
+                            <Smartphone size={14} /> Imagem Vertical (Padrão / Mobile)
+                          </label>
+                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 bg-brand-neon/10 text-brand-neon rounded-full border border-brand-neon/20">
+                            Principal
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-white/40 ml-2">
+                          Utilizada em smartphones e também servirá como fallback para computadores caso uma versão horizontal não seja fornecida.
+                        </p>
+                        
+                        <HeroSlideImageUploader
+                          title="Anexar Imagem Vertical (Mobile)"
+                          description="PNG, JPG, JPEG, WEBP • Limite: 1.5 MB"
+                          recommendedRatio="9:16 ou vertical (ex: 1080x1920)"
+                          badgeLabel="Prévia Vertical / Mobile"
+                          aspectClass="aspect-[9/16] max-h-[300px] mx-auto"
+                          icon={<Smartphone className="w-6 h-6 text-brand-neon" />}
+                          currentImage={editingSlide.url_base64 || editingSlide.image_desktop_url}
+                          onImageChange={(base64) => {
+                            setEditingSlide(prev => prev ? ({
+                              ...prev,
+                              url_base64: base64,
+                              image_desktop_url: prev.url_base64_horizontal || base64,
+                            }) : null);
+                          }}
+                        />
+                      </div>
+
+                      {/* Pergunta / Toggle: Adicionar versão horizontal para Desktop */}
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 transition-all hover:border-brand-neon/30">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Monitor size={16} className="text-brand-neon" />
+                              <span className="text-xs font-bold uppercase tracking-wider text-white">
+                                Deseja adicionar uma versão de imagem horizontal para Desktop?
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-white/50">
+                              Exibe uma arte horizontal panorâmica (16:9) em telas grandes, melhorando o enquadramento em computadores.
+                            </p>
+                          </div>
+
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const nextState = !showHorizontalImage;
+                              setShowHorizontalImage(nextState);
+                              if (!nextState) {
+                                setEditingSlide(prev => prev ? ({ ...prev, url_base64_horizontal: '' }) : null);
+                              }
+                            }}
+                            className={`w-12 h-6 rounded-full relative transition-colors shrink-0 ${showHorizontalImage ? 'bg-brand-neon' : 'bg-white/15'}`}
+                            role="switch"
+                            aria-checked={showHorizontalImage}
+                          >
+                            <motion.div 
+                              animate={{ x: showHorizontalImage ? 24 : 2 }} 
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              className="w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5" 
+                            />
+                          </button>
+                        </div>
+
+                        {/* Campo 2: Imagem Horizontal / Desktop (Expandido condicionalmente) */}
+                        <AnimatePresence>
+                          {showHorizontalImage && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.25 }}
+                              className="pt-4 mt-4 border-t border-white/10 space-y-3 overflow-hidden"
+                            >
+                              <div className="flex items-center justify-between">
+                                <label className="text-[10px] uppercase font-bold text-cyan-400 tracking-widest flex items-center gap-1.5">
+                                  <Monitor size={14} /> Imagem Horizontal (Exclusiva Desktop)
+                                </label>
+                                <span className="text-[9px] uppercase font-bold px-2 py-0.5 bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">
+                                  Desktop 16:9
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-white/40">
+                                Esta imagem será carregada em monitores e computadores (telas a partir de 768px).
+                              </p>
+
+                              <HeroSlideImageUploader
+                                title="Anexar Imagem Horizontal (Desktop)"
+                                description="PNG, JPG, JPEG, WEBP • Limite: 1.5 MB"
+                                recommendedRatio="16:9 ou panorâmico (ex: 1920x1080)"
+                                badgeLabel="Prévia Horizontal / Desktop"
+                                aspectClass="aspect-[16/9]"
+                                icon={<Monitor className="w-6 h-6 text-cyan-400" />}
+                                currentImage={editingSlide.url_base64_horizontal}
+                                onImageChange={(base64) => {
+                                  setEditingSlide(prev => prev ? ({
+                                    ...prev,
+                                    url_base64_horizontal: base64,
+                                    image_desktop_url: base64 || prev.url_base64 || '',
+                                  }) : null);
+                                }}
+                              />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -831,10 +972,10 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
 
                       {/* HERO CONTENT */}
                       <div className="absolute inset-0 z-0">
-                         {(previewSnapshot.url_base64 || previewSnapshot.image_desktop_url) ? (
-                            isVideoUrl((previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? previewSnapshot.image_mobile_url : (previewSnapshot.url_base64 || previewSnapshot.image_desktop_url)) ? (
+                         {((previewMode === 'desktop' && previewSnapshot.url_base64_horizontal) || previewSnapshot.url_base64 || previewSnapshot.image_desktop_url) ? (
+                            isVideoUrl((previewMode === 'desktop' && previewSnapshot.url_base64_horizontal) ? previewSnapshot.url_base64_horizontal : (previewSnapshot.url_base64 || previewSnapshot.image_desktop_url)) ? (
                                <video 
-                                 src={(previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? getDirectDriveUrl(previewSnapshot.image_mobile_url) : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
+                                 src={(previewMode === 'desktop' && previewSnapshot.url_base64_horizontal) ? previewSnapshot.url_base64_horizontal : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
                                  className="w-full h-full object-cover" 
                                  autoPlay 
                                  muted 
@@ -843,7 +984,7 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
                                />
                             ) : (
                                <img 
-                                 src={(previewMode === 'mobile' && previewSnapshot.use_mobile_image && previewSnapshot.image_mobile_url) ? getDirectDriveUrl(previewSnapshot.image_mobile_url) : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
+                                 src={(previewMode === 'desktop' && previewSnapshot.url_base64_horizontal) ? previewSnapshot.url_base64_horizontal : (previewSnapshot.url_base64 || getDirectDriveUrl(previewSnapshot.image_desktop_url))} 
                                  className="w-full h-full object-cover" 
                                  alt="" 
                                />

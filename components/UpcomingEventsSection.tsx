@@ -93,6 +93,21 @@ interface UpcomingEventsSectionProps {
   firstImageUrl?: string;
 }
 
+const MeshGradientBackground: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`absolute inset-0 overflow-hidden bg-[#0a0812] ${className}`} aria-hidden="true">
+    <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#d8aae9] rounded-full mix-blend-screen filter blur-[120px] opacity-50" />
+    <div className="absolute top-[20%] left-[30%] w-[70%] h-[70%] bg-[#5846F5] rounded-full mix-blend-screen filter blur-[140px] opacity-60" />
+    <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#3b2d82] rounded-full mix-blend-screen filter blur-[120px] opacity-50" />
+    <svg className="absolute inset-0 w-full h-full opacity-30 mix-blend-overlay pointer-events-none" aria-hidden="true">
+      <filter id="grain-noise-purple">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grain-noise-purple)" />
+    </svg>
+  </div>
+);
+
 export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ firstImageUrl }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
@@ -197,36 +212,28 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
   return (
     <section 
       id="proximos-encontros" 
-      className="relative w-full py-12 md:py-20 lg:py-12 overflow-hidden select-none"
-      style={{
-        background: 'linear-gradient(180deg, #D6F200 0%, #70D4CC 55%, #BCECF2 100%)',
-      }}
+      className="relative w-full py-12 md:py-20 lg:py-16 overflow-hidden select-none bg-[#0a0812]"
     >
-      {/* Glow Radial Azul atrás do título */}
-      <div 
-        className="absolute top-0 left-0 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] pointer-events-none rounded-full z-0 opacity-90 transition-all duration-700"
-        style={{
-          background: 'radial-gradient(circle, rgba(75,200,255,.45), transparent 65%)',
-        }}
-      />
+      {/* Mesh Gradient escuro com base #0a0812 */}
+      <MeshGradientBackground className="absolute inset-0 z-0 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* CABEÇALHO */}
         <motion.div 
-          className="mb-6 sm:mb-10"
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          className="mb-4 sm:mb-10 text-center flex flex-col items-center justify-center"
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           style={{ willChange: 'transform, opacity' }}
         >
-          {/* Título Principal em duas linhas */}
-          <h2 className="font-[900] font-sans uppercase text-white tracking-tight leading-[0.85] text-4xl sm:text-6xl md:text-7xl lg:text-[4.5rem] drop-shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
-            PRÓXIMOS<br />ENCONTROS
+          {/* Título Principal em linha única, com fonte ampliada exclusivamente no mobile */}
+          <h2 className="font-[900] font-sans uppercase text-white tracking-tight leading-none whitespace-nowrap text-[clamp(1.6rem,7.2vw,2.3rem)] sm:text-5xl lg:text-[3.5rem] drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] text-center">
+            PRÓXIMOS ENCONTROS
           </h2>
-          {/* Subtítulo em tom Azul */}
-          <p className="text-sm sm:text-base font-bold uppercase tracking-wider text-[#002776] mt-2 sm:mt-3 drop-shadow-sm">
+          {/* Subtítulo em tom harmônico mantendo espaçamento contido */}
+          <p className="text-xs sm:text-base font-bold uppercase tracking-wider text-[#D8AAE9] mt-1.5 sm:mt-3 drop-shadow-sm text-center">
             Acompanhe a Umademats
           </p>
         </motion.div>

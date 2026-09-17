@@ -14,21 +14,21 @@ export const JesusReinaBanner: React.FC<JesusReinaBannerProps> = ({ theme = 'def
   const iconColor = isCopa ? 'fill-[#002776] text-[#002776]' : 'fill-black text-black';
 
   return (
-    <div className={`relative w-full ${bgColor} py-2 md:py-3 lg:py-2 border-y-2 border-black overflow-hidden z-20`}>
+    <div className={`relative w-full ${bgColor} py-1 md:py-1.5 border-y-2 border-black overflow-hidden z-20`}>
       <motion.div 
-        className={`flex whitespace-nowrap items-center font-display uppercase text-lg md:text-2xl lg:text-xl ${textColor} italic tracking-tighter`}
+        className={`flex whitespace-nowrap items-center font-display uppercase text-xs sm:text-sm md:text-base ${textColor} italic tracking-tight leading-none`}
         animate={{ x: ["0%", "-50%"] }}
         transition={{ 
-          duration: 20, 
+          duration: 22, 
           repeat: Infinity, 
           ease: "linear" 
         }}
         style={{ willChange: "transform" }}
       >
         {[...Array(15)].map((_, i) => (
-          <span key={i} className="flex items-center gap-6 md:gap-10 mr-10">
+          <span key={i} className="flex items-center gap-3 md:gap-5 mr-6 md:mr-8">
             <span>AQUI JESUS REINA</span>
-            <Zap className={iconColor} size={24} />
+            <Zap className={iconColor} size={16} />
           </span>
         ))}
       </motion.div>

@@ -503,7 +503,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
         ]}
         bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
         textColor={isCopa ? "text-[#002776]" : "text-black"}
-        rotate={-1}
+        rotate={0}
         position="bottom"
         zIndex={30}
       />

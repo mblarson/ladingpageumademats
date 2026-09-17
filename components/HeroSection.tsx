@@ -253,7 +253,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const currentSlide = slides[currentIndex];
 
   return (
-    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-screen lg:min-h-[75vh] overflow-hidden bg-black">
+    <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-[100dvh] lg:min-h-[100dvh] overflow-hidden bg-black">
       {/* O fundo preto padrão (bg-black) serve como base neutra e elegante antes do primeiro slide correto renderizar */}
 
 
@@ -327,26 +327,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                       isActive={true}
                     />
                   ) : (
-                    /* Responsive Desktop / Mobile Image */
-                    <picture className="w-full h-full block">
-                      {/* Versão horizontal dedicada para telas Desktop (a partir de 768px) */}
-                      {currentSlide.url_base64_horizontal ? (
-                        <source media="(min-width: 768px)" srcSet={currentSlide.url_base64_horizontal} />
-                      ) : null}
-                      {/* Fallback de versão mobile legada se aplicável */}
-                      {currentSlide.use_mobile_image && currentSlide.image_mobile_url && !currentSlide.url_base64 ? (
-                        <source media="(max-width: 767px)" srcSet={getDirectDriveUrl(currentSlide.image_mobile_url)} />
-                      ) : null}
-                      {/* Imagem padrão: Vertical (Base64) ou fallback para Desktop se a horizontal não foi informada */}
-                      <img 
-                        src={currentSlide.url_base64 || currentSlide.url_base64_horizontal || getDirectDriveUrl(currentSlide.image_desktop_url)} 
-                        alt={currentSlide.title} 
-                        className="w-full h-full object-cover"
-                        loading="eager"
-                        fetchPriority="high"
-                        decoding="async"
-                      />
-                    </picture>
+                    <>
+                      {/* DESKTOP (telas a partir de md / 768px): versão horizontal em fullscreen absoluto sem distorção */}
+                      <div className="hidden md:block w-full h-full absolute inset-0 overflow-hidden">
+                        <img 
+                          src={currentSlide.url_base64_horizontal || currentSlide.url_base64 || getDirectDriveUrl(currentSlide.image_desktop_url)} 
+                          alt={currentSlide.title} 
+                          className="w-full h-full object-cover object-center absolute inset-0"
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
+                        />
+                      </div>
+
+                      {/* MOBILE (telas menores que md): versão vertical 9:16 intacta */}
+                      <div className="block md:hidden w-full h-full absolute inset-0">
+                        <img 
+                          src={(currentSlide.use_mobile_image && currentSlide.image_mobile_url) ? getDirectDriveUrl(currentSlide.image_mobile_url) : (currentSlide.url_base64 || currentSlide.url_base64_horizontal || getDirectDriveUrl(currentSlide.image_desktop_url))} 
+                          alt={currentSlide.title} 
+                          className="w-full h-full object-cover"
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
+                        />
+                      </div>
+                    </>
                   )}
                 </>
               ) : (
@@ -386,7 +391,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                 </div>
               )}
 
-              <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto flex-1 md:pt-[7%]">
+              <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto px-4 lg:px-8 flex-1 md:pt-[7%]">
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
                   {/* Dynamic Content Mapping */}
                   {currentSlide.id === '1' && slides.length <= 5 && !(currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) ? (

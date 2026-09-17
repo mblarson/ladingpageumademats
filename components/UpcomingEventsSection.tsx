@@ -212,37 +212,37 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
   return (
     <section 
       id="proximos-encontros" 
-      className="relative w-full py-12 md:py-20 lg:py-16 overflow-hidden select-none bg-[#0a0812]"
+      className="relative w-full py-12 md:py-20 lg:py-20 overflow-hidden select-none bg-[#0a0812]"
     >
       {/* Mesh Gradient escuro com base #0a0812 */}
       <MeshGradientBackground className="absolute inset-0 z-0 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row lg:justify-between lg:items-center lg:gap-8 xl:gap-12">
         
-        {/* CABEÇALHO */}
+        {/* CABEÇALHO (Centralizado no Mobile/Tablet, Alinhado à Esquerda no Desktop) */}
         <motion.div 
-          className="mb-4 sm:mb-10 text-center flex flex-col items-center justify-center"
+          className="mb-3 sm:mb-10 lg:mb-0 text-center lg:text-left flex flex-col items-center lg:items-start justify-center lg:justify-start lg:shrink-0"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           style={{ willChange: 'transform, opacity' }}
         >
-          {/* Título Principal em linha única, com fonte ampliada exclusivamente no mobile */}
-          <h2 className="font-[900] font-sans uppercase text-white tracking-tight leading-none whitespace-nowrap text-[clamp(1.6rem,7.2vw,2.3rem)] sm:text-5xl lg:text-[3.5rem] drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] text-center">
-            PRÓXIMOS ENCONTROS
+          {/* Título Principal: Linha única com fonte ampliada no Mobile, Duas linhas com quebra e alinhado à esquerda no Desktop */}
+          <h2 className="font-[900] font-sans uppercase text-white tracking-tighter sm:tracking-tight leading-none lg:leading-[0.95] whitespace-nowrap lg:whitespace-normal text-[clamp(1.85rem,8.4vw,2.85rem)] sm:text-5xl lg:text-5xl xl:text-6xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] text-center lg:text-left">
+            PRÓXIMOS <br className="hidden lg:block" />ENCONTROS
           </h2>
-          {/* Subtítulo em tom harmônico mantendo espaçamento contido */}
-          <p className="text-xs sm:text-base font-bold uppercase tracking-wider text-[#D8AAE9] mt-1.5 sm:mt-3 drop-shadow-sm text-center">
+          {/* Subtítulo em tom harmônico mantendo espaçamento estritamente contido */}
+          <p className="text-xs sm:text-base font-bold uppercase tracking-wider text-[#D8AAE9] mt-1 sm:mt-3 drop-shadow-sm text-center lg:text-left">
             Acompanhe a Umademats
           </p>
         </motion.div>
 
         {/* CONTAINER DO CARROSSEL EM PILHA (STACK) */}
-        <div className="relative w-full flex items-center justify-center my-4 md:my-8 lg:my-6 min-h-[260px] sm:min-h-[360px] md:min-h-[420px] lg:min-h-[320px]">
+        <div className="relative w-full lg:w-[55%] xl:w-[52%] flex items-center justify-center lg:justify-end my-4 md:my-8 lg:my-0 min-h-[260px] sm:min-h-[360px] md:min-h-[420px] lg:min-h-[360px] lg:ml-auto">
           
           {/* ÁREA DA PILHA DE CARDS - ASPECT 16:9 (aspect-video) COM ANIMAÇÃO DE FLUTUAÇÃO */}
-          <div className="relative w-[86vw] max-w-[480px] sm:max-w-[620px] md:max-w-[720px] lg:max-w-[560px] aspect-video flex items-center justify-center animate-float">
+          <div className="relative w-[86vw] max-w-[480px] sm:max-w-[620px] md:max-w-[720px] lg:w-full lg:max-w-[560px] xl:max-w-[600px] aspect-video flex items-center justify-center animate-float">
             {eventsList.map((event, index) => {
               const offset = (index - activeIndex + totalCards) % totalCards;
               const stackStyle = getStackPositionStyles(index);

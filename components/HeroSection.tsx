@@ -1,10 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DividerCreative } from './DividerCreative';
 import { MarqueeBanner } from './MarqueeBanner';
 import { SubtleWaveDivider } from './SubtleWaveDivider';
-import { CreativeDivider } from './CreativeDivider';
 import { Instagram, Church, Gamepad2, Calendar, Users, Book, Menu, X, ArrowRight, GraduationCap, Zap, Star, Music, Camera, ExternalLink } from 'lucide-react';
 import { useSiteConfig, DEFAULT_SITE_CONFIG, SiteConfig } from '../hooks/useSiteConfig';
 import { PageType } from '../App';
@@ -496,6 +494,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Divisor / Faixa Verde Padrão (MarqueeBanner) */}
+      <MarqueeBanner 
+        items={[
+          { text: "CONGRESSO 2026", icon: Zap },
+          { text: "EXPERIÊNCIA ÚNICA", icon: Star }
+        ]}
+        bgColor={isCopa ? "bg-[#ffdf00]" : "bg-brand-neon"}
+        textColor={isCopa ? "text-[#002776]" : "text-black"}
+        rotate={-1}
+        position="bottom"
+        zIndex={30}
+      />
     </section>
   );
 };

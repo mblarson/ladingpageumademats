@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, Zap, Lock, X, Gamepad2, Users, Book } from 'lucide-react';
+import { Star, Zap, Lock, X } from 'lucide-react';
 import { SubtleWaveDivider } from './SubtleWaveDivider';
 import { DividerCreative } from './DividerCreative';
 import { MarqueeBanner } from './MarqueeBanner';
@@ -82,7 +82,7 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             <SubtleWaveDivider className="mt-2 opacity-50" width="120px" height="8px" color={isCopa ? "#ffdf00" : "#CCFF00"} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-8 lg:gap-4 w-full lg:max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
           
           <motion.div
             onMouseEnter={() => setHoveredCard('games')}
@@ -90,56 +90,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => window.open('https://www.umadegames.com.br', '_blank', 'noopener,noreferrer')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 order-2 md:order-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[3/1] lg:aspect-[4.5/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} group shadow-2xl transition-all`}
+            className={`order-2 md:order-1 lg:order-1 md:col-span-1 lg:col-span-1 relative bg-[#1a1a1a] rounded-[1.5rem] md:rounded-[2rem] aspect-[2.5/1] md:aspect-video lg:aspect-[16/10] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
-              {/* Mobile View: Cloudinary Image ONLY */}
               <img 
                 src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_57_03_wltyjr.png" 
                 alt="Games Umademats"
-                className="lg:hidden absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 loading="lazy"
               />
-
-              {/* Desktop View: Model Reversion (BG Image + Text) */}
-              <div className="hidden lg:block absolute inset-0 z-0">
-                  <div className="absolute inset-0 z-0 pointer-events-none">
-                    <img 
-                      src="https://raw.githubusercontent.com/mblarson/imagens/main/aventuraspenteca.png" 
-                      alt="Aventuras Penteca Background"
-                      className="w-full h-full object-cover object-[center_20%] opacity-60 transition-transform duration-700 ease-out group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                  </div>
-
-                  <div className="absolute top-0 right-0 p-0 overflow-hidden opacity-10 transition-opacity group-hover:opacity-20">
-                    <Gamepad2 size={120} strokeWidth={0.5} className="transform translate-x-8 -translate-y-8 text-white" />
-                  </div>
-
-                  <div className="relative z-10 flex flex-col justify-center h-full max-w-[60%] p-8">
-                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                          <Gamepad2 className="text-black w-6 h-6" />
-                      </div>
-                      <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
-                          Games
-                          <br/>
-                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'}>Umademats</span>
-                      </h3>
-                      <p className="text-gray-300 font-sans text-xs max-w-xs leading-relaxed drop-shadow-md">
-                          Participe das competições e divirta-se.
-                      </p>
-                  </div>
-
-                  <div className="absolute bottom-6 right-8 z-10">
-                      <motion.div 
-                        animate={{ x: hoveredCard === 'games' ? 5 : 0 }}
-                        className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-neon'} p-3 rounded-full text-black shadow-lg`}
-                      >
-                          <ArrowRight className="w-5 h-5" />
-                      </motion.div>
-                  </div>
-              </div>
           </motion.div>
 
           <motion.div
@@ -148,48 +107,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('lidera')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 md:col-span-1 order-3 md:order-2 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.3/1] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-green'} group shadow-2xl transition-all`}
+            className={`order-3 md:order-2 lg:order-2 md:col-span-1 lg:col-span-1 relative bg-brand-dark rounded-[1.5rem] md:rounded-[2rem] aspect-[2.5/1] md:aspect-video lg:aspect-[16/10] overflow-hidden cursor-pointer border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-green'} group shadow-2xl transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
                 src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_57_10_py3coi.png" 
                 alt="Lidera Umademats"
-                className="lg:hidden absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 loading="lazy"
               />
-
-              {/* Desktop View: Model Reversion */}
-              <div className="hidden lg:block absolute inset-0 z-0 h-full w-full">
-                  <div className="absolute inset-0 z-0 pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity flex items-center justify-center">
-                    <Users size={180} className="absolute -right-6 -bottom-6 text-white" />
-                  </div>
-
-                  <div className="relative z-10 flex flex-col justify-between h-full p-8">
-                    <div>
-                      <div className={`w-10 h-10 ${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-green'} rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg`}>
-                          <Users className="text-black w-6 h-6" />
-                      </div>
-                      <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
-                          Lidera
-                          <br/>
-                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-green'}>Umademats</span>
-                      </h3>
-                      <p className="text-gray-400 font-sans text-xs max-w-xs leading-relaxed">
-                          Portal exclusivo para líderes e oficiais.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className={`${isCopa ? 'text-[#ffdf00]' : 'text-brand-green'} font-bold font-sans tracking-widest text-[10px] uppercase`}>ACESSAR PORTAL</span>
-                        <motion.div 
-                          animate={{ x: hoveredCard === 'lidera' ? 5 : 0 }}
-                          className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-green'} p-3 rounded-full text-black shadow-lg`}
-                        >
-                            <ArrowRight className="w-5 h-5" />
-                        </motion.div>
-                    </div>
-                  </div>
-              </div>
           </motion.div>
 
           <motion.div
@@ -198,53 +124,15 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onNavigate, previe
             onClick={() => onNavigate('bible')}
             whileHover={{ scale: 1.02, zIndex: 10 }}
             whileTap={{ scale: 0.98 }}
-            className={`col-span-2 md:col-span-1 order-1 md:order-3 relative ${isCopa ? 'bg-[#002776]' : 'bg-brand-purple'} rounded-[1.5rem] md:rounded-[2.5rem] aspect-[2.5/1] md:aspect-[1.5/1] lg:aspect-[2.3/1] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} transition-all`}
+            className={`order-1 md:order-3 lg:order-3 md:col-span-2 lg:col-span-1 relative ${isCopa ? 'bg-[#002776]' : 'bg-brand-purple'} rounded-[1.5rem] md:rounded-[2rem] aspect-[2.5/1] md:aspect-[3.2/1] lg:aspect-[16/10] overflow-hidden cursor-pointer group shadow-2xl border-2 border-white/10 ${isCopa ? 'hover:border-[#ffdf00]' : 'hover:border-brand-neon'} transition-all`}
             style={{ willChange: 'transform' }}
           >
               <img 
                 src="https://res.cloudinary.com/dcmi2z6xp/image/upload/v1776967114/ChatGPT_Image_23_de_abr._de_2026_13_56_52_jr56qo.png" 
                 alt="Plano de Leitura"
-                className="lg:hidden absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 loading="lazy"
               />
-
-              {/* Desktop View: Model Reversion */}
-              <div className="hidden lg:block absolute inset-0 z-0 h-full w-full">
-                  <div className="absolute inset-0 z-0 pointer-events-none">
-                      <img 
-                        src="https://raw.githubusercontent.com/mblarson/imagens/main/mascotebiblia.png" 
-                        alt="Mascote Bíblia"
-                        className="w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-all duration-700 ease-out"
-                      />
-                      <div className={`absolute inset-0 bg-gradient-to-t ${isCopa ? 'from-[#002776] via-[#002776]/40' : 'from-brand-purple via-brand-purple/40'} to-transparent opacity-80`} />
-                  </div>
-
-                  <div className="relative z-10 flex flex-col justify-between h-full p-8">
-                    <div>
-                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 rotate-3 group-hover:rotate-0 transition-transform shadow-lg">
-                          <Book className={`${isCopa ? 'text-[#002776]' : 'text-brand-purple'} w-6 h-6`} />
-                      </div>
-                      <h3 className="text-2xl font-display uppercase text-white mb-1 leading-[0.9] drop-shadow-md">
-                          Plano de
-                          <br/>
-                          <span className={isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'}>Leitura</span>
-                      </h3>
-                      <p className="text-white/80 font-sans text-xs max-w-xs leading-relaxed font-medium">
-                          Acompanhe o devocional diário.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <span className={`${isCopa ? 'text-[#ffdf00]' : 'text-brand-neon'} font-bold font-sans tracking-widest text-[10px] uppercase`}>LER AGORA</span>
-                        <motion.div 
-                          animate={{ x: hoveredCard === 'devocional' ? 5 : 0 }}
-                          className={`${isCopa ? 'bg-[#ffdf00]' : 'bg-brand-neon'} p-3 rounded-full text-black shadow-lg`}
-                        >
-                            <ArrowRight className="w-5 h-5" />
-                        </motion.div>
-                    </div>
-                  </div>
-              </div>
           </motion.div>
 
         </div>

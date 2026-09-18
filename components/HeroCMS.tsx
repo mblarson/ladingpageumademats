@@ -1,28 +1,11 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { 
   Plus, Trash2, Edit2, Copy, GripVertical, Eye, EyeOff, Save, X, 
   Monitor, Smartphone, AlertCircle, Info, ChevronRight, Layout, Menu,
   Upload, CheckCircle2
 } from 'lucide-react';
-import { 
-  DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
-  useSensors,
-  DragEndEvent
-} from '@dnd-kit/core';
-import { 
-  arrayMove, 
-  SortableContext, 
-  sortableKeyboardCoordinates, 
-  verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '../lib/supabaseClient';
 import { HeroSlide } from '../types';
 import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
@@ -332,7 +315,7 @@ const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
   );
 };
 
-interface SortableSlideCardProps {
+interface ReorderSlideCardProps {
   slide: HeroSlide;
   index: number;
   onEdit: (slide: HeroSlide) => void;
@@ -341,7 +324,7 @@ interface SortableSlideCardProps {
   onToggleActive: (id: string, currentStatus: boolean) => void;
 }
 
-const SortableSlideCard: React.FC<SortableSlideCardProps> = ({ 
+const ReorderSlideCard: React.FC<ReorderSlideCardProps> = ({ 
   slide, 
   index,
   onEdit, 
@@ -349,29 +332,26 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
   onDuplicate, 
   onToggleActive 
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id: slide.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-  };
-
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      className={`bg-[#1a1a1a] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 group transition-all ${isDragging ? 'opacity-50 scale-95' : 'hover:border-brand-neon/30 hover:bg-[#222]'}`}
+    <Reorder.Item 
+      id={slide.id}
+      value={slide}
+      whileDrag={{
+        scale: 1.03,
+        boxShadow: "0px 16px 32px rgba(0, 0, 0, 0.65), 0px 4px 12px rgba(0, 0, 0, 0.4)",
+        zIndex: 50,
+        cursor: "grabbing",
+      }}
+      transition={{ duration: 0.15 }}
+      className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 group select-none touch-none cursor-grab active:cursor-grabbing hover:border-brand-neon/40 hover:bg-[#202020] transition-colors relative"
+      style={{
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'none',
+      }}
     >
-      <div className="flex items-center gap-4 w-full sm:w-auto">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-white/20 hover:text-brand-neon transition-colors">
+      <div className="flex items-center gap-4 w-full sm:w-auto flex-1 min-w-0 pointer-events-none select-none">
+        <div className="text-white/30 group-hover:text-brand-neon transition-colors shrink-0">
           <GripVertical size={20} />
         </div>
 
@@ -390,7 +370,7 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="bg-brand-neon/20 text-brand-neon px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
-               Slide #{index}
+               Slide #{index + 1}
             </span>
             {slide.url_base64 && (
               <span className="bg-white/10 text-white/70 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
@@ -408,25 +388,57 @@ const SortableSlideCard: React.FC<SortableSlideCardProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
+      <div 
+        className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0 shrink-0 relative z-10"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button 
-          onClick={() => onToggleActive(slide.id, slide.is_active)}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleActive(slide.id, slide.is_active);
+          }}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${slide.is_active ? 'bg-brand-neon/10 text-brand-neon' : 'bg-white/5 text-white/20 hover:text-white'}`}
           title={slide.is_active ? 'Ativo' : 'Inativo'}
         >
           {slide.is_active ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
-        <button onClick={() => onEdit(slide)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(slide);
+          }} 
+          className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+          title="Editar"
+        >
           <Edit2 size={16} />
         </button>
-        <button onClick={() => onDuplicate(slide)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(slide);
+          }} 
+          className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+          title="Duplicar"
+        >
           <Copy size={16} />
         </button>
-        <button onClick={() => onDelete(slide.id)} className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors">
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(slide.id);
+          }} 
+          className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+          title="Excluir"
+        >
           <Trash2 size={16} />
         </button>
       </div>
-    </div>
+    </Reorder.Item>
   );
 };
 
@@ -449,13 +461,6 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
     }
   }, [editingSlide?.id]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
   const fetchSlides = async () => {
     const { data } = await supabase
       .from('hero_slides')
@@ -477,28 +482,24 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
     fetchSlides();
   }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleReorder = async (newOrder: HeroSlide[]) => {
+    // 1. Atualização otimista imediata no frontend (60 FPS)
+    setSlides(newOrder);
 
-    if (over && active.id !== over.id) {
-      setSlides((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
-        const newArray = arrayMove(items, oldIndex, newIndex);
-        
-        // Update order in DB
-        const updates = newArray.map((slide: HeroSlide, idx: number) => ({
-          id: slide.id,
-          order: idx
-        }));
-        
-        // We do it asynchronously
-        Promise.all(updates.map(u => 
+    // 2. Persistência assíncrona em background no Supabase
+    try {
+      const updates = newOrder.map((slide: HeroSlide, idx: number) => ({
+        id: slide.id,
+        order: idx
+      }));
+
+      await Promise.all(
+        updates.map(u => 
           supabase.from('hero_slides').update({ order: u.order }).eq('id', u.id)
-        )).catch(err => console.error("Erro ao reordenar:", err));
-
-        return newArray;
-      });
+        )
+      );
+    } catch (err) {
+      console.error("Erro ao reordenar slides no Supabase:", err);
     }
   };
 
@@ -688,36 +689,30 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
         </div>
 
         <div className="p-6 md:p-8">
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+          <Reorder.Group 
+            axis="y" 
+            values={slides} 
+            onReorder={handleReorder}
+            className="space-y-3 select-none"
           >
-            <SortableContext 
-              items={slides.map(s => s.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {slides.map((slide, index) => (
-                  <SortableSlideCard 
-                    key={slide.id} 
-                    slide={slide} 
-                    index={index}
-                    onEdit={setEditingSlide}
-                    onDelete={handleDelete}
-                    onDuplicate={handleDuplicate}
-                    onToggleActive={handleToggleActive}
-                  />
-                ))}
-                {slides.length === 0 && !loading && (
-                   <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
-                      <Layout size={40} className="mx-auto text-white/10 mb-4" />
-                      <p className="text-white/20 uppercase font-bold tracking-widest text-xs">Nenhum slide cadastrado</p>
-                   </div>
-                )}
-              </div>
-            </SortableContext>
-          </DndContext>
+            {slides.map((slide, index) => (
+              <ReorderSlideCard 
+                key={slide.id} 
+                slide={slide} 
+                index={index}
+                onEdit={setEditingSlide}
+                onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
+                onToggleActive={handleToggleActive}
+              />
+            ))}
+            {slides.length === 0 && !loading && (
+               <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                  <Layout size={40} className="mx-auto text-white/10 mb-4" />
+                  <p className="text-white/20 uppercase font-bold tracking-widest text-xs">Nenhum slide cadastrado</p>
+               </div>
+            )}
+          </Reorder.Group>
         </div>
       </div>
 

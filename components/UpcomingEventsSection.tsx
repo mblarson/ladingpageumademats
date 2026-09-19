@@ -217,19 +217,19 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
       {/* Mesh Gradient escuro com base #0a0812 */}
       <MeshGradientBackground className="absolute inset-0 z-0 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row lg:justify-between lg:items-center lg:gap-8 xl:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row lg:justify-between lg:items-center lg:gap-12">
         
         {/* CABEÇALHO (Centralizado no Mobile/Tablet, Alinhado à Esquerda no Desktop) */}
         <motion.div 
           className="mb-3 sm:mb-10 lg:mb-0 text-center lg:text-left flex flex-col items-center lg:items-start justify-center lg:justify-start lg:shrink-0"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           style={{ willChange: 'transform, opacity' }}
         >
           {/* Título Principal: Linha única com fonte ampliada no Mobile, Duas linhas com quebra e alinhado à esquerda no Desktop */}
-          <h2 className="font-[900] font-sans uppercase text-white tracking-tighter sm:tracking-tight leading-none lg:leading-[0.95] whitespace-nowrap lg:whitespace-normal text-[clamp(1.85rem,8.4vw,2.85rem)] sm:text-5xl lg:text-5xl xl:text-6xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] text-center lg:text-left">
+          <h2 className="font-[900] font-sans uppercase text-white tracking-tighter sm:tracking-tight leading-none lg:leading-none whitespace-nowrap lg:whitespace-normal text-[clamp(1.85rem,8.4vw,2.85rem)] sm:text-5xl lg:text-7xl xl:text-[5rem] drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] text-center lg:text-left">
             PRÓXIMOS <br className="hidden lg:block" />ENCONTROS
           </h2>
           {/* Subtítulo em tom harmônico mantendo espaçamento estritamente contido */}
@@ -239,7 +239,7 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
         </motion.div>
 
         {/* CONTAINER DO CARROSSEL EM PILHA (STACK) */}
-        <div className="relative w-full lg:w-[55%] xl:w-[52%] flex items-center justify-center lg:justify-end my-4 md:my-8 lg:my-0 min-h-[260px] sm:min-h-[360px] md:min-h-[420px] lg:min-h-[360px] lg:ml-auto">
+        <div className="relative w-full lg:w-[50%] flex items-center justify-center lg:justify-end my-4 md:my-8 lg:my-0 min-h-[260px] sm:min-h-[360px] md:min-h-[420px] lg:min-h-[360px] lg:ml-auto">
           
           {/* ÁREA DA PILHA DE CARDS - ASPECT 16:9 (aspect-video) COM ANIMAÇÃO DE FLUTUAÇÃO */}
           <div className="relative w-[86vw] max-w-[480px] sm:max-w-[620px] md:max-w-[720px] lg:w-full lg:max-w-[560px] xl:max-w-[600px] aspect-video flex items-center justify-center animate-float">

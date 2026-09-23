@@ -151,8 +151,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           .from('hero_slides')
           .select('*')
           .eq('is_active', true)
-          .order('order', { ascending: true })
-          .limit(4);
+          .order('order', { ascending: true });
         
         if (!error && data && data.length > 0) {
           const normalized = data.map((s: any) => ({

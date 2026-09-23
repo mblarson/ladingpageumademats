@@ -111,12 +111,10 @@ const MeshGradientBackground: React.FC<{ className?: string }> = ({ className = 
 export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ firstImageUrl }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const [cardImageLoaded, setCardImageLoaded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // Resetar falhas anteriores caso uma nova imagem (ou Base64) seja informada
     setFailedImages({});
-    setCardImageLoaded({});
   }, [firstImageUrl]);
 
   const eventsList = useMemo(() => {
@@ -320,27 +318,15 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
                       </div>
                     </div>
                   ) : (
-                    <div className="relative w-full h-full bg-[#0A0D14] overflow-hidden">
-                      {!cardImageLoaded[event.id] && (
-                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0A0D14] animate-pulse">
-                          <div className="w-8 h-8 border-2 border-[#D6F200] border-t-transparent rounded-full animate-spin mb-2" />
-                          <span className="text-[10px] text-white/50 font-mono tracking-wider uppercase">Carregando imagem...</span>
-                        </div>
-                      )}
-                      <img
-                        src={event.imageUrl}
-                        alt={event.title}
-                        className={`w-full h-full object-cover select-none pointer-events-none transition-opacity duration-300 ${cardImageLoaded[event.id] ? 'opacity-100' : 'opacity-0'}`}
-                        loading={index === 0 ? 'eager' : 'lazy'}
-                        onLoad={() => {
-                          setCardImageLoaded(prev => ({ ...prev, [event.id]: true }));
-                        }}
-                        onError={() => {
-                          setCardImageLoaded(prev => ({ ...prev, [event.id]: true }));
-                          setFailedImages(prev => ({ ...prev, [event.id]: true }));
-                        }}
-                      />
-                    </div>
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      onError={() => {
+                        setFailedImages(prev => ({ ...prev, [event.id]: true }));
+                      }}
+                    />
                   )}
                 </motion.div>
               );

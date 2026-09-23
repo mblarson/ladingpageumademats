@@ -11,7 +11,7 @@ import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'fra
 import { supabase } from './lib/supabaseClient';
 import { X, LogIn, ShieldCheck, Zap, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useSiteAnalytics } from './hooks/useSiteAnalytics';
-import { useSiteConfig, fetchSharedSiteConfig } from './hooks/useSiteConfig';
+import { useSiteConfig } from './hooks/useSiteConfig';
 import { GlobalLoadingScreen } from './components/GlobalLoadingScreen';
 import { HeroSlide } from './types';
 
@@ -52,8 +52,7 @@ export default function App() {
         .from('hero_slides')
         .select('*')
         .eq('is_active', true)
-        .order('order', { ascending: true })
-        .limit(4);
+        .order('order', { ascending: true });
       
       if (!error && data && data.length > 0) {
         setSlides(data);
@@ -74,14 +73,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Carregamento paralelo inicial: hero_slides (.limit(4)) e site_config
-    Promise.all([
-      fetchSlides(),
-      fetchSharedSiteConfig()
-    ]).catch(err => {
-      console.error("Erro no carregamento paralelo dos dados da Home:", err);
-      setSlidesLoading(false);
-    });
+    fetchSlides();
   }, []);
 
   const [currentPage, setCurrentPage] = useState<PageType>(() => {

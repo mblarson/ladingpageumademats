@@ -96,13 +96,64 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   bible_campaign_active: false,
 };
 
+// Cache em memória e promessa compartilhada para evitar requisições redundantes de componentes montados em paralelo
+let cachedConfig: SiteConfig | null = null;
+let inFlightConfigPromise: Promise<SiteConfig | null> | null = null;
+
+export const fetchSharedSiteConfig = async (): Promise<SiteConfig | null> => {
+  if (cachedConfig) return cachedConfig;
+  if (inFlightConfigPromise) return inFlightConfigPromise;
+
+  inFlightConfigPromise = (async () => {
+    try {
+      const { data } = await supabase
+        .from('site_config')
+        .select('value')
+        .eq('key', 'landing_page')
+        .maybeSingle();
+
+      if (data && data.value) {
+        const mergedConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...data.value };
+        cachedConfig = mergedConfig;
+        if (typeof window !== 'undefined') {
+          if (mergedConfig.system_theme) {
+            localStorage.setItem('umademats_system_theme', mergedConfig.system_theme);
+          }
+          try {
+            localStorage.setItem('umademats_site_config', JSON.stringify(mergedConfig));
+          } catch (e) {}
+        }
+        return mergedConfig;
+      }
+    } catch (e) {
+      console.warn("Using default config (Table not found or empty)");
+    } finally {
+      inFlightConfigPromise = null;
+    }
+    return null;
+  })();
+
+  return inFlightConfigPromise;
+};
+
 export const useSiteConfig = () => {
   const [config, setConfig] = useState<SiteConfig>(() => {
+    if (cachedConfig) return cachedConfig;
     let initialTheme: 'default' | 'copa' = 'default';
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('umademats_system_theme');
-      if (saved === 'default' || saved === 'copa') {
-        initialTheme = saved as 'default' | 'copa';
+      try {
+        const saved = localStorage.getItem('umademats_site_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const merged: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...parsed };
+          cachedConfig = merged;
+          return merged;
+        }
+      } catch (e) {}
+
+      const savedTheme = localStorage.getItem('umademats_system_theme');
+      if (savedTheme === 'default' || savedTheme === 'copa') {
+        initialTheme = savedTheme as 'default' | 'copa';
       }
     }
     return {
@@ -110,47 +161,40 @@ export const useSiteConfig = () => {
       system_theme: initialTheme
     };
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !cachedConfig);
 
-  // Carregar configurações ao iniciar
+  // Carregar configurações ao iniciar com desduplicação de requisição
   useEffect(() => {
-    fetchConfig();
-  }, []);
-
-  const fetchConfig = async () => {
-    try {
-      // .maybeSingle() não retorna erro 406 se a linha não existir (retorna null)
-      const { data, error } = await supabase
-        .from('site_config')
-        .select('value')
-        .eq('key', 'landing_page')
-        .maybeSingle();
-
-      if (data) {
-        // Merge com defaults para garantir que novos campos não quebrem
-        const mergedConfig = { ...DEFAULT_SITE_CONFIG, ...data.value };
-        setConfig(mergedConfig);
-        
-        // Sincronizar o tema com o localStorage para que acessos futuros carreguem instantaneamente
-        if (typeof window !== 'undefined' && mergedConfig.system_theme) {
-          localStorage.setItem('umademats_system_theme', mergedConfig.system_theme);
-        }
-      }
-    } catch (e) {
-      console.warn("Using default config (Table not found or empty)");
-    } finally {
+    let isMounted = true;
+    if (cachedConfig) {
       setLoading(false);
+      return;
     }
-  };
+
+    fetchSharedSiteConfig().then((res) => {
+      if (isMounted) {
+        if (res) setConfig(res);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const saveConfig = async (newConfig: SiteConfig) => {
     try {
-      // Otimistic Update
+      // Optimistic Update imediato
+      cachedConfig = newConfig;
       setConfig(newConfig);
       
       // Salvar imediatamente no localStorage para evitar qualquer atraso visual
       if (typeof window !== 'undefined') {
         localStorage.setItem('umademats_system_theme', newConfig.system_theme);
+        try {
+          localStorage.setItem('umademats_site_config', JSON.stringify(newConfig));
+        } catch (e) {}
       }
       
       const { error } = await supabase

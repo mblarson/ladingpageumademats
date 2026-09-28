@@ -11,22 +11,20 @@ export const GlobalLoadingScreen: React.FC<GlobalLoadingScreenProps> = ({
   loading,
   onComplete,
 }) => {
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-
-  // Tempo mínimo de exibição: 1,5 segundos (1500ms)
+  // Libera a tela imediatamente assim que o carregamento dos dados termina
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Quando o carregamento do banco estiver pronto e o tempo mínimo de 1.5s tiver passado, finaliza
-  useEffect(() => {
-    if (!loading && minTimeElapsed) {
+    if (!loading) {
       onComplete();
     }
-  }, [loading, minTimeElapsed, onComplete]);
+  }, [loading, onComplete]);
+
+  // Trava de segurança (timeout máximo para conexões lentas ou instáveis)
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      onComplete();
+    }, 2500);
+    return () => clearTimeout(safetyTimer);
+  }, [onComplete]);
 
   return (
     <motion.div

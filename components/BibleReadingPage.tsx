@@ -91,6 +91,22 @@ const BIBLE_BOOK_MAP: Record<string, string> = {
   "1 João": "1 João", "2 João": "2 João", "3 João": "3 João", "Judas": "Judas", "Apocalipse": "Apocalipse"
 };
 
+// Dicionário de fallback/correção exclusivo para livros cuja referência no plano anual não possui capítulo explícito
+// Livros de capítulo único são mapeados para o capítulo 1
+// Livros curtos com múltiplos capítulos são mapeados para o intervalo completo de seus capítulos
+const BOOK_REFERENCE_CORRECTIONS: Record<string, string> = {
+  "Obadias": "Obadias 1",
+  "Naum": "Naum 1-3",
+  "Habacuque": "Habacuque 1-3",
+  "Sofonias": "Sofonias 1-3",
+  "Ageu": "Ageu 1-2",
+  "Tito": "Tito 1-3",
+  "Filemom": "Filemom 1",
+  "2 João": "2 João 1",
+  "3 João": "3 João 1",
+  "Judas": "Judas 1"
+};
+
 interface BibleReadingPageProps {
   onBack: () => void;
   onIntroComplete?: () => void;
@@ -337,8 +353,8 @@ const ReadingReader: React.FC<{
     if (!item) return;
 
     const fetchPart = async (ref: string): Promise<Verse[]> => {
-      const encodedRef = encodeURIComponent(ref);
-      const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida`);
+      const encodedRef = encodeURIComponent(ref.trim());
+      const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida&single_chapter_book_matching=indifferent`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Erro na API (${res.status})`);
@@ -351,7 +367,13 @@ const ReadingReader: React.FC<{
       setLoading(true);
       setError(null);
       try {
-        let cleanRef = item.ref.replace(/–|—/g, '-');
+        let cleanRef = item.ref.replace(/–|—/g, '-').trim();
+
+        // Intercepta e corrige estritamente livros sem numeração de capítulo informada no plano
+        if (BOOK_REFERENCE_CORRECTIONS[cleanRef]) {
+          cleanRef = BOOK_REFERENCE_CORRECTIONS[cleanRef];
+        }
+
         let bookPt = "";
         let bookEn = "";
 
@@ -425,7 +447,7 @@ const ReadingReader: React.FC<{
         setContent({ reference: item.ref, text: "", verses: finalVerses });
       } catch (err: any) {
         console.error("🚨 [Bible API Error]:", err);
-        if (err.message.includes("404")) {
+        if (err.message && (err.message.includes("404") || err.message.toLowerCase().includes("not found"))) {
            setError("Texto não encontrado para esta referência na tradução escolhida.");
         } else {
            setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");

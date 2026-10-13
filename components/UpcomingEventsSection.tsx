@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Sparkles, Clock, MapPin } from 'lucide-react';
 import { getDirectDriveUrl } from '../lib/heroUtils';
+import { supabase } from '../lib/supabaseClient';
 
 export interface EventCardItem {
   id: string;
@@ -112,16 +113,78 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [cardImageLoaded, setCardImageLoaded] = useState<Record<string, boolean>>({});
+  const [base64Image, setBase64Image] = useState<string>(() => firstImageUrl || '');
+  const [isImageLoading, setIsImageLoading] = useState<boolean>(!firstImageUrl);
 
   useEffect(() => {
-    // Resetar falhas anteriores caso uma nova imagem (ou Base64) seja informada
+    let isMounted = true;
+
+    // Resetar falhas anteriores
     setFailedImages({});
-    setCardImageLoaded({});
+
+    const fetchSection2Image = async () => {
+      // Se firstImageUrl já foi fornecido via props e não está vazio
+      if (firstImageUrl && firstImageUrl.trim()) {
+        console.log("📸 [Seção 2 - Próximos Encontros] Imagem Base64 recebida via props:", {
+          length: firstImageUrl.length,
+          preview: firstImageUrl.substring(0, 50) + "..."
+        });
+        if (isMounted) {
+          setBase64Image(firstImageUrl.trim());
+          setIsImageLoading(false);
+          setCardImageLoaded(prev => ({ ...prev, 'default-culto': true }));
+        }
+        return;
+      }
+
+      // Caso firstImageUrl ainda não esteja disponível via props, busca diretamente no Supabase (site_config)
+      try {
+        setIsImageLoading(true);
+        console.log("🔍 [Seção 2 - Próximos Encontros] Buscando Base64 diretamente no banco de dados (site_config)...");
+        const { data, error } = await supabase
+          .from('site_config')
+          .select('value')
+          .eq('key', 'landing_page')
+          .maybeSingle();
+
+        console.log("📦 [Seção 2 - Próximos Encontros] Resposta do banco de dados:", {
+          hasData: !!data,
+          hasValue: !!data?.value,
+          section2_url_length: data?.value?.section2_first_image_url?.length || 0,
+          error
+        });
+
+        if (isMounted) {
+          if (!error && data?.value?.section2_first_image_url) {
+            const b64 = data.value.section2_first_image_url;
+            console.log("✅ [Seção 2 - Próximos Encontros] Imagem Base64 carregada com sucesso do banco:", b64.substring(0, 50) + "...");
+            setBase64Image(b64);
+            setCardImageLoaded(prev => ({ ...prev, 'default-culto': true }));
+          } else {
+            console.log("ℹ️ [Seção 2 - Próximos Encontros] Nenhuma imagem Base64 cadastrada no banco, usando card padrão.");
+            setBase64Image('');
+          }
+        }
+      } catch (err) {
+        console.error("🚨 [Seção 2 - Próximos Encontros] Erro ao carregar imagem do banco:", err);
+      } finally {
+        if (isMounted) {
+          setIsImageLoading(false);
+        }
+      }
+    };
+
+    fetchSection2Image();
+
+    return () => {
+      isMounted = false;
+    };
   }, [firstImageUrl]);
 
   const eventsList = useMemo(() => {
-    if (!firstImageUrl || !firstImageUrl.trim()) return MOCK_EVENTS;
-    const trimmed = firstImageUrl.trim();
+    const activeUrl = base64Image || firstImageUrl || '';
+    if (!activeUrl || !activeUrl.trim()) return MOCK_EVENTS;
+    const trimmed = activeUrl.trim();
     // Se for data URI Base64, utiliza diretamente sem passar por conversor de URL externa
     const finalImageUrl = trimmed.startsWith('data:image/') ? trimmed : getDirectDriveUrl(trimmed);
     if (!finalImageUrl || !finalImageUrl.trim()) return MOCK_EVENTS;
@@ -136,7 +199,7 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
       }
       return evt;
     });
-  }, [firstImageUrl]);
+  }, [base64Image, firstImageUrl]);
 
   const totalCards = eventsList.length;
 
@@ -321,16 +384,20 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
                     </div>
                   ) : (
                     <div className="relative w-full h-full bg-[#0A0D14] overflow-hidden">
-                      {!cardImageLoaded[event.id] && (
+                      {(isImageLoading || (!event.imageUrl.startsWith('data:image/') && !cardImageLoaded[event.id])) ? (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0A0D14] animate-pulse">
                           <div className="w-8 h-8 border-2 border-[#D6F200] border-t-transparent rounded-full animate-spin mb-2" />
                           <span className="text-[10px] text-white/50 font-mono tracking-wider uppercase">Carregando imagem...</span>
                         </div>
-                      )}
+                      ) : null}
                       <img
                         src={event.imageUrl}
                         alt={event.title}
-                        className={`w-full h-full object-cover select-none pointer-events-none transition-opacity duration-300 ${cardImageLoaded[event.id] ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-full object-cover select-none pointer-events-none transition-opacity duration-300 ${
+                          (!isImageLoading && (event.imageUrl.startsWith('data:image/') || cardImageLoaded[event.id])) 
+                            ? 'opacity-100' 
+                            : 'opacity-0'
+                        }`}
                         loading={index === 0 ? 'eager' : 'lazy'}
                         onLoad={() => {
                           setCardImageLoaded(prev => ({ ...prev, [event.id]: true }));
@@ -338,6 +405,11 @@ export const UpcomingEventsSection: React.FC<UpcomingEventsSectionProps> = ({ fi
                         onError={() => {
                           setCardImageLoaded(prev => ({ ...prev, [event.id]: true }));
                           setFailedImages(prev => ({ ...prev, [event.id]: true }));
+                        }}
+                        ref={(imgEl) => {
+                          if (imgEl && imgEl.complete && imgEl.naturalWidth > 0 && !cardImageLoaded[event.id]) {
+                            setCardImageLoaded(prev => ({ ...prev, [event.id]: true }));
+                          }
                         }}
                       />
                     </div>

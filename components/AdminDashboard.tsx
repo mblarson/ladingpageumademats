@@ -13,6 +13,8 @@ import { PresenceCounter } from './PresenceCounter';
 import { supabase } from '../lib/supabaseClient';
 import { EstoqueUmadematsAdmin } from './EstoqueUmadematsAdmin';
 import { getDirectDriveUrl } from '../lib/heroUtils';
+import { compressImageToWebp, formatByteSize } from '../lib/imageCompression';
+import { setCachedImage, removeCachedImage } from '../lib/imageCache';
 
 const SECTORS_LIST = ["A", "B", "C1", "C2", "D", "E", "F", "G", "H", "I", "J", "M", "N", "VISITANTE"];
 
@@ -1767,12 +1769,6 @@ const Section2ImageUploader: React.FC<Section2ImageUploaderProps> = ({
   const [fileMeta, setFileMeta] = useState<{ name: string; size: string; wasCompressed: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatBytes = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
   const handleProcessFile = async (file: File) => {
     setErrorMessage(null);
     setSuccessNotice(null);
@@ -1786,91 +1782,21 @@ const Section2ImageUploader: React.FC<Section2ImageUploaderProps> = ({
     setIsProcessing(true);
 
     try {
-      const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
-
-      // Leitor assíncrono nativo utilizando a API nativa FileReader (readAsDataURL)
-      const readAsDataURLAsync = (f: Blob | File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('Erro ao ler os dados do arquivo via FileReader.'));
-          reader.readAsDataURL(f);
-        });
-      };
-
-      // Se o arquivo for menor ou igual a 1.5 MB, converte diretamente para Base64
-      if (file.size <= MAX_BYTES) {
-        const base64Data = await readAsDataURLAsync(file);
-        onImageChange(base64Data);
-        setFileMeta({
-          name: file.name,
-          size: formatBytes(file.size),
-          wasCompressed: false,
-        });
-        setSuccessNotice(`Imagem convertida em Base64 (${formatBytes(file.size)}). Clique em "Salvar Configuração" para gravar.`);
-        setIsProcessing(false);
-        return;
-      }
-
-      // Se exceder 1.5 MB, realiza compressão inteligente assíncrona via Canvas
-      const rawBase64 = await readAsDataURLAsync(file);
-      await new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let { width, height } = img;
-            const MAX_DIM = 1600;
-
-            if (width > MAX_DIM || height > MAX_DIM) {
-              if (width > height) {
-                height = Math.round((height * MAX_DIM) / width);
-                width = MAX_DIM;
-              } else {
-                width = Math.round((width * MAX_DIM) / height);
-                height = MAX_DIM;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              throw new Error('Falha ao inicializar o contexto 2D para compressão.');
-            }
-
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Compressão progressiva JPEG
-            let quality = 0.85;
-            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            let approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
-
-            if (approxBytes > MAX_BYTES) {
-              quality = 0.72;
-              compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-              approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
-            }
-
-            if (approxBytes > MAX_BYTES) {
-              throw new Error(`A imagem ultrapassa o limite de 1.5 MB mesmo após compressão (${formatBytes(approxBytes)}). Escolha um arquivo menor.`);
-            }
-
-            onImageChange(compressedDataUrl);
-            setFileMeta({
-              name: file.name,
-              size: `${formatBytes(approxBytes)} (original: ${formatBytes(file.size)})`,
-              wasCompressed: true,
-            });
-            setSuccessNotice(`Imagem otimizada e convertida em Base64 (${formatBytes(approxBytes)}). Clique em "Salvar Configuração" para gravar.`);
-            resolve();
-          } catch (err: any) {
-            reject(err);
-          }
-        };
-        img.onerror = () => reject(new Error('Não foi possível carregar o arquivo para compressão.'));
-        img.src = rawBase64;
+      // Compressão Inteligente Pré-Upload via Canvas (máx 1920x1080 horizontal, WebP a 0.7)
+      const result = await compressImageToWebp(file, {
+        isVertical: false,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.7,
       });
+
+      onImageChange(result.base64);
+      setFileMeta({
+        name: file.name,
+        size: `${formatByteSize(result.compressedBytes)} (original: ${formatByteSize(result.originalBytes)}) • -${result.reductionPercentage}%`,
+        wasCompressed: true,
+      });
+      setSuccessNotice(`Imagem otimizada com Canvas para ${result.format.toUpperCase()} (${result.width}x${result.height}px, ${formatByteSize(result.compressedBytes)}). Redução de ${result.reductionPercentage}%! Clique em "Salvar Configuração" para gravar.`);
     } catch (err: any) {
       console.error('Erro no processamento da imagem:', err);
       setErrorMessage(err?.message || 'Falha ao processar arquivo.');
@@ -1910,6 +1836,7 @@ const Section2ImageUploader: React.FC<Section2ImageUploaderProps> = ({
   const handleRemoveImage = () => {
     if (confirm('Deseja remover a imagem anexada da Seção 2 e voltar ao Card Padrão Institucional?')) {
       onImageChange('');
+      removeCachedImage('section2_first_image');
       setFileMeta(null);
       setSuccessNotice('Imagem removida do rascunho. O card padrão será exibido. Clique em "Salvar Configuração" para confirmar.');
       setErrorMessage(null);
@@ -1920,6 +1847,11 @@ const Section2ImageUploader: React.FC<Section2ImageUploaderProps> = ({
     setIsSaving(true);
     setErrorMessage(null);
     try {
+      if (currentImage && currentImage.trim().length > 0) {
+        await setCachedImage('section2_first_image', currentImage);
+      } else {
+        await removeCachedImage('section2_first_image');
+      }
       await onSave();
       setSuccessNotice('Configurações da Seção 2 salvas com sucesso no Supabase! 💾');
     } catch (err: any) {

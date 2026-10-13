@@ -48,15 +48,23 @@ export default function App() {
 
   const fetchSlides = async () => {
     try {
+      // OTIMIZAÇÃO: Busca apenas metadata leve de texto e ordem (sem as colunas Base64 pesadas)
+      // O carregamento das imagens Base64 é desacoplado e assíncrono no HeroSection com cache em IndexedDB
       const { data, error } = await supabase
         .from('hero_slides')
-        .select('*')
+        .select('id, title, subtitle, link, redirect_url, order, is_active, use_mobile_image, image_mobile_url')
         .eq('is_active', true)
         .order('order', { ascending: true })
         .limit(4);
       
       if (!error && data && data.length > 0) {
-        setSlides(data);
+        const normalized = data.map((s: any) => ({
+          ...s,
+          url_base64: '',
+          url_base64_horizontal: '',
+          image_desktop_url: '',
+        }));
+        setSlides(normalized);
       } else {
         setSlides([
           { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },

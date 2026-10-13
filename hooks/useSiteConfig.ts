@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { setCachedImage } from '../lib/imageCache';
 
 export interface SiteConfig {
   // UI INTERACTION
@@ -119,8 +120,15 @@ export const fetchSharedSiteConfig = async (): Promise<SiteConfig | null> => {
           if (mergedConfig.system_theme) {
             localStorage.setItem('umademats_system_theme', mergedConfig.system_theme);
           }
+          if (mergedConfig.section2_first_image_url) {
+            setCachedImage('section2_first_image', mergedConfig.section2_first_image_url);
+          }
           try {
-            localStorage.setItem('umademats_site_config', JSON.stringify(mergedConfig));
+            const safeConfig = {
+              ...mergedConfig,
+              section2_first_image_url: mergedConfig.section2_first_image_url?.startsWith('data:') ? '' : mergedConfig.section2_first_image_url,
+            };
+            localStorage.setItem('umademats_site_config', JSON.stringify(safeConfig));
           } catch (e) {}
         }
         return mergedConfig;
@@ -189,11 +197,18 @@ export const useSiteConfig = () => {
       cachedConfig = newConfig;
       setConfig(newConfig);
       
-      // Salvar imediatamente no localStorage para evitar qualquer atraso visual
+      // Salvar imediatamente no localStorage e IndexedDB para evitar atraso visual e sobrecarga de quota
       if (typeof window !== 'undefined') {
         localStorage.setItem('umademats_system_theme', newConfig.system_theme);
+        if (newConfig.section2_first_image_url) {
+          setCachedImage('section2_first_image', newConfig.section2_first_image_url);
+        }
         try {
-          localStorage.setItem('umademats_site_config', JSON.stringify(newConfig));
+          const safeConfig = {
+            ...newConfig,
+            section2_first_image_url: newConfig.section2_first_image_url?.startsWith('data:') ? '' : newConfig.section2_first_image_url,
+          };
+          localStorage.setItem('umademats_site_config', JSON.stringify(safeConfig));
         } catch (e) {}
       }
       

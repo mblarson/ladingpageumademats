@@ -9,6 +9,8 @@ import {
 import { supabase } from '../lib/supabaseClient';
 import { HeroSlide } from '../types';
 import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
+import { compressImageToWebp, formatByteSize } from '../lib/imageCompression';
+import { setCachedImage, removeCachedImage } from '../lib/imageCache';
 
 interface HeroCMSProps {
   heroDimensions: { width: number; height: number };
@@ -62,89 +64,23 @@ const HeroSlideImageUploader: React.FC<HeroSlideImageUploaderProps> = ({
     setIsProcessing(true);
 
     try {
-      const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
-
-      const readAsDataURLAsync = (f: Blob | File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('Erro ao ler os dados do arquivo via FileReader.'));
-          reader.readAsDataURL(f);
-        });
-      };
-
-      // Se o arquivo for menor ou igual a 1.5 MB, converte diretamente
-      if (file.size <= MAX_BYTES) {
-        const base64Data = await readAsDataURLAsync(file);
-        onImageChange(base64Data);
-        setFileMeta({
-          name: file.name,
-          size: formatBytes(file.size),
-          wasCompressed: false,
-        });
-        setSuccessNotice(`Imagem convertida em Base64 (${formatBytes(file.size)}).`);
-        setIsProcessing(false);
-        return;
-      }
-
-      // Se exceder 1.5 MB, realiza compressão inteligente assíncrona via Canvas
-      const rawBase64 = await readAsDataURLAsync(file);
-      await new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let { width, height } = img;
-            const MAX_DIM = 1920;
-
-            if (width > MAX_DIM || height > MAX_DIM) {
-              if (width > height) {
-                height = Math.round((height * MAX_DIM) / width);
-                width = MAX_DIM;
-              } else {
-                width = Math.round((width * MAX_DIM) / height);
-                height = MAX_DIM;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              throw new Error('Falha ao inicializar o contexto 2D para compressão.');
-            }
-
-            ctx.drawImage(img, 0, 0, width, height);
-
-            let quality = 0.85;
-            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            let approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
-
-            if (approxBytes > MAX_BYTES) {
-              quality = 0.72;
-              compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-              approxBytes = Math.round((compressedDataUrl.length * 3) / 4);
-            }
-
-            if (approxBytes > MAX_BYTES) {
-              throw new Error(`A imagem ultrapassa 1.5 MB mesmo após otimização (${formatBytes(approxBytes)}). Escolha um arquivo menor.`);
-            }
-
-            onImageChange(compressedDataUrl);
-            setFileMeta({
-              name: file.name,
-              size: `${formatBytes(approxBytes)} (original: ${formatBytes(file.size)})`,
-              wasCompressed: true,
-            });
-            setSuccessNotice(`Imagem otimizada e convertida em Base64 (${formatBytes(approxBytes)}).`);
-            resolve();
-          } catch (err: any) {
-            reject(err);
-          }
-        };
-        img.onerror = () => reject(new Error('Não foi possível carregar o arquivo para compressão.'));
-        img.src = rawBase64;
+      const isVertical = Boolean(aspectClass?.includes('9/16') || badgeLabel?.toLowerCase().includes('vertical'));
+      
+      // Compressão Inteligente Pré-Upload via Canvas (máx 1920px horizontal, 1080px vertical, formato WebP a 0.7)
+      const result = await compressImageToWebp(file, {
+        isVertical,
+        maxWidth: isVertical ? 1080 : 1920,
+        maxHeight: isVertical ? 1920 : 1080,
+        quality: 0.7,
       });
+
+      onImageChange(result.base64);
+      setFileMeta({
+        name: file.name,
+        size: `${formatByteSize(result.compressedBytes)} (original: ${formatByteSize(result.originalBytes)}) • -${result.reductionPercentage}%`,
+        wasCompressed: true,
+      });
+      setSuccessNotice(`Imagem otimizada com Canvas para ${result.format.toUpperCase()} (${result.width}x${result.height}px, ${formatByteSize(result.compressedBytes)}). Redução de ${result.reductionPercentage}%!`);
     } catch (err: any) {
       console.error('Erro no processamento da imagem do slide:', err);
       setErrorMessage(err?.message || 'Falha ao processar arquivo.');
@@ -506,6 +442,8 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
   const handleDelete = async (id: string) => {
     if (confirm("Deseja realmente excluir este slide?")) {
       await supabase.from('hero_slides').delete().eq('id', id);
+      removeCachedImage(`hero_slide_${id}`);
+      removeCachedImage(`hero_slide_h_${id}`);
       fetchSlides();
     }
   };
@@ -524,6 +462,10 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       .from('hero_slides')
       .insert([slideData])
       .select();
+    if (data && data[0]) {
+      if (slideData.url_base64) setCachedImage(`hero_slide_${data[0].id}`, slideData.url_base64);
+      if (slideData.url_base64_horizontal) setCachedImage(`hero_slide_h_${data[0].id}`, slideData.url_base64_horizontal);
+    }
     if (data) fetchSlides();
   };
 
@@ -550,9 +492,16 @@ export const HeroCMS: React.FC<HeroCMSProps> = ({ heroDimensions }) => {
       };
 
       if (editingSlide.id.startsWith('new_')) {
-        await supabase.from('hero_slides').insert([{ ...slideData, order: slides.length }]);
+        const { data: inserted } = await supabase.from('hero_slides').insert([{ ...slideData, order: slides.length }]).select();
+        if (inserted && inserted[0]) {
+          const newId = inserted[0].id;
+          if (verticalImage) setCachedImage(`hero_slide_${newId}`, verticalImage);
+          if (horizontalImage) setCachedImage(`hero_slide_h_${newId}`, horizontalImage);
+        }
       } else {
         await supabase.from('hero_slides').update(slideData).eq('id', editingSlide.id);
+        if (verticalImage) setCachedImage(`hero_slide_${editingSlide.id}`, verticalImage);
+        if (horizontalImage) setCachedImage(`hero_slide_h_${editingSlide.id}`, horizontalImage);
       }
       setEditingSlide(null);
       fetchSlides();

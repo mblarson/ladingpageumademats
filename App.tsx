@@ -46,36 +46,50 @@ export default function App() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [slidesLoading, setSlidesLoading] = useState(true);
 
+  const normalizeHeroSlides = (rawSlides: any[]): HeroSlide[] => {
+    return rawSlides.map((s: any) => ({
+      ...s,
+      url_base64: s.url_base64 || s.redirect_url || s.image_desktop_url || '',
+      url_base64_horizontal: s.url_base64_horizontal || '',
+      image_desktop_url: s.url_base64_horizontal || s.url_base64 || s.image_desktop_url || s.redirect_url || '',
+    }));
+  };
+
   const fetchSlides = async () => {
     try {
-      // OTIMIZAÇÃO: Busca apenas metadata leve de texto e ordem (sem as colunas Base64 pesadas)
-      // O carregamento das imagens Base64 é desacoplado e assíncrono no HeroSection com cache em IndexedDB
       const { data, error } = await supabase
         .from('hero_slides')
-        .select('id, title, subtitle, link, redirect_url, order, is_active, use_mobile_image, image_mobile_url')
+        .select('*')
         .eq('is_active', true)
-        .order('order', { ascending: true })
-        .limit(4);
+        .order('order', { ascending: true });
       
       if (!error && data && data.length > 0) {
-        const normalized = data.map((s: any) => ({
-          ...s,
-          url_base64: '',
-          url_base64_horizontal: '',
-          image_desktop_url: '',
-        }));
+        const normalized = normalizeHeroSlides(data);
         setSlides(normalized);
-      } else {
+
+        // Preload / decodificação antecipada da imagem Base64 na memória do navegador durante o loading global
+        if (typeof window !== 'undefined') {
+          const first = normalized[0];
+          const isDesktop = window.innerWidth >= 768;
+          const preSrc = isDesktop
+            ? (first.url_base64_horizontal || first.url_base64 || first.image_desktop_url)
+            : (first.url_base64 || first.url_base64_horizontal || first.image_desktop_url);
+          if (preSrc) {
+            const img = new Image();
+            img.src = preSrc;
+          }
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
         setSlides([
-          { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
-          { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
-          { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
-          { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
-          { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
+          { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
+          { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
+          { id: '3', title: 'LIDERA', subtitle: 'UMADEMATS', link: '/lidera', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 2, is_active: true },
+          { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
+          { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
         ]);
       }
     } catch (e) {
-      console.error("Erro ao carregar slides:", e);
+      console.error("Erro ao carregar slides no preload global:", e);
     } finally {
       setSlidesLoading(false);
     }

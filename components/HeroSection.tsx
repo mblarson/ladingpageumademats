@@ -166,8 +166,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     }
   }, [initialSlides]);
 
-  // Busca Slides diretamente do Supabase (prioridade absoluta para dados cadastrados no Admin)
+  // Busca Slides diretamente do Supabase apenas como fallback de contingência se não houver dados pré-carregados
   useEffect(() => {
+    // Se os slides já foram antecipados/pré-carregados pelo App.tsx durante o loading global, consome a memória imediatamente
+    if (initialSlides && initialSlides.length > 0 && !isMockSlidesList(initialSlides)) {
+      return;
+    }
+
     let isMounted = true;
 
     const fetchSlides = async () => {

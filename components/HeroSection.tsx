@@ -9,7 +9,6 @@ import { PageType } from '../App';
 import { supabase } from '../lib/supabaseClient';
 import { HeroSlide } from '../types';
 import { getDirectDriveUrl, isVideoUrl } from '../lib/heroUtils';
-import { getMultipleCachedImages, setCachedImage } from '../lib/imageCache';
 
 interface HeroVideoProps {
   desktopUrl: string;
@@ -102,15 +101,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
   const dragFreeProps = activeConfig.ui_allowDrag ? { drag: true, dragConstraints: { top: -200, left: -200, right: 200, bottom: 200 }, whileDrag: { scale: 1.1, cursor: 'grabbing', zIndex: 100 } } : {};
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [slides, setSlides] = useState<HeroSlide[]>(initialSlides || []);
+  const isMockSlidesList = (list?: HeroSlide[]): boolean => {
+    if (!list || list.length === 0) return false;
+    return list.some(s => s.id === '1' && s.title === 'FOTOS DO CONGRESSO') ||
+           (list.length === 5 && list.every(s => !s.url_base64 && !s.url_base64_horizontal && !s.image_desktop_url));
+  };
+
+  const normalizeSlides = (rawSlides: any[]): HeroSlide[] => {
+    return rawSlides.map((s: any) => ({
+      ...s,
+      url_base64: s.url_base64 || s.redirect_url || s.image_desktop_url || '',
+      url_base64_horizontal: s.url_base64_horizontal || '',
+      image_desktop_url: s.url_base64_horizontal || s.url_base64 || s.image_desktop_url || s.redirect_url || '',
+    }));
+  };
+
+  const [slides, setSlides] = useState<HeroSlide[]>(() => {
+    if (initialSlides && initialSlides.length > 0 && !isMockSlidesList(initialSlides)) {
+      return normalizeSlides(initialSlides);
+    }
+    return [];
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPhotosInfoModal, setShowPhotosInfoModal] = useState(false);
-  const [loading, setLoading] = useState(!initialSlides || initialSlides.length === 0);
-
-  // Cache e estado de mídias pesadas (Base64) desacopladas do render principal
-  const [slideMedia, setSlideMedia] = useState<Record<string, { vertical?: string; horizontal?: string }>>({});
-  const [imageLoadedMap, setImageLoadedMap] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(!initialSlides || initialSlides.length === 0 || isMockSlidesList(initialSlides));
 
   const isCopa = theme === 'copa';
   const accentColor = isCopa ? '#ffdf00' : activeConfig.hero_accentColor;
@@ -142,33 +157,46 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
     };
   }, [onDimensionsDetected]);
 
-  // Busca Slides Metadata inicial (caso não venham pré-carregados via initialSlides)
+  // Sincronização caso initialSlides receba dados reais do Supabase via prop
   useEffect(() => {
-    if (initialSlides && initialSlides.length > 0) {
-      setSlides(initialSlides);
+    if (initialSlides && initialSlides.length > 0 && !isMockSlidesList(initialSlides)) {
+      console.log('[HeroSection] Recebidos slides reais via initialSlides prop:', initialSlides.length);
+      setSlides(normalizeSlides(initialSlides));
       setLoading(false);
-      return;
     }
+  }, [initialSlides]);
 
-    const fetchSlidesMetadata = async () => {
+  // Busca Slides diretamente do Supabase (prioridade absoluta para dados cadastrados no Admin)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSlides = async () => {
       try {
+        console.log('[HeroSection] Buscando slides ativos diretamente do Supabase...');
         const { data, error } = await supabase
           .from('hero_slides')
-          .select('id, title, subtitle, link, redirect_url, order, is_active, use_mobile_image, image_mobile_url')
+          .select('*')
           .eq('is_active', true)
-          .order('order', { ascending: true })
-          .limit(4);
+          .order('order', { ascending: true });
         
-        if (!error && data && data.length > 0) {
-          const normalized = data.map((s: any) => ({
-            ...s,
-            url_base64: '',
-            url_base64_horizontal: '',
-            image_desktop_url: '',
-          }));
+        if (error) {
+          console.error('[HeroSection] Erro retornado pelo Supabase:', error);
+          // Em caso de erro, NUNCA sobrepomos dados reais do Admin com mock
+          return;
+        }
+
+        console.log('[HeroSection] Retorno do banco de dados (hero_slides):', data?.length ?? 0, 'slides encontrados');
+
+        if (!isMounted) return;
+
+        if (data && data.length > 0) {
+          // PRIORIDADE 1: Se o banco possui slides cadastrados pelo Admin, atualiza imediatamente e ignora qualquer mock
+          const normalized = normalizeSlides(data);
           setSlides(normalized);
-        } else {
-          // Fallback slides if none found
+          setLoading(false);
+        } else if (Array.isArray(data) && data.length === 0) {
+          // PRIORIDADE 2: APENAS se o banco explicitamente retornar um array vazio (nenhum slide cadastrado)
+          console.log('[HeroSection] Nenhum slide cadastrado no banco. Aplicando slides estáticos de contingência.');
           setSlides([
             { id: '1', title: 'FOTOS DO CONGRESSO', subtitle: 'CLIQUE AQUI', link: 'https://drive.google.com/drive/folders/1-ii9LgbBjl57vvVWYob2qZxrw0sBqMLa?usp=sharing', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 0, is_active: true },
             { id: '2', title: 'UMADE', subtitle: 'MATS', link: '', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 1, is_active: true },
@@ -176,78 +204,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
             { id: '4', title: 'JOGUE AGORA', subtitle: '"AS AVENTURAS DE PENTECA"', link: '', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 3, is_active: true },
             { id: '5', title: 'LEIA A BÍBLIA', subtitle: 'JUNTO COM A UMADEMATS', link: '/bible', url_base64: '', url_base64_horizontal: '', image_desktop_url: '', image_mobile_url: '', use_mobile_image: false, order: 4, is_active: true },
           ]);
+          setLoading(false);
         }
       } catch (e) {
-        console.error("Erro ao carregar slides:", e);
+        console.error('[HeroSection] Exceção durante a requisição de slides:', e);
       } finally {
-        setLoading(false);
-      }
-    };
-    fetchSlidesMetadata();
-  }, [initialSlides]);
-
-  // EFEITO ASSÍNCRONO DESACOPLADO: Carrega imagens em background com IndexedDB Cache
-  useEffect(() => {
-    if (!slides || slides.length === 0) return;
-
-    let isMounted = true;
-    const loadMedia = async () => {
-      // 1. Tentar IndexedDB primeiro para todos os slides ativos (1ms)
-      const keys = slides.flatMap(s => [`hero_slide_${s.id}`, `hero_slide_h_${s.id}`]);
-      const cached = await getMultipleCachedImages(keys);
-
-      const foundMedia: Record<string, { vertical?: string; horizontal?: string }> = {};
-      const missingIds: string[] = [];
-
-      for (const slide of slides) {
-        const vertKey = `hero_slide_${slide.id}`;
-        const horizKey = `hero_slide_h_${slide.id}`;
-        const vert = cached[vertKey] || slide.url_base64 || '';
-        const horiz = cached[horizKey] || slide.url_base64_horizontal || '';
-
-        if (vert || horiz) {
-          foundMedia[slide.id] = { vertical: vert, horizontal: horiz };
-        } else if (!slide.id.startsWith('new_')) {
-          missingIds.push(slide.id);
-        }
-      }
-
-      if (isMounted && Object.keys(foundMedia).length > 0) {
-        setSlideMedia(prev => ({ ...prev, ...foundMedia }));
-      }
-
-      // 2. Se houver slides sem mídia no cache, busca em background no Supabase
-      if (missingIds.length > 0) {
-        try {
-          const { data, error } = await supabase
-            .from('hero_slides')
-            .select('id, url_base64, url_base64_horizontal, image_desktop_url')
-            .in('id', missingIds);
-
-          if (!error && data && isMounted) {
-            const fetchedMedia: Record<string, { vertical?: string; horizontal?: string }> = {};
-            for (const row of data) {
-              const vert = row.url_base64 || row.image_desktop_url || '';
-              const horiz = row.url_base64_horizontal || '';
-              fetchedMedia[row.id] = { vertical: vert, horizontal: horiz };
-
-              // Salva no IndexedDB para carregamentos futuros instantâneos
-              if (vert) setCachedImage(`hero_slide_${row.id}`, vert);
-              if (horiz) setCachedImage(`hero_slide_h_${row.id}`, horiz);
-            }
-            setSlideMedia(prev => ({ ...prev, ...fetchedMedia }));
-          }
-        } catch (err) {
-          console.warn("Erro ao buscar mídias dos slides em background:", err);
+        if (isMounted) {
+          setLoading(false);
         }
       }
     };
 
-    loadMedia();
+    fetchSlides();
+
     return () => {
       isMounted = false;
     };
-  }, [slides]);
+  }, []);
 
   // Timer do Slider
   useEffect(() => {
@@ -317,17 +290,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
       }
   };
 
-  const currentSlide = slides[currentIndex];
-  const currentMedia = currentSlide ? slideMedia[currentSlide.id] : undefined;
-
-  const currentVerticalImage = currentMedia?.vertical || currentSlide?.url_base64 || currentSlide?.image_desktop_url || '';
-  const currentHorizontalImage = currentMedia?.horizontal || currentSlide?.url_base64_horizontal || '';
-  const currentDesktopUrl = currentHorizontalImage || currentVerticalImage || getDirectDriveUrl(currentSlide?.image_desktop_url);
-  const currentMobileUrl = (currentSlide?.use_mobile_image && currentSlide?.image_mobile_url) 
-    ? getDirectDriveUrl(currentSlide.image_mobile_url) 
-    : (currentVerticalImage || currentHorizontalImage || getDirectDriveUrl(currentSlide?.image_desktop_url));
-
-  const hasMediaConfigured = Boolean(currentDesktopUrl || currentMobileUrl);
+  const currentSlide = slides[currentIndex < slides.length ? currentIndex : 0];
 
   return (
     <section ref={containerRef} className="relative w-full min-h-[80vh] md:min-h-[100dvh] lg:min-h-[100dvh] overflow-hidden bg-black">
@@ -385,7 +348,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
           {/* Background Image / Color / Video */}
           <AnimatePresence initial={false}>
             <motion.div
-               key={currentSlide.id + '_' + currentIndex + (hasMediaConfigured ? '_media' : '_bg')}
+               key={currentSlide.id + '_' + currentIndex + ((currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) ? '_media' : '_bg')}
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
@@ -393,48 +356,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                className="absolute inset-0 z-0 bg-black"
                style={{ willChange: "opacity" }}
             >
-              {hasMediaConfigured ? (
+              {(currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) ? (
                 <>
-                  {isVideoUrl(currentDesktopUrl) || (currentSlide.use_mobile_image && isVideoUrl(currentSlide.image_mobile_url)) ? (
+                  {isVideoUrl(currentSlide.url_base64_horizontal || currentSlide.url_base64 || currentSlide.image_desktop_url) || (currentSlide.use_mobile_image && isVideoUrl(currentSlide.image_mobile_url)) ? (
                     <HeroVideoBackground
-                      desktopUrl={currentDesktopUrl}
-                      mobileUrl={currentMobileUrl}
+                      desktopUrl={currentSlide.url_base64_horizontal || currentSlide.url_base64 || currentSlide.image_desktop_url}
+                      mobileUrl={currentSlide.url_base64 || currentSlide.image_mobile_url}
                       useMobileImage={Boolean(currentSlide.url_base64 || currentSlide.use_mobile_image)}
                       altTitle={currentSlide.title}
                       isActive={true}
                     />
                   ) : (
                     <>
-                      {/* SKELETON SHIMMER enquanto a imagem carrega/descompacta */}
-                      {!imageLoadedMap[currentSlide.id] && (
-                        <div className="absolute inset-0 z-0 bg-[#0A0D14] overflow-hidden flex items-center justify-center">
-                          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none" />
-                        </div>
-                      )}
-
                       {/* DESKTOP (telas a partir de md / 768px): versão horizontal em fullscreen absoluto sem distorção */}
                       <div className="hidden md:block w-full h-full absolute inset-0 overflow-hidden">
                         <img 
-                          src={currentDesktopUrl} 
+                          src={currentSlide.url_base64_horizontal || currentSlide.url_base64 || getDirectDriveUrl(currentSlide.image_desktop_url)} 
                           alt={currentSlide.title} 
-                          className={`w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-300 ${imageLoadedMap[currentSlide.id] ? 'opacity-100' : 'opacity-0'}`}
+                          className="w-full h-full object-cover object-center absolute inset-0"
                           loading="eager"
                           fetchPriority="high"
                           decoding="async"
-                          onLoad={() => setImageLoadedMap(prev => ({ ...prev, [currentSlide.id]: true }))}
                         />
                       </div>
 
                       {/* MOBILE (telas menores que md): versão vertical 9:16 intacta */}
                       <div className="block md:hidden w-full h-full absolute inset-0">
                         <img 
-                          src={currentMobileUrl} 
+                          src={(currentSlide.use_mobile_image && currentSlide.image_mobile_url) ? getDirectDriveUrl(currentSlide.image_mobile_url) : (currentSlide.url_base64 || currentSlide.url_base64_horizontal || getDirectDriveUrl(currentSlide.image_desktop_url))} 
                           alt={currentSlide.title} 
-                          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoadedMap[currentSlide.id] ? 'opacity-100' : 'opacity-0'}`}
+                          className="w-full h-full object-cover"
                           loading="eager"
                           fetchPriority="high"
                           decoding="async"
-                          onLoad={() => setImageLoadedMap(prev => ({ ...prev, [currentSlide.id]: true }))}
                         />
                       </div>
                     </>
@@ -471,7 +425,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               onClick={() => handleSlideClick(currentSlide)}
             >
               {/* Grid Background Effect (only if no image) */}
-              {!hasMediaConfigured && (
+              {!(currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
                   <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:2.5rem_2.5rem]" />
                 </div>
@@ -480,7 +434,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
               <div className="relative z-10 text-center flex flex-col items-center md:justify-start justify-center w-full max-w-7xl mx-auto px-4 lg:px-8 flex-1 md:pt-[7%]">
                 <div className="relative w-full flex-1 flex items-center justify-center overflow-visible py-4 md:py-4">
                   {/* Dynamic Content Mapping */}
-                  {currentSlide.id === '1' && slides.length <= 5 && !hasMediaConfigured ? (
+                  {currentSlide.id === '1' && slides.length <= 5 && !(currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) ? (
                     // Original Photos Slide
                     <motion.div className="flex flex-col items-center justify-center px-4 w-full h-full relative" {...dragProps}>
                       <h2 className="hero-secondary-title text-[18vw] md:text-[5vw] xl:text-[5.5vw] leading-[0.85] font-display italic uppercase text-white text-center">FOTOS DO CONGRESSO</h2>
@@ -490,7 +444,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ previewConfig, onNavig
                         <h3 className="hero-box-title text-[11vw] md:text-[4vw] xl:text-[4.5vw] leading-none font-fun text-black uppercase tracking-tight">CLIQUE AQUI</h3>
                       </div>
                     </motion.div>
-                  ) : currentSlide.id === '2' && slides.length <= 5 && !hasMediaConfigured ? (
+                  ) : currentSlide.id === '2' && slides.length <= 5 && !(currentSlide.url_base64 || currentSlide.url_base64_horizontal || currentSlide.image_desktop_url) ? (
                      // Original Main Slide
                      <motion.div className="flex flex-col items-center justify-center w-full h-full relative" {...dragProps}>
                        <h1 className="hero-main-title text-[42vw] md:text-[8vw] xl:text-[9vw] leading-[0.75] font-display uppercase text-white tracking-tighter drop-shadow-2xl">UMADE<br /><span style={{ color: accentColor }}>MATS</span></h1>

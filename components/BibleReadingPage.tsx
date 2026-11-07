@@ -69,26 +69,238 @@ const ANNUAL_PLAN = RAW_PLAN.map((m, mIdx) => ({
   }))
 }));
 
-// Mapeamento de Livros para API (Português -> Identificador API)
-// Alguns livros na API bible-api.com com translation=almeida exigem o nome em PT ou respondem errado em EN (ex: Ezra -> Ezekiel)
-const BIBLE_BOOK_MAP: Record<string, string> = {
-  "Gênesis": "Gênesis", "Êxodo": "Êxodo", "Levítico": "Levítico", "Números": "Números",
-  "Deuteronômio": "Deuteronômio", "Josué": "Josué", "Juízes": "Juízes", "Rute": "Rute",
-  "1 Samuel": "1 Samuel", "2 Samuel": "2 Samuel", "1 Reis": "1 Reis", "2 Reis": "2 Reis",
-  "1 Crônicas": "1 Crônicas", "2 Crônicas": "2 Crônicas", "Esdras": "Esdras", "Neemias": "Neemias",
-  "Ester": "Ester", "Jó": "Jó", "Salmos": "Salmos", "Provérbios": "Provérbios",
-  "Eclesiastes": "Eclesiastes", "Cantares": "Cantares", "Isaías": "Isaías",
-  "Jeremias": "Jeremias", "Lamentações": "Lamentações", "Ezequiel": "Ezequiel", "Daniel": "Daniel",
-  "Oséias": "Oséias", "Joel": "Joel", "Amós": "Amós", "Obadias": "Obadias", "Jonas": "Jonas",
-  "Miquéias": "Miquéias", "Naum": "Naum", "Habacuque": "Habacuque", "Sofonias": "Sofonias",
-  "Ageu": "Ageu", "Zacarias": "Zacarias", "Malaquias": "Malaquias", "Mateus": "Mateus",
-  "Marcos": "Marcos", "Lucas": "Lucas", "João": "João", "Atos": "Atos", "Romanos": "Romanos",
-  "1 Coríntios": "1 Coríntios", "2 Coríntios": "2 Coríntios", "Gálatas": "Gálatas",
-  "Efésios": "Efésios", "Filipenses": "Filipenses", "Colossenses": "Colossenses",
-  "1 Tessalonicenses": "1 Tessalonicenses", "2 Tessalonicenses": "2 Tessalonicenses",
-  "1 Timóteo": "1 Timóteo", "2 Timóteo": "2 Timóteo", "Tito": "Tito", "Filemom": "Filemom",
-  "Hebreus": "Hebreus", "Tiago": "Tiago", "1 Pedro": "1 Pedro", "2 Pedro": "2 Pedro",
-  "1 João": "1 João", "2 João": "2 João", "3 João": "3 João", "Judas": "Judas", "Apocalipse": "Apocalipse"
+// --------------------------------------------------------------------------
+// NORMALIZAÇÃO E MAPEAMENTO ROBUSTO PARA API BÍBLICA E FALLBACK LOCAL
+// --------------------------------------------------------------------------
+
+export interface BookInfo {
+  id: string;          // Código canônico USFX de 3 letras (JHN, GEN, PSA, etc.)
+  namePt: string;      // Nome em Português (João, Gênesis, Salmos, etc.)
+  nameEn: string;      // Nome em Inglês (John, Genesis, Psalms, etc.)
+  abbrev: string;      // Abreviação canônica da tradução ACF (jo, gn, sl, etc.)
+}
+
+/**
+ * Sanitiza e normaliza o nome do livro:
+ * - Converte para minúsculas
+ * - Remove acentuação e diacríticos (ex: "Gênesis" -> "genesis", "Jó" -> "jo")
+ * - Normaliza numerais romanos (I, II, III -> 1, 2, 3)
+ * - Remove caracteres especiais, pontuações, espaços e hífens
+ */
+export const normalizeBookString = (str: string): string => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^iii\s+|^3\s*/i, '3')
+    .replace(/^ii\s+|^2\s*/i, '2')
+    .replace(/^i\s+|^1\s*/i, '1')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+};
+
+/**
+ * Dicionário canônico completo dos 66 livros da Bíblia com dados estruturados
+ */
+const CANONICAL_BOOKS: BookInfo[] = [
+  // Antigo Testamento
+  { id: 'GEN', namePt: 'Gênesis', nameEn: 'Genesis', abbrev: 'gn' },
+  { id: 'EXO', namePt: 'Êxodo', nameEn: 'Exodus', abbrev: 'ex' },
+  { id: 'LEV', namePt: 'Levítico', nameEn: 'Leviticus', abbrev: 'lv' },
+  { id: 'NUM', namePt: 'Números', nameEn: 'Numbers', abbrev: 'nm' },
+  { id: 'DEU', namePt: 'Deuteronômio', nameEn: 'Deuteronomy', abbrev: 'dt' },
+  { id: 'JOS', namePt: 'Josué', nameEn: 'Joshua', abbrev: 'js' },
+  { id: 'JDG', namePt: 'Juízes', nameEn: 'Judges', abbrev: 'jz' },
+  { id: 'RUT', namePt: 'Rute', nameEn: 'Ruth', abbrev: 'rt' },
+  { id: '1SA', namePt: '1 Samuel', nameEn: '1 Samuel', abbrev: '1sm' },
+  { id: '2SA', namePt: '2 Samuel', nameEn: '2 Samuel', abbrev: '2sm' },
+  { id: '1KI', namePt: '1 Reis', nameEn: '1 Kings', abbrev: '1rs' },
+  { id: '2KI', namePt: '2 Reis', nameEn: '2 Kings', abbrev: '2rs' },
+  { id: '1CH', namePt: '1 Crônicas', nameEn: '1 Chronicles', abbrev: '1cr' },
+  { id: '2CH', namePt: '2 Crônicas', nameEn: '2 Chronicles', abbrev: '2cr' },
+  { id: 'EZR', namePt: 'Esdras', nameEn: 'Ezra', abbrev: 'ed' },
+  { id: 'NEH', namePt: 'Neemias', nameEn: 'Nehemiah', abbrev: 'ne' },
+  { id: 'EST', namePt: 'Ester', nameEn: 'Esther', abbrev: 'et' },
+  { id: 'JOB', namePt: 'Jó', nameEn: 'Job', abbrev: 'jó' },
+  { id: 'PSA', namePt: 'Salmos', nameEn: 'Psalms', abbrev: 'sl' },
+  { id: 'PRO', namePt: 'Provérbios', nameEn: 'Proverbs', abbrev: 'pv' },
+  { id: 'ECC', namePt: 'Eclesiastes', nameEn: 'Ecclesiastes', abbrev: 'ec' },
+  { id: 'SNG', namePt: 'Cantares', nameEn: 'Song of Solomon', abbrev: 'ct' },
+  { id: 'ISA', namePt: 'Isaías', nameEn: 'Isaiah', abbrev: 'is' },
+  { id: 'JER', namePt: 'Jeremias', nameEn: 'Jeremiah', abbrev: 'jr' },
+  { id: 'LAM', namePt: 'Lamentações', nameEn: 'Lamentations', abbrev: 'lm' },
+  { id: 'EZK', namePt: 'Ezequiel', nameEn: 'Ezekiel', abbrev: 'ez' },
+  { id: 'DAN', namePt: 'Daniel', nameEn: 'Daniel', abbrev: 'dn' },
+  { id: 'HOS', namePt: 'Oséias', nameEn: 'Hosea', abbrev: 'os' },
+  { id: 'JOL', namePt: 'Joel', nameEn: 'Joel', abbrev: 'jl' },
+  { id: 'AMO', namePt: 'Amós', nameEn: 'Amos', abbrev: 'am' },
+  { id: 'OBA', namePt: 'Obadias', nameEn: 'Obadiah', abbrev: 'ob' },
+  { id: 'JON', namePt: 'Jonas', nameEn: 'Jonah', abbrev: 'jn' },
+  { id: 'MIC', namePt: 'Miquéias', nameEn: 'Micah', abbrev: 'mq' },
+  { id: 'NAM', namePt: 'Naum', nameEn: 'Nahum', abbrev: 'na' },
+  { id: 'HAB', namePt: 'Habacuque', nameEn: 'Habakkuk', abbrev: 'hc' },
+  { id: 'ZEP', namePt: 'Sofonias', nameEn: 'Zephaniah', abbrev: 'sf' },
+  { id: 'HAG', namePt: 'Ageu', nameEn: 'Haggai', abbrev: 'ag' },
+  { id: 'ZEC', namePt: 'Zacarias', nameEn: 'Zechariah', abbrev: 'zc' },
+  { id: 'MAL', namePt: 'Malaquias', nameEn: 'Malachi', abbrev: 'ml' },
+
+  // Novo Testamento
+  { id: 'MAT', namePt: 'Mateus', nameEn: 'Matthew', abbrev: 'mt' },
+  { id: 'MRK', namePt: 'Marcos', nameEn: 'Mark', abbrev: 'mc' },
+  { id: 'LUK', namePt: 'Lucas', nameEn: 'Luke', abbrev: 'lc' },
+  { id: 'JHN', namePt: 'João', nameEn: 'John', abbrev: 'jo' },
+  { id: 'ACT', namePt: 'Atos', nameEn: 'Acts', abbrev: 'atos' },
+  { id: 'ROM', namePt: 'Romanos', nameEn: 'Romans', abbrev: 'rm' },
+  { id: '1CO', namePt: '1 Coríntios', nameEn: '1 Corinthians', abbrev: '1co' },
+  { id: '2CO', namePt: '2 Coríntios', nameEn: '2 Corinthians', abbrev: '2co' },
+  { id: 'GAL', namePt: 'Gálatas', nameEn: 'Galatians', abbrev: 'gl' },
+  { id: 'EPH', namePt: 'Efésios', nameEn: 'Ephesians', abbrev: 'ef' },
+  { id: 'PHP', namePt: 'Filipenses', nameEn: 'Philippians', abbrev: 'fp' },
+  { id: 'COL', namePt: 'Colossenses', nameEn: 'Colossians', abbrev: 'cl' },
+  { id: '1TH', namePt: '1 Tessalonicenses', nameEn: '1 Thessalonians', abbrev: '1ts' },
+  { id: '2TH', namePt: '2 Tessalonicenses', nameEn: '2 Thessalonians', abbrev: '2ts' },
+  { id: '1TI', namePt: '1 Timóteo', nameEn: '1 Timothy', abbrev: '1tm' },
+  { id: '2TI', namePt: '2 Timóteo', nameEn: '2 Timothy', abbrev: '2tm' },
+  { id: 'TIT', namePt: 'Tito', nameEn: 'Titus', abbrev: 'tt' },
+  { id: 'PHM', namePt: 'Filemom', nameEn: 'Philemon', abbrev: 'fm' },
+  { id: 'HEB', namePt: 'Hebreus', nameEn: 'Hebrews', abbrev: 'hb' },
+  { id: 'JAS', namePt: 'Tiago', nameEn: 'James', abbrev: 'tg' },
+  { id: '1PE', namePt: '1 Pedro', nameEn: '1 Peter', abbrev: '1pe' },
+  { id: '2PE', namePt: '2 Pedro', nameEn: '2 Peter', abbrev: '2pe' },
+  { id: '1JN', namePt: '1 João', nameEn: '1 John', abbrev: '1jo' },
+  { id: '2JN', namePt: '2 João', nameEn: '2 John', abbrev: '2jo' },
+  { id: '3JN', namePt: '3 João', nameEn: '3 John', abbrev: '3jo' },
+  { id: 'JUD', namePt: 'Judas', nameEn: 'Jude', abbrev: 'jd' },
+  { id: 'REV', namePt: 'Apocalipse', nameEn: 'Revelation', abbrev: 'ap' }
+];
+
+// Mapeamento amplo de apelidos, variações ortográficas e siglas para os livros canônicos
+const BOOK_ALIAS_MAP: Record<string, BookInfo> = {};
+
+// Popula aliases padrão a partir de CANONICAL_BOOKS
+CANONICAL_BOOKS.forEach(b => {
+  BOOK_ALIAS_MAP[normalizeBookString(b.namePt)] = b;
+  BOOK_ALIAS_MAP[normalizeBookString(b.nameEn)] = b;
+  BOOK_ALIAS_MAP[normalizeBookString(b.id)] = b;
+  BOOK_ALIAS_MAP[normalizeBookString(b.abbrev)] = b;
+});
+
+// Aliases e variações populares adicionais
+const EXTRA_ALIASES: Record<string, string> = {
+  // Cantares / Cânticos
+  'canticos': 'SNG',
+  'canticodoscanticos': 'SNG',
+  'cantico': 'SNG',
+  'song': 'SNG',
+  'songs': 'SNG',
+  'songofsongs': 'SNG',
+  'cantaresdesalomao': 'SNG',
+  // Jó vs João
+  'jo': 'JOB',
+  'job': 'JOB',
+  'jb': 'JOB',
+  'joao': 'JHN',
+  'jhn': 'JHN',
+  'john': 'JHN',
+  'jn': 'JHN',
+  // Juízes vs Judas
+  'juizes': 'JDG',
+  'juiz': 'JDG',
+  'judges': 'JDG',
+  'judas': 'JUD',
+  'jude': 'JUD',
+  // Salmos
+  'salmo': 'PSA',
+  'salmos': 'PSA',
+  'sl': 'PSA',
+  'ps': 'PSA',
+  'psalm': 'PSA',
+  'psalms': 'PSA',
+  // Reis
+  '1reis': '1KI',
+  '2reis': '2KI',
+  '1rs': '1KI',
+  '2rs': '2KI',
+  '1ki': '1KI',
+  '2ki': '2KI',
+  // Crônicas
+  '1cronicas': '1CH',
+  '2cronicas': '2CH',
+  '1cr': '1CH',
+  '2cr': '2CH',
+  '1ch': '1CH',
+  '2ch': '2CH',
+  // Samuel
+  '1samuel': '1SA',
+  '2samuel': '2SA',
+  '1sm': '1SA',
+  '2sm': '2SA',
+  '1sa': '1SA',
+  '2sa': '2SA',
+  // Pedro
+  '1pedro': '1PE',
+  '2pedro': '2PE',
+  '1pe': '1PE',
+  '2pe': '2PE',
+  '1pt': '1PE',
+  '2pt': '2PE',
+  // João Epístolas
+  '1joao': '1JN',
+  '2joao': '2JN',
+  '3joao': '3JN',
+  '1jo': '1JN',
+  '2jo': '2JN',
+  '3jo': '3JN',
+  '1jn': '1JN',
+  '2jn': '2JN',
+  '3jn': '3JN',
+  '1john': '1JN',
+  '2john': '2JN',
+  '3john': '3JN',
+  // Atos
+  'atos': 'ACT',
+  'at': 'ACT',
+  'acts': 'ACT',
+  // Apocalipse
+  'apocalipse': 'REV',
+  'ap': 'REV',
+  'revelation': 'REV',
+  'rev': 'REV',
+  // Esdras
+  'esdras': 'EZR',
+  'ed': 'EZR',
+  'esd': 'EZR',
+  'ezra': 'EZR',
+  // Ezequiel
+  'ezequiel': 'EZK',
+  'ez': 'EZK',
+  'eze': 'EZK',
+  'ezk': 'EZK'
+};
+
+Object.entries(EXTRA_ALIASES).forEach(([alias, id]) => {
+  const target = CANONICAL_BOOKS.find(b => b.id === id);
+  if (target) {
+    BOOK_ALIAS_MAP[normalizeBookString(alias)] = target;
+  }
+});
+
+/**
+ * Retorna as informações completas do livro (ID USFX, nome em português, nome em inglês, abbrev)
+ */
+export const lookupBookInfo = (rawName: string): BookInfo | null => {
+  if (!rawName) return null;
+  const norm = normalizeBookString(rawName);
+  return BOOK_ALIAS_MAP[norm] || null;
+};
+
+/**
+ * Mantém retrocompatibilidade para código existente
+ */
+export const lookupBookApiName = (rawName: string): string => {
+  const info = lookupBookInfo(rawName);
+  return info ? info.nameEn : rawName.trim();
 };
 
 // Dicionário de fallback/correção exclusivo para livros cuja referência no plano anual não possui capítulo explícito
@@ -352,15 +564,107 @@ const ReadingReader: React.FC<{
   useEffect(() => {
     if (!item) return;
 
-    const fetchPart = async (ref: string): Promise<Verse[]> => {
-      const encodedRef = encodeURIComponent(ref.trim());
-      const res = await fetch(`https://bible-api.com/${encodedRef}?translation=almeida&single_chapter_book_matching=indifferent`);
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erro na API (${res.status})`);
-      }
+    // Helper para buscar a Bíblia Almeida (ACF) em cache para fallback de alta disponibilidade
+    const getAcfBible = async (): Promise<any[]> => {
+      if ((window as any).__acfBibleCache) return (window as any).__acfBibleCache;
+      const res = await fetch("https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json");
+      if (!res.ok) throw new Error(`Falha no fallback (${res.status})`);
       const data = await res.json();
-      return data.verses || [];
+      (window as any).__acfBibleCache = data;
+      return data;
+    };
+
+    // Busca versículos de um capítulo através de múltiplas estratégias progressivas
+    const fetchChapterVerses = async (bookInfo: BookInfo, chNum: number): Promise<Verse[]> => {
+      // 1. Tentativa Estruturada (Parameterized Endpoint): bible-api.com/data/almeida/:book_id/:chapter
+      // É a rota mais precisa da API pois busca direto no banco de dados pelo código canônico USFX sem passar por regex
+      try {
+        const paramUrl = `https://bible-api.com/data/almeida/${bookInfo.id}/${chNum}`;
+        console.log(`📡 [Bible API Parameterized]: Tentando ${paramUrl}`);
+        const res = await fetch(paramUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.verses) && data.verses.length > 0) {
+            console.log(`✅ [Bible API Parameterized Sucesso]: ${bookInfo.namePt} ${chNum} (${data.verses.length} versículos)`);
+            return data.verses.map((v: any) => ({
+              book_name: v.book_name || v.book || bookInfo.namePt,
+              chapter: Number(v.chapter),
+              verse: Number(v.verse),
+              text: v.text || ''
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn(`Tentativa estruturada falhou para ${bookInfo.id} ${chNum}:`, err);
+      }
+
+      // 2. Tentativa por Referência em Português: bible-api.com/:ref?translation=almeida
+      try {
+        const ptQuery = encodeURIComponent(`${bookInfo.namePt} ${chNum}`);
+        const ptUrl = `https://bible-api.com/${ptQuery}?translation=almeida&single_chapter_book_matching=indifferent`;
+        console.log(`📡 [Bible API Natural PT]: Tentando ${ptUrl}`);
+        const res = await fetch(ptUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.verses) && data.verses.length > 0) {
+            console.log(`✅ [Bible API Natural PT Sucesso]: ${bookInfo.namePt} ${chNum} (${data.verses.length} versículos)`);
+            return data.verses.map((v: any) => ({
+              book_name: v.book_name || v.book || bookInfo.namePt,
+              chapter: Number(v.chapter),
+              verse: Number(v.verse),
+              text: v.text || ''
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn(`Tentativa natural PT falhou para ${bookInfo.namePt} ${chNum}:`, err);
+      }
+
+      // 3. Tentativa por Referência em Inglês: bible-api.com/:ref?translation=almeida
+      try {
+        const enQuery = encodeURIComponent(`${bookInfo.nameEn} ${chNum}`);
+        const enUrl = `https://bible-api.com/${enQuery}?translation=almeida&single_chapter_book_matching=indifferent`;
+        console.log(`📡 [Bible API Natural EN]: Tentando ${enUrl}`);
+        const res = await fetch(enUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.verses) && data.verses.length > 0) {
+            console.log(`✅ [Bible API Natural EN Sucesso]: ${bookInfo.nameEn} ${chNum} (${data.verses.length} versículos)`);
+            return data.verses.map((v: any) => ({
+              book_name: v.book_name || v.book || bookInfo.namePt,
+              chapter: Number(v.chapter),
+              verse: Number(v.verse),
+              text: v.text || ''
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn(`Tentativa natural EN falhou para ${bookInfo.nameEn} ${chNum}:`, err);
+      }
+
+      // 4. Fallback Ultra-Resiliente com o texto integral de João Ferreira de Almeida (ACF)
+      try {
+        console.log(`🛡️ [Bible Reader Fallback]: Carregando ${bookInfo.namePt} cap. ${chNum} da base autêntica Almeida (ACF)...`);
+        const bible = await getAcfBible();
+        const bookIdx = CANONICAL_BOOKS.indexOf(bookInfo);
+        const bookData = bookIdx >= 0 ? bible[bookIdx] : bible.find((b: any) => b.abbrev === bookInfo.abbrev);
+        if (bookData && Array.isArray(bookData.chapters)) {
+          const chVerses = bookData.chapters[chNum - 1];
+          if (Array.isArray(chVerses) && chVerses.length > 0) {
+            console.log(`✅ [Fallback ACF Sucesso]: ${bookInfo.namePt} ${chNum} (${chVerses.length} versículos)`);
+            return chVerses.map((txt: string, idx: number) => ({
+              book_name: bookInfo.namePt,
+              chapter: chNum,
+              verse: idx + 1,
+              text: txt || ''
+            }));
+          }
+        }
+      } catch (fallbackErr) {
+        console.error(`🚨 [Fallback ACF Falhou]:`, fallbackErr);
+      }
+
+      throw new Error(`Texto não encontrado para ${bookInfo.namePt} ${chNum}`);
     };
 
     const fetchText = async () => {
@@ -369,28 +673,37 @@ const ReadingReader: React.FC<{
       try {
         let cleanRef = item.ref.replace(/–|—/g, '-').trim();
 
+        console.log(`📖 [Bible Reader]: Abrindo leitura: "${item.ref}" (limpo: "${cleanRef}")`);
+
         // Intercepta e corrige estritamente livros sem numeração de capítulo informada no plano
         if (BOOK_REFERENCE_CORRECTIONS[cleanRef]) {
           cleanRef = BOOK_REFERENCE_CORRECTIONS[cleanRef];
+          console.log(`📖 [Bible Reader]: Referência corrigida por BOOK_REFERENCE_CORRECTIONS: "${cleanRef}"`);
         }
 
+        // Separação do nome do livro e da passagem numérica (capítulos / versículos)
         let bookPt = "";
-        let bookEn = "";
+        let passage = "";
 
-        for (const [pt, en] of Object.entries(BIBLE_BOOK_MAP)) {
-          if (cleanRef.startsWith(pt)) {
-            bookPt = pt;
-            bookEn = en;
-            break;
-          }
+        const refMatch = cleanRef.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ\s]+?)\s*(\d+.*)?$/);
+        if (refMatch) {
+          bookPt = refMatch[1].trim();
+          passage = refMatch[2]?.trim() || "1";
+        } else {
+          bookPt = cleanRef;
+          passage = "1";
         }
 
-        if (!bookEn) throw new Error("Livro não identificado.");
+        const bookInfo = lookupBookInfo(bookPt);
+        console.log(`🔍 [Bible Reader Diagnóstico]: Livro: "${bookPt}" -> Info Canônica:`, bookInfo, `| Passagem: "${passage}"`);
 
-        // Lógica aprimorada de parser para evitar o erro "too many chapters"
-        // Formatos tratados: "Salmos 1-9", "Salmos 117-119:72", "Gênesis 1-3"
-        const rangeRegex = new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?\\s*(?:-|–|—)\\s*(\\d+)(?::(\\d+))?`);
-        const rangeMatch = cleanRef.match(rangeRegex);
+        if (!bookInfo) {
+          throw new Error(`Livro não identificado: "${bookPt}"`);
+        }
+
+        // Formatos de intervalo tratados: "1-3", "117-119:72", etc.
+        const rangeRegex = /^(\d+)(?::(\d+))?\s*(?:-|–|—)\s*(\d+)(?::(\d+))?$/;
+        const rangeMatch = passage.match(rangeRegex);
 
         let finalVerses: Verse[] = [];
 
@@ -400,57 +713,52 @@ const ReadingReader: React.FC<{
           const endChapter = rangeMatch[3] ? parseInt(rangeMatch[3]) : startChapter;
           const endVerse = rangeMatch[4] ? parseInt(rangeMatch[4]) : null;
 
-          // SEMPRE buscamos capítulo por capítulo se houver um intervalo, 
-          // isso garante que nunca estouraremos o limite de "too many chapters" do backend.
+          // Busca capítulo por capítulo para garantir compatibilidade e nunca estourar limites
           for (let ch = startChapter; ch <= endChapter; ch++) {
-            let currentQuery = `${bookEn} ${ch}`;
-            
-            // Caso especial: início em versículo específico no primeiro capítulo do intervalo
+            let chVerses = await fetchChapterVerses(bookInfo, ch);
+
+            // Filtragem de versículos nos limites do intervalo
             if (ch === startChapter && startVerse) {
               if (startChapter === endChapter && endVerse) {
-                // Intervalo de versículos no mesmo capítulo: Genesis 1:1-5
-                currentQuery += `:${startVerse}-${endVerse}`;
+                chVerses = chVerses.filter(v => v.verse >= startVerse && v.verse <= endVerse);
               } else {
-                // Início no meio do capítulo mas continua para outros: Genesis 1:10-FIM
-                currentQuery += `:${startVerse}-999`; // bible-api entende 999 como "até o fim"
+                chVerses = chVerses.filter(v => v.verse >= startVerse);
               }
-            } 
-            // Caso especial: fim em versículo específico no último capítulo do intervalo
-            else if (ch === endChapter && endVerse) {
-              currentQuery += `:1-${endVerse}`;
+            } else if (ch === endChapter && endVerse) {
+              chVerses = chVerses.filter(v => v.verse <= endVerse);
             }
 
-            try {
-              const part = await fetchPart(currentQuery);
-              finalVerses = [...finalVerses, ...part];
-            } catch (partErr: any) {
-              // Se falhar em um capítulo específico, lançamos o erro
-              throw partErr;
-            }
+            finalVerses = [...finalVerses, ...chVerses];
           }
         } else {
-          // Caso seja apenas um capítulo: "João 3" ou "João 3:16"
-          const singleMatch = cleanRef.match(new RegExp(`${bookPt}\\s+(\\d+)(?::(\\d+))?`));
+          // Caso seja apenas um capítulo: "Lucas 1" ou "João 3:16" ou "Judas 1"
+          const singleMatch = passage.match(/^(\d+)(?::(\d+)(?:-(\d+))?)?$/);
           if (singleMatch) {
-            const ch = singleMatch[1];
-            const vs = singleMatch[2] ? `:${singleMatch[2]}` : "";
-            finalVerses = await fetchPart(`${bookEn} ${ch}${vs}`);
+            const ch = parseInt(singleMatch[1]);
+            const startV = singleMatch[2] ? parseInt(singleMatch[2]) : null;
+            const endV = singleMatch[3] ? parseInt(singleMatch[3]) : startV;
+            let chVerses = await fetchChapterVerses(bookInfo, ch);
+            if (startV) {
+              chVerses = chVerses.filter(v => v.verse >= startV && (!endV || v.verse <= endV));
+            }
+            finalVerses = chVerses;
           } else {
-            // Fallback para referências que o Regex não capturou (simples)
-            const apiRef = cleanRef.replace(bookPt, bookEn);
-            finalVerses = await fetchPart(apiRef);
+            const chNum = parseInt(passage) || 1;
+            finalVerses = await fetchChapterVerses(bookInfo, chNum);
           }
         }
 
-        if (finalVerses.length === 0) throw new Error("Nenhum versículo encontrado.");
-        
+        if (finalVerses.length === 0) {
+          throw new Error("Nenhum versículo encontrado.");
+        }
+
         setContent({ reference: item.ref, text: "", verses: finalVerses });
       } catch (err: any) {
-        console.error("🚨 [Bible API Error]:", err);
+        console.error(`🚨 [Bible API Error - Falha Geral]: Referência: "${item.ref}"`, err);
         if (err.message && (err.message.includes("404") || err.message.toLowerCase().includes("not found"))) {
-           setError("Texto não encontrado para esta referência na tradução escolhida.");
+          setError("Texto não encontrado para esta referência na tradução escolhida.");
         } else {
-           setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
+          setError("Erro ao carregar o texto bíblico. Verifique sua conexão.");
         }
       } finally {
         setLoading(false);

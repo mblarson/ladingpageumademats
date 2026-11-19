@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShoppingBag, Tag, Plus, X, Check, Trash2, DollarSign, 
+  ShoppingBag, ShoppingCart, Search, Tag, Plus, Minus, X, Check, Trash2, DollarSign, 
   Smartphone, Calendar, TrendingUp, Share2, Power, Store, 
   ChevronRight, ArrowLeft, RefreshCw, Layers, Edit3, ShieldAlert, Copy, CheckCircle2, History, Menu, BarChart
 } from 'lucide-react';
@@ -80,6 +80,14 @@ export interface EstoqueVendaItem {
   category?: string;
 }
 
+export interface CartItem {
+  key: string; // `${product_id}__${size || 'UNIQUE'}`
+  produto: EstoqueProduto;
+  size?: string;
+  variation_id?: string;
+  quantity: number;
+}
+
 // Default Seed Products
 const INITIAL_PRODUCTS_SEED = [
   // VESTUÁRIO
@@ -119,7 +127,6 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   // Modal States
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showAbrirLojaModal, setShowAbrirLojaModal] = useState(false);
-  const [showVendaModal, setShowVendaModal] = useState<{ produto: EstoqueProduto; size?: string } | null>(null);
   const [showDetalhesVendasModal, setShowDetalhesVendasModal] = useState(false);
   const [showFecharLojaModal, setShowFecharLojaModal] = useState(false);
   const [showConfirmCancelVenda, setShowConfirmCancelVenda] = useState<EstoqueVenda | null>(null);
@@ -130,10 +137,14 @@ export const EstoqueUmadematsAdmin: React.FC<{ onBack?: () => void }> = ({ onBac
   const [productForSizes, setProductForSizes] = useState<EstoqueProduto | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Expanded clothes product sizes and checkout confirmation
+  // Expanded clothes product sizes and multi-item Cart checkout
   const [expandedProductSizes, setExpandedProductSizes] = useState<string | null>(null);
-  const [vendaQuantidade, setVendaQuantidade] = useState<number>(1);
-  const [confirmVendaData, setConfirmVendaData] = useState<{ produto: EstoqueProduto; size?: string; paymentMethod: 'PIX' | 'CARTÃO'; quantidade: number } | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [showAddMorePicker, setShowAddMorePicker] = useState(false);
+  const [cartSearchTerm, setCartSearchTerm] = useState('');
+  const [pickerExpandedProdId, setPickerExpandedProdId] = useState<string | null>(null);
+  const [confirmVendaData, setConfirmVendaData] = useState<{ items: CartItem[]; paymentMethod: 'PIX' | 'CARTÃO'; total: number } | null>(null);
 
   // Edit Product Form State
   const [editProdName, setEditProdName] = useState('');
@@ -482,10 +493,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
   }, []);
 
   useEffect(() => {
-    if (showVendaModal) {
-      setVendaQuantidade(1);
+    if (!activeEvento) {
+      setCartItems([]);
+      setShowCartModal(false);
+      setShowAddMorePicker(false);
+      setConfirmVendaData(null);
     }
-  }, [showVendaModal?.produto?.id, showVendaModal?.size]);
+  }, [activeEvento]);
 
   const copySQL = () => {
     navigator.clipboard.writeText(SQL_CODE);
@@ -1038,147 +1052,334 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
     }
   };
 
-  const handleUpdateQty = (amount: number) => {
-    if (!showVendaModal) return;
-    const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
-      ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
-      : (showVendaModal.produto.initial_quantity || 0);
+  // -------------------------------------------------------------
+  // CART HELPERS & STOCK VALIDATION (VENDA COM MÚLTIPLOS ITENS)
+  // -------------------------------------------------------------
+  const getCartItemKey = (productId: string, size?: string) => `${productId}__${size || 'UNIQUE'}`;
 
-    setVendaQuantidade(prev => {
-      const newQty = prev + amount;
-      if (newQty < 1) return 1;
-      if (newQty > availableStock) {
-        showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
-        return availableStock;
+  const getAvailableStock = (produto: EstoqueProduto, size?: string): number => {
+    const latestProd = produtos.find(p => p.id === produto.id) || produto;
+    if (latestProd.category === 'VESTUÁRIO' && size) {
+      return latestProd.variations?.find(v => v.size === size)?.quantity || 0;
+    }
+    return latestProd.initial_quantity || 0;
+  };
+
+  const getCartQuantityFor = (productId: string, size?: string): number => {
+    const key = getCartItemKey(productId, size);
+    return cartItems.find(ci => ci.key === key)?.quantity || 0;
+  };
+
+  const resolvedCartItems = useMemo<CartItem[]>(() => {
+    return cartItems.map(ci => {
+      const latestProd = produtos.find(p => p.id === ci.produto.id) || ci.produto;
+      const matchedVar = latestProd.category === 'VESTUÁRIO' && ci.size
+        ? latestProd.variations?.find(v => v.size === ci.size)
+        : undefined;
+      return {
+        ...ci,
+        produto: latestProd,
+        variation_id: matchedVar?.id || ci.variation_id
+      };
+    });
+  }, [cartItems, produtos]);
+
+  const cartTotal = useMemo(() => {
+    return resolvedCartItems.reduce((sum, item) => sum + item.produto.price * Math.max(0, item.quantity), 0);
+  }, [resolvedCartItems]);
+
+  const cartTotalUnits = useMemo(() => {
+    return resolvedCartItems.reduce((sum, item) => sum + Math.max(0, item.quantity), 0);
+  }, [resolvedCartItems]);
+
+  const handleAddToCart = (produto: EstoqueProduto, size?: string, openModal = true) => {
+    if (!activeEvento) {
+      showToast("Abra a loja/caixa para iniciar vendas.", "error");
+      return;
+    }
+
+    const latestProd = produtos.find(p => p.id === produto.id) || produto;
+    const availableStock = getAvailableStock(latestProd, size);
+
+    if (availableStock <= 0) {
+      showToast("Produto sem estoque disponível.", "error");
+      return;
+    }
+
+    const key = getCartItemKey(latestProd.id, size);
+    const matchedVar = latestProd.category === 'VESTUÁRIO' && size
+      ? latestProd.variations?.find(v => v.size === size)
+      : undefined;
+
+    const existing = cartItems.find(ci => ci.key === key);
+    if (existing) {
+      if (existing.quantity + 1 > availableStock) {
+        showToast(`Estoque insuficiente! Máximo disponível para ${latestProd.name}${size ? ` (${size})` : ''}: ${availableStock}`, "error");
+        if (openModal) setShowCartModal(true);
+        return;
       }
-      return newQty;
+      setCartItems(prev => prev.map(ci => ci.key === key ? { ...ci, produto: latestProd, quantity: ci.quantity + 1 } : ci));
+      showToast(`+1 ${latestProd.name}${size ? ` (${size})` : ''} adicionado ao carrinho.`, "info");
+    } else {
+      setCartItems(prev => [
+        ...prev,
+        {
+          key,
+          produto: latestProd,
+          size,
+          variation_id: matchedVar?.id,
+          quantity: 1
+        }
+      ]);
+      if (!openModal) {
+        showToast(`${latestProd.name}${size ? ` (${size})` : ''} adicionado ao carrinho.`, "success");
+      }
+    }
+
+    if (openModal) {
+      setShowAddMorePicker(false);
+      setPickerExpandedProdId(null);
+      setShowCartModal(true);
+    }
+  };
+
+  const handleUpdateCartItemQty = (key: string, amount: number) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.key !== key) return item;
+      const availableStock = getAvailableStock(item.produto, item.size);
+      const nextQty = item.quantity + amount;
+      if (nextQty < 1) return { ...item, quantity: 1 };
+      if (nextQty > availableStock) {
+        showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
+        return { ...item, quantity: availableStock };
+      }
+      return { ...item, quantity: nextQty };
+    }));
+  };
+
+  const handleCartQtyInputChange = (key: string, val: string) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.key !== key) return item;
+      const availableStock = getAvailableStock(item.produto, item.size);
+      if (val === '') {
+        return { ...item, quantity: 0 };
+      }
+      const parsed = parseInt(val, 10);
+      if (isNaN(parsed) || parsed < 1) {
+        return { ...item, quantity: 1 };
+      }
+      if (parsed > availableStock) {
+        showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
+        return { ...item, quantity: availableStock };
+      }
+      return { ...item, quantity: parsed };
+    }));
+  };
+
+  const handleCartQtyBlur = (key: string) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.key !== key) return item;
+      if (!item.quantity || item.quantity < 1) {
+        return { ...item, quantity: 1 };
+      }
+      return item;
+    }));
+  };
+
+  const handleRemoveFromCart = (key: string) => {
+    setCartItems(prev => prev.filter(item => item.key !== key));
+  };
+
+  // -------------------------------------------------------------
+  // SALES TRANSACTIONS (VENDER CARRINHO, BAIXA CONSISTENTE DE ESTOQUE)
+  // -------------------------------------------------------------
+  const handlePrepareConfirmVenda = (paymentMethod: 'PIX' | 'CARTÃO') => {
+    if (!activeEvento) {
+      showToast("A loja/caixa precisa estar aberta para registrar vendas.", "error");
+      return;
+    }
+    if (resolvedCartItems.length === 0) {
+      showToast("Adicione pelo menos um item ao carrinho.", "error");
+      return;
+    }
+
+    const normalizedItems: CartItem[] = [];
+    for (const item of resolvedCartItems) {
+      const qty = Math.max(1, item.quantity || 1);
+      const availableStock = getAvailableStock(item.produto, item.size);
+      if (availableStock <= 0) {
+        showToast(`O item "${item.produto.name}${item.size ? ` (${item.size})` : ''}" está sem estoque disponível.`, "error");
+        return;
+      }
+      if (qty > availableStock) {
+        showToast(`Estoque insuficiente para "${item.produto.name}${item.size ? ` (${item.size})` : ''}". Disponível: ${availableStock}.`, "error");
+        return;
+      }
+      normalizedItems.push({ ...item, quantity: qty });
+    }
+
+    const total = normalizedItems.reduce((sum, item) => sum + item.produto.price * item.quantity, 0);
+    setConfirmVendaData({
+      items: normalizedItems,
+      paymentMethod,
+      total
     });
   };
 
-  const handleQtyInputChange = (val: string) => {
-    if (!showVendaModal) return;
-    const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
-      ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
-      : (showVendaModal.produto.initial_quantity || 0);
-
-    if (val === '') {
-      setVendaQuantidade(0);
-      return;
-    }
-    const parsed = parseInt(val, 10);
-    if (isNaN(parsed) || parsed < 1) {
-      setVendaQuantidade(1);
-    } else if (parsed > availableStock) {
-      showToast(`Quantidade superior ao estoque disponível! Máximo: ${availableStock}`, "error");
-      setVendaQuantidade(availableStock);
-    } else {
-      setVendaQuantidade(parsed);
-    }
-  };
-
-  // -------------------------------------------------------------
-  // SALES TRANSACTIONS (VENDER, BAIXA DIRETA DE ESTOQUE)
-  // -------------------------------------------------------------
   const handleRegisterVenda = async (payment_method: 'PIX' | 'CARTÃO') => {
-    if (!activeEvento || !showVendaModal) return;
-    const { produto, size } = showVendaModal;
-    const chosenQuantity = confirmVendaData?.quantidade || vendaQuantidade || 1;
+    const itemsToSell = confirmVendaData?.items || resolvedCartItems;
+    if (!activeEvento || itemsToSell.length === 0) return;
 
     setLoading(true);
 
     try {
+      const totalSalePrice = itemsToSell.reduce((sum, item) => sum + item.produto.price * item.quantity, 0);
+
       if (dbMode === 'SUPABASE') {
-        // Double Check stock on clothes
-        let selectedVarId = undefined;
-        if (produto.category === 'VESTUÁRIO' && size) {
-          const matchedVar = produto.variations?.find(v => v.size === size);
-          if (!matchedVar || matchedVar.quantity < chosenQuantity) {
-            showToast(`Estoque insuficiente! Apenas ${matchedVar?.quantity || 0} disponível.`, "error");
-            setLoading(false);
-            return;
+        // 1. Validate real-time stock in Supabase for EVERY item before creating the sale
+        const verifiedItems: Array<{
+          cartItem: CartItem;
+          variationId?: string;
+          currentDbQty: number;
+        }> = [];
+
+        for (const item of itemsToSell) {
+          if (item.produto.category === 'VESTUÁRIO' && item.size) {
+            const matchedVar = item.produto.variations?.find(v => v.size === item.size);
+            if (!matchedVar) {
+              showToast(`Tamanho ${item.size} de "${item.produto.name}" não encontrado no estoque.`, "error");
+              setLoading(false);
+              return;
+            }
+            const { data: freshVar, error: varCheckErr } = await supabase
+              .from('estoque_variacoes')
+              .select('id, quantity')
+              .eq('id', matchedVar.id)
+              .single();
+
+            if (varCheckErr || !freshVar) {
+              showToast(`Erro ao validar estoque de "${item.produto.name} (${item.size})".`, "error");
+              setLoading(false);
+              return;
+            }
+            if (freshVar.quantity < item.quantity) {
+              showToast(`Estoque insuficiente para "${item.produto.name} (${item.size})". Apenas ${freshVar.quantity} disponível.`, "error");
+              setLoading(false);
+              return;
+            }
+            verifiedItems.push({
+              cartItem: item,
+              variationId: freshVar.id,
+              currentDbQty: freshVar.quantity
+            });
+          } else {
+            const { data: freshProd, error: prodCheckErr } = await supabase
+              .from('estoque_produtos')
+              .select('id, initial_quantity')
+              .eq('id', item.produto.id)
+              .single();
+
+            if (prodCheckErr || !freshProd) {
+              showToast(`Erro ao validar estoque de "${item.produto.name}".`, "error");
+              setLoading(false);
+              return;
+            }
+            if (freshProd.initial_quantity < item.quantity) {
+              showToast(`Estoque insuficiente para "${item.produto.name}". Apenas ${freshProd.initial_quantity} disponível.`, "error");
+              setLoading(false);
+              return;
+            }
+            verifiedItems.push({
+              cartItem: item,
+              variationId: undefined,
+              currentDbQty: freshProd.initial_quantity
+            });
           }
-          selectedVarId = matchedVar.id;
-        } else if (produto.category === 'ITENS' && produto.initial_quantity < chosenQuantity) {
-          showToast(`Estoque insuficiente! Apenas ${produto.initial_quantity || 0} disponível.`, "error");
-          setLoading(false);
-          return;
         }
 
-        // 1. Insert into Sales
+        // 2. Insert 1 parent record into estoque_vendas
         const { data: dbSale, error: saleErr } = await supabase
           .from('estoque_vendas')
-          .insert([{ event_id: activeEvento.id, total_price: produto.price * chosenQuantity, payment_method, status: 'CONCLUIDA' }])
+          .insert([{ event_id: activeEvento.id, total_price: totalSalePrice, payment_method, status: 'CONCLUIDA' }])
           .select()
           .single();
 
         if (saleErr) throw saleErr;
 
-        // 2. Insert into Sale items
         if (dbSale) {
-          const { error: itemErr } = await supabase
+          // 3. Batch insert all items into estoque_venda_itens
+          const vendaItensPayload = verifiedItems.map(({ cartItem, variationId }) => ({
+            sale_id: dbSale.id,
+            product_id: cartItem.produto.id,
+            variation_id: variationId || null,
+            quantity: cartItem.quantity,
+            price_at_sale: cartItem.produto.price,
+            size: cartItem.size || null
+          }));
+
+          const { data: insertedSaleItems, error: itemErr } = await supabase
             .from('estoque_venda_itens')
-            .insert([{
-              sale_id: dbSale.id,
-              product_id: produto.id,
-              variation_id: selectedVarId,
-              quantity: chosenQuantity,
-              price_at_sale: produto.price,
-              size
-            }]);
+            .insert(vendaItensPayload)
+            .select();
 
           if (itemErr) throw itemErr;
 
-          // 3. Subtract stock manually inside Supabase (if trigger is not configured)
-          if (produto.category === 'VESTUÁRIO' && selectedVarId) {
-            const currentQty = produto.variations?.find(v => v.id === selectedVarId)?.quantity || 0;
-            await supabase
-              .from('estoque_variacoes')
-              .update({ quantity: currentQty - chosenQuantity })
-              .eq('id', selectedVarId);
-          } else {
-            const currentQty = produto.initial_quantity || 0;
-            await supabase
-              .from('estoque_produtos')
-              .update({ initial_quantity: currentQty - chosenQuantity })
-              .eq('id', produto.id);
+          // 4. Update stock in Supabase for every item in the sale
+          for (const { cartItem, variationId, currentDbQty } of verifiedItems) {
+            if (cartItem.produto.category === 'VESTUÁRIO' && variationId) {
+              const { error: updVarErr } = await supabase
+                .from('estoque_variacoes')
+                .update({ quantity: Math.max(0, currentDbQty - cartItem.quantity) })
+                .eq('id', variationId);
+              if (updVarErr) throw updVarErr;
+            } else {
+              const { error: updProdErr } = await supabase
+                .from('estoque_produtos')
+                .update({ initial_quantity: Math.max(0, currentDbQty - cartItem.quantity) })
+                .eq('id', cartItem.produto.id);
+              if (updProdErr) throw updProdErr;
+            }
           }
 
-          // Update local state instantly for zero-latency screen refresh
+          // 5. Update local state instantly for zero-latency screen refresh
           const updatedProducts = produtos.map(p => {
-            if (p.id === produto.id) {
-              if (p.category === 'VESTUÁRIO') {
-                const updatedVars = (p.variations || []).map(v => {
-                  if (v.size === size) {
-                    return { ...v, quantity: Math.max(0, v.quantity - chosenQuantity) };
-                  }
-                  return v;
-                });
-                const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
-                return { ...p, variations: updatedVars, initial_quantity: sumQty };
-              } else {
-                return { ...p, initial_quantity: Math.max(0, p.initial_quantity - chosenQuantity) };
-              }
+            const matchingCartItems = itemsToSell.filter(ci => ci.produto.id === p.id);
+            if (matchingCartItems.length === 0) return p;
+
+            if (p.category === 'VESTUÁRIO') {
+              const updatedVars = (p.variations || []).map(v => {
+                const match = matchingCartItems.find(ci => ci.size === v.size);
+                if (match) {
+                  return { ...v, quantity: Math.max(0, v.quantity - match.quantity) };
+                }
+                return v;
+              });
+              const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+              return { ...p, variations: updatedVars, initial_quantity: sumQty };
+            } else {
+              const totalDeduct = matchingCartItems.reduce((sum, ci) => sum + ci.quantity, 0);
+              return { ...p, initial_quantity: Math.max(0, p.initial_quantity - totalDeduct) };
             }
-            return p;
           });
 
           const newSale: EstoqueVenda = {
             id: dbSale.id,
             event_id: activeEvento.id,
-            total_price: produto.price * chosenQuantity,
+            total_price: totalSalePrice,
             payment_method,
             status: 'CONCLUIDA',
             created_at: dbSale.created_at || new Date().toISOString(),
-            items: [{
-              id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            items: verifiedItems.map(({ cartItem, variationId }, idx) => ({
+              id: insertedSaleItems?.[idx]?.id || `sale-item-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
               sale_id: dbSale.id,
-              product_id: produto.id,
-              quantity: chosenQuantity,
-              price_at_sale: produto.price,
-              size,
-              product_name: produto.name,
-              category: produto.category
-            }]
+              product_id: cartItem.produto.id,
+              variation_id: variationId,
+              quantity: cartItem.quantity,
+              price_at_sale: cartItem.produto.price,
+              size: cartItem.size,
+              product_name: cartItem.produto.name,
+              category: cartItem.produto.category
+            }))
           };
 
           setProdutos(updatedProducts);
@@ -1186,57 +1387,79 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
         }
       } else {
         // LOCAL DB WORKFLOW
-        // 1. Subtract Stock Local
-        const updatedProducts = produtos.map(p => {
-          if (p.id === produto.id) {
-            if (p.category === 'VESTUÁRIO') {
-              const updatedVars = (p.variations || []).map(v => {
-                if (v.size === size) {
-                  return { ...v, quantity: Math.max(0, v.quantity - chosenQuantity) };
-                }
-                return v;
-              });
-              const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
-              return { ...p, variations: updatedVars, initial_quantity: sumQty };
-            } else {
-              return { ...p, initial_quantity: Math.max(0, p.initial_quantity - chosenQuantity) };
-            }
+        // 1. Validate all items first
+        for (const item of itemsToSell) {
+          const available = getAvailableStock(item.produto, item.size);
+          if (available < item.quantity) {
+            showToast(`Estoque insuficiente para "${item.produto.name}${item.size ? ` (${item.size})` : ''}". Apenas ${available} disponível.`, "error");
+            setLoading(false);
+            return;
           }
-          return p;
+        }
+
+        // 2. Subtract Stock Local across all items
+        const updatedProducts = produtos.map(p => {
+          const matchingCartItems = itemsToSell.filter(ci => ci.produto.id === p.id);
+          if (matchingCartItems.length === 0) return p;
+
+          if (p.category === 'VESTUÁRIO') {
+            const updatedVars = (p.variations || []).map(v => {
+              const match = matchingCartItems.find(ci => ci.size === v.size);
+              if (match) {
+                return { ...v, quantity: Math.max(0, v.quantity - match.quantity) };
+              }
+              return v;
+            });
+            const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+            return { ...p, variations: updatedVars, initial_quantity: sumQty };
+          } else {
+            const totalDeduct = matchingCartItems.reduce((sum, ci) => sum + ci.quantity, 0);
+            return { ...p, initial_quantity: Math.max(0, p.initial_quantity - totalDeduct) };
+          }
         });
 
-        // 2. Create Sale
+        // 3. Create Sale with all items
         const saleId = `sale-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const newSale: EstoqueVenda = {
           id: saleId,
           event_id: activeEvento.id,
-          total_price: produto.price * chosenQuantity,
+          total_price: totalSalePrice,
           payment_method,
           status: 'CONCLUIDA',
           created_at: new Date().toISOString(),
-          items: [{
-            id: `sale-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          items: itemsToSell.map((cartItem, idx) => ({
+            id: `sale-item-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
             sale_id: saleId,
-            product_id: produto.id,
-            quantity: chosenQuantity,
-            price_at_sale: produto.price,
-            size,
-            product_name: produto.name,
-            category: produto.category
-          }]
+            product_id: cartItem.produto.id,
+            variation_id: cartItem.variation_id,
+            quantity: cartItem.quantity,
+            price_at_sale: cartItem.produto.price,
+            size: cartItem.size,
+            product_name: cartItem.produto.name,
+            category: cartItem.produto.category
+          }))
         };
 
         const updatedSales = [newSale, ...vendas];
         saveLocalStorageData(updatedProducts, eventos, updatedSales);
-        
+
         // Update states directly
         setProdutos(updatedProducts);
         setVendas(updatedSales);
       }
 
-      setSuccessModalMessage("Venda registrada com sucesso!");
+      setCartItems([]);
+      setShowCartModal(false);
+      setShowAddMorePicker(false);
+      setPickerExpandedProdId(null);
+      setCartSearchTerm('');
+      setConfirmVendaData(null);
+      setSuccessModalMessage(
+        itemsToSell.length > 1
+          ? `Venda com ${itemsToSell.length} itens registrada com sucesso!`
+          : "Venda registrada com sucesso!"
+      );
       loadData(true);
-      setShowVendaModal(null);
     } catch (err: any) {
       showToast("Erro ao realizar venda: " + err.message, "error");
     } finally {
@@ -1293,27 +1516,29 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
         }
       } else {
         // LOCAL DB WORKFLOW
-        // Restore quantities to products list
-        const saleItem = sale.items && sale.items[0];
+        // Restore quantities for ALL items in the sale
+        const saleItems = sale.items || [];
         
         let restoredProducts = [...produtos];
-        if (saleItem) {
+        if (saleItems.length > 0) {
           restoredProducts = produtos.map(p => {
-            if (p.id === saleItem.product_id) {
-              if (p.category === 'VESTUÁRIO') {
-                const updatedVars = (p.variations || []).map(v => {
-                  if (v.size === saleItem.size) {
-                    return { ...v, quantity: v.quantity + saleItem.quantity };
-                  }
-                  return v;
-                });
-                const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
-                return { ...p, variations: updatedVars, initial_quantity: sumQty };
-              } else {
-                return { ...p, initial_quantity: p.initial_quantity + saleItem.quantity };
-              }
+            const matchingItems = saleItems.filter(si => si.product_id === p.id);
+            if (matchingItems.length === 0) return p;
+
+            if (p.category === 'VESTUÁRIO') {
+              const updatedVars = (p.variations || []).map(v => {
+                const match = matchingItems.find(si => si.size === v.size);
+                if (match) {
+                  return { ...v, quantity: v.quantity + match.quantity };
+                }
+                return v;
+              });
+              const sumQty = updatedVars.reduce((sum, current) => sum + current.quantity, 0);
+              return { ...p, variations: updatedVars, initial_quantity: sumQty };
+            } else {
+              const totalRestore = matchingItems.reduce((sum, si) => sum + si.quantity, 0);
+              return { ...p, initial_quantity: p.initial_quantity + totalRestore };
             }
-            return p;
           });
         }
 
@@ -1838,12 +2063,61 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                 </div>
               </div>
 
+              {/* ACTIVE CART BANNER */}
+              {cartItems.length > 0 && (
+                <div className="bg-[#111827] border-2 border-[#75BCE8] text-white p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#75BCE8] text-[#111827] flex items-center justify-center shrink-0">
+                      <ShoppingCart size={20} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#75BCE8]">
+                        CARRINHO DA VENDA ATUAL ({cartTotalUnits} {cartTotalUnits === 1 ? 'unidade' : 'unidades'})
+                      </p>
+                      <p className="text-lg font-mono font-black leading-tight">
+                        Total: R$ {cartTotal.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => setCartItems([])}
+                      className="px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Limpar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddMorePicker(false);
+                        setShowCartModal(true);
+                      }}
+                      className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-[#75BCE8] hover:bg-white text-[#111827] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    >
+                      <ShoppingCart size={14} />
+                      Ver Carrinho / Finalizar
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* POS ITEMS GRID */}
               <div className="space-y-3">
-                <h3 className="font-montserrat text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-montserrat text-lg uppercase tracking-wider text-[#111827] font-bold">POS Rápido: Venda Balcão</h3>
+                  {cartItems.length > 0 && (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#111827] bg-[#75BCE8]/25 border border-[#75BCE8]/50 px-2.5 py-1 rounded-full">
+                      {resolvedCartItems.length} {resolvedCartItems.length === 1 ? 'item distinto' : 'itens distintos'} no carrinho
+                    </span>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {uniqueProdutos.map(p => {
                     const totalEstoque = (p as any).itemsCount;
+                    const qtyInCartForProduct = resolvedCartItems
+                      .filter(ci => ci.produto.id === p.id)
+                      .reduce((sum, ci) => sum + ci.quantity, 0);
 
                     return (
                       <div 
@@ -1851,14 +2125,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                         className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col justify-between hover:border-[#111827]/40 transition-all shadow-sm group"
                       >
                         <div className="mb-3">
-                          <div className="flex justify-between items-start mb-1.5">
+                          <div className="flex justify-between items-start mb-1.5 gap-2">
                             <span className="text-[8px] font-bold uppercase tracking-wider font-sans bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{p.category}</span>
                             <span className={`text-[9px] font-extrabold uppercase tracking-wider ${totalEstoque > 10 ? 'text-green-600' : totalEstoque > 0 ? 'text-amber-600' : 'text-red-500'}`}>
                               {totalEstoque > 0 ? `${totalEstoque} em Estoque` : 'ESGOTADO'}
                             </span>
                           </div>
                           <h4 className="font-montserrat text-sm uppercase text-slate-800 group-hover:text-[#111827] font-bold transition-colors leading-snug truncate">{p.name}</h4>
-                          <p className="text-lg font-mono text-[#111827] font-black mt-1 tracking-tighter">R$ {p.price.toFixed(2).replace('.', ',')}</p>
+                          <div className="flex items-center justify-between mt-1 gap-2">
+                            <p className="text-lg font-mono text-[#111827] font-black tracking-tighter">R$ {p.price.toFixed(2).replace('.', ',')}</p>
+                            {qtyInCartForProduct > 0 && (
+                              <span className="text-[9px] font-black uppercase bg-[#75BCE8]/25 text-[#111827] px-2 py-0.5 rounded-full border border-[#75BCE8]/40">
+                                {qtyInCartForProduct} no carrinho
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* RENDER VARIATIONS OR SELL INSTANT BUTTON */}
@@ -1878,21 +2159,24 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                                 {p.variations && p.variations.some(v => v.quantity > 0) ? (
                                   p.variations
                                     .filter(v => v.quantity > 0)
-                                    .map(v => (
-                                      <button
-                                        key={`${p.id}-${v.size}`}
-                                        onClick={() => {
-                                          setShowVendaModal({ produto: p, size: v.size });
-                                          setExpandedProductSizes(null);
-                                        }}
-                                        className="p-2 rounded-xl bg-white border border-slate-300 hover:border-[#111827] hover:bg-[#111827]/10 text-[#111827] text-[11px] uppercase font-bold flex flex-col items-center justify-center transition-all"
-                                      >
-                                        <span>{v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}</span>
-                                        <span className="text-[9px] font-mono mt-0.5 font-bold text-slate-500">
-                                          {v.quantity} un
-                                        </span>
-                                      </button>
-                                    ))
+                                    .map(v => {
+                                      const inCartQty = getCartQuantityFor(p.id, v.size);
+                                      return (
+                                        <button
+                                          key={`${p.id}-${v.size}`}
+                                          onClick={() => {
+                                            handleAddToCart(p, v.size, true);
+                                            setExpandedProductSizes(null);
+                                          }}
+                                          className={`p-2 rounded-xl border text-[#111827] text-[11px] uppercase font-bold flex flex-col items-center justify-center transition-all ${inCartQty > 0 ? 'bg-[#75BCE8]/20 border-[#111827]' : 'bg-white border-slate-300 hover:border-[#111827] hover:bg-[#111827]/10'}`}
+                                        >
+                                          <span>{v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}</span>
+                                          <span className="text-[9px] font-mono mt-0.5 font-bold text-slate-500">
+                                            {v.quantity} un
+                                          </span>
+                                        </button>
+                                      );
+                                    })
                                 ) : (
                                   <div className="col-span-3 p-2 text-center text-[10px] text-slate-400 uppercase italic font-bold">
                                     Sem estoque disponível
@@ -1907,17 +2191,17 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                               className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#111827] text-white hover:bg-[#111827]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
                             >
                               <ShoppingBag size={14} />
-                              VENDER ITEM
+                              {qtyInCartForProduct > 0 ? 'ADICIONAR OUTRO TAM.' : 'VENDER ITEM'}
                             </button>
                           )
                         ) : (
                           <button
                             disabled={totalEstoque <= 0}
-                            onClick={() => setShowVendaModal({ produto: p })}
+                            onClick={() => handleAddToCart(p, undefined, true)}
                             className={`w-full py-3.5 rounded-2xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 transition-all ${totalEstoque > 0 ? 'bg-[#111827] text-white hover:bg-[#111827]/95 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 border border-slate-355 cursor-not-allowed'}`}
                           >
                             <ShoppingBag size={14} />
-                            VENDER ITEM
+                            {qtyInCartForProduct > 0 ? 'ADICIONAR +1' : 'VENDER ITEM'}
                           </button>
                         )}
                       </div>
@@ -2328,114 +2612,309 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
           </div>
         )}
 
-        {/* MAKE SALE / CHOOSE PAYMENT INBALCÃO MODAL */}
-        {showVendaModal && (() => {
-          const availableStock = showVendaModal.produto.category === 'VESTUÁRIO' && showVendaModal.size
-            ? (showVendaModal.produto.variations?.find(v => v.size === showVendaModal.size)?.quantity || 0)
-            : (showVendaModal.produto.initial_quantity || 0);
+        {/* MULTI-ITEM CART & PAYMENT MODAL */}
+        {showCartModal && activeEvento && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCartModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-lg rounded-[2rem] shadow-md flex flex-col max-h-[90vh] overflow-hidden text-left">
+              {/* Header */}
+              <div className="p-5 border-b border-[#111827]/10 bg-white/70 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#111827] text-white flex items-center justify-center shrink-0">
+                    <ShoppingCart size={20} />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block leading-none mb-1">CAIXA ABERTO: {activeEvento.event_name}</span>
+                    <h3 className="text-lg font-montserrat uppercase text-[#111827] leading-none font-black">
+                      CARRINHO DE VENDA
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCartModal(false)}
+                  className="text-slate-400 hover:text-[#111827] p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
+                  title="Minimizar carrinho (itens mantidos)"
+                >
+                  <X size={22} />
+                </button>
+              </div>
 
-          return (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowVendaModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 text-center shadow-md">
-                <ShoppingBag size={40} className="mx-auto text-[#111827] mb-4 animate-bounce" />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">REGISTRO DE VENDA RÁPIDA</span>
-                  <h3 className="text-xl font-montserrat uppercase text-[#111827] leading-none mt-2 font-black">{showVendaModal.produto.name}</h3>
-                  {showVendaModal.size && (
-                    <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mt-1.5">
-                      Tamanho: {showVendaModal.size}
-                    </span>
-                  )}
-                  <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-extrabold mt-2">
-                    Disponível: {availableStock} {availableStock === 1 ? 'unidade' : 'unidades'}
-                  </span>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-4">
+                {/* Action Bar: Add More Items */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddMorePicker(prev => !prev);
+                      setPickerExpandedProdId(null);
+                    }}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-1.5 border-2 transition-all ${
+                      showAddMorePicker
+                        ? 'bg-[#75BCE8]/20 border-[#111827] text-[#111827]'
+                        : 'bg-white border-dashed border-[#111827]/40 hover:border-[#111827] text-[#111827]'
+                    }`}
+                  >
+                    {showAddMorePicker ? <X size={14} /> : <Plus size={14} strokeWidth={2.5} />}
+                    {showAddMorePicker ? 'Fechar Busca de Produtos' : 'Adicionar Mais Itens'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCartModal(false)}
+                    className="py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-600 font-bold uppercase text-[10px] tracking-wider transition-colors"
+                  >
+                    Voltar à Vitrine
+                  </button>
                 </div>
 
-                {/* QUANTITY INPUT */}
-                <div className="py-4 border-y border-slate-300/60 my-4 text-center">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Quantidade</span>
-                  <div className="flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateQty(-1)}
-                      className="w-12 h-12 rounded-xl bg-white border border-slate-300 font-black text-xl text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95 shadow-sm shrink-0"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={availableStock}
-                      value={vendaQuantidade || ''}
-                      onChange={(e) => handleQtyInputChange(e.target.value)}
-                      onBlur={() => { if (!vendaQuantidade || vendaQuantidade < 1) setVendaQuantidade(1); }}
-                      className="w-20 h-12 bg-white border border-slate-300 rounded-xl text-center font-mono font-black text-lg text-[#111827] shadow-inner focus:outline-none focus:border-[#111827] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateQty(1)}
-                      className="w-12 h-12 rounded-xl bg-white border border-slate-300 font-black text-xl text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95 shadow-sm shrink-0"
-                    >
-                      +
-                    </button>
+                {/* Inline Product Picker */}
+                {showAddMorePicker && (
+                  <div className="bg-white border-2 border-[#111827]/20 rounded-2xl p-3.5 space-y-3 shadow-sm">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={cartSearchTerm}
+                        onChange={(e) => setCartSearchTerm(e.target.value)}
+                        placeholder="Buscar produto no estoque..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#111827]"
+                      />
+                    </div>
+
+                    <div className="max-h-52 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                      {uniqueProdutos
+                        .filter(p => {
+                          const totalEst = (p as any).itemsCount;
+                          if (totalEst <= 0) return false;
+                          if (!cartSearchTerm.trim()) return true;
+                          return p.name.toLowerCase().includes(cartSearchTerm.trim().toLowerCase());
+                        })
+                        .map(p => {
+                          const isVestuario = p.category === 'VESTUÁRIO';
+                          const isExpanded = pickerExpandedProdId === p.id;
+                          const inCartTotal = resolvedCartItems
+                            .filter(ci => ci.produto.id === p.id)
+                            .reduce((s, ci) => s + ci.quantity, 0);
+                          const totalEst = (p as any).itemsCount;
+                          const remainingGeneral = Math.max(0, totalEst - inCartTotal);
+
+                          return (
+                            <div key={`picker-${p.id}`} className="py-2.5 first:pt-1 last:pb-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold uppercase text-slate-800 truncate">{p.name}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[11px] font-mono font-black text-[#111827]">
+                                      R$ {p.price.toFixed(2).replace('.', ',')}
+                                    </span>
+                                    <span className="text-[9px] font-bold uppercase text-slate-400">
+                                      • Disp: {remainingGeneral} un
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {isVestuario ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setPickerExpandedProdId(isExpanded ? null : p.id)}
+                                    className="px-3 py-1.5 rounded-lg bg-[#111827] hover:bg-[#111827]/90 text-white text-[10px] font-bold uppercase tracking-wider shrink-0"
+                                  >
+                                    {isExpanded ? 'Fechar' : 'Escolher Tam.'}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={remainingGeneral <= 0}
+                                    onClick={() => handleAddToCart(p, undefined, false)}
+                                    className="px-3 py-1.5 rounded-lg bg-[#111827] hover:bg-[#111827]/90 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0"
+                                  >
+                                    <Plus size={12} /> Adicionar
+                                  </button>
+                                )}
+                              </div>
+
+                              {isVestuario && isExpanded && (
+                                <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-4 gap-1.5">
+                                  {(p.variations || [])
+                                    .filter(v => v.quantity > 0)
+                                    .map(v => {
+                                      const alreadyInCart = getCartQuantityFor(p.id, v.size);
+                                      const remSize = Math.max(0, v.quantity - alreadyInCart);
+                                      return (
+                                        <button
+                                          key={`picker-var-${p.id}-${v.size}`}
+                                          type="button"
+                                          disabled={remSize <= 0}
+                                          onClick={() => handleAddToCart(p, v.size, false)}
+                                          className="p-1.5 rounded-lg border border-slate-200 hover:border-[#111827] hover:bg-[#75BCE8]/15 disabled:opacity-40 disabled:cursor-not-allowed text-center transition-all"
+                                        >
+                                          <span className="text-[10px] font-bold uppercase text-[#111827] block">
+                                            {v.size.replace('Babylook', 'BL').replace('Infantil', 'INF')}
+                                          </span>
+                                          <span className="text-[9px] font-mono text-slate-500">
+                                            {remSize} un
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {uniqueProdutos.filter(p => (p as any).itemsCount > 0 && (!cartSearchTerm.trim() || p.name.toLowerCase().includes(cartSearchTerm.trim().toLowerCase()))).length === 0 && (
+                        <p className="text-center text-[10px] font-bold uppercase text-slate-400 py-4">Nenhum produto disponível encontrado.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Cart Items List */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                      Itens na Venda ({resolvedCartItems.length})
+                    </span>
+                    {resolvedCartItems.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setCartItems([])}
+                        className="text-[9px] font-black uppercase text-red-500 hover:text-red-600 tracking-wider"
+                      >
+                        Limpar Tudo
+                      </button>
+                    )}
+                  </div>
+
+                  {resolvedCartItems.length === 0 ? (
+                    <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-8 text-center">
+                      <ShoppingCart size={28} className="mx-auto text-slate-300 mb-2" />
+                      <p className="text-xs font-bold uppercase text-slate-400">Nenhum item no carrinho.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Clique em &ldquo;Adicionar Mais Itens&rdquo; acima ou selecione na vitrine.</p>
+                    </div>
+                  ) : (
+                    resolvedCartItems.map((item) => {
+                      const availableStock = getAvailableStock(item.produto, item.size);
+                      const itemSubtotal = item.produto.price * (item.quantity || 0);
+
+                      return (
+                        <div key={item.key} className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+                                  {item.produto.category}
+                                </span>
+                                {item.size && (
+                                  <span className="text-[9px] font-black uppercase bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 px-2 py-0.5 rounded-full">
+                                    Tam: {item.size}
+                                  </span>
+                                )}
+                                <span className="text-[9px] font-bold uppercase text-slate-400">
+                                  Disp: {availableStock} un
+                                </span>
+                              </div>
+                              <h4 className="text-sm font-montserrat font-bold uppercase text-[#111827] leading-snug">
+                                {item.produto.name}
+                              </h4>
+                              <p className="text-[11px] font-mono font-bold text-slate-500 mt-0.5">
+                                R$ {item.produto.price.toFixed(2).replace('.', ',')} / un
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFromCart(item.key)}
+                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                              title="Remover item do carrinho"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateCartItemQty(item.key, -1)}
+                                className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-300 font-black text-base text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                max={availableStock}
+                                value={item.quantity || ''}
+                                onChange={(e) => handleCartQtyInputChange(item.key, e.target.value)}
+                                onBlur={() => handleCartQtyBlur(item.key)}
+                                className="w-14 h-9 bg-white border border-slate-300 rounded-xl text-center font-mono font-black text-sm text-[#111827] focus:outline-none focus:border-[#111827] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateCartItemQty(item.key, 1)}
+                                className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-300 font-black text-base text-[#111827] flex items-center justify-center hover:bg-slate-100 active:scale-95"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block leading-none mb-0.5">Subtotal</span>
+                              <span className="text-base font-mono font-black text-[#111827]">
+                                R$ {itemSubtotal.toFixed(2).replace('.', ',')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Footer: Total & Payment Selection */}
+              <div className="p-5 border-t border-[#111827]/15 bg-white/80 shrink-0 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">
+                      TOTAL DA VENDA ({cartTotalUnits} {cartTotalUnits === 1 ? 'unid.' : 'unids.'})
+                    </span>
+                    <span className="text-2xl font-mono font-black text-[#111827]">
+                      R$ {cartTotal.toFixed(2).replace('.', ',')}
+                    </span>
                   </div>
                 </div>
 
-                <div className="font-mono text-3xl text-slate-800 font-black pb-4">
-                  Total: R$ {(showVendaModal.produto.price * (vendaQuantidade || 1)).toFixed(2).replace('.', ',')}
-                </div>
-
-                <div className="pt-4 border-t border-slate-300 space-y-4">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Meio de Pagamento Utilizado:</p>
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Finalizar com Meio de Pagamento:</p>
                   <div className="grid grid-cols-2 gap-3">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      disabled={!vendaQuantidade || vendaQuantidade < 1}
-                      onClick={() => {
-                        setConfirmVendaData({
-                          produto: showVendaModal.produto,
-                          size: showVendaModal.size,
-                          paymentMethod: 'PIX',
-                          quantidade: vendaQuantidade || 1
-                        });
-                      }}
-                      className="py-4 bg-white border border-[#EBEBEB] hover:border-[#75BCE8] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={resolvedCartItems.length === 0 || cartTotal <= 0}
+                      onClick={() => handlePrepareConfirmVenda('PIX')}
+                      className="py-3.5 bg-[#111827] hover:bg-[#111827]/90 text-white rounded-2xl flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                      <Smartphone size={20} />
+                      <Smartphone size={18} />
                       <span className="text-xs font-bold uppercase tracking-wider">Pix</span>
                     </motion.button>
 
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      disabled={!vendaQuantidade || vendaQuantidade < 1}
-                      onClick={() => {
-                        setConfirmVendaData({
-                          produto: showVendaModal.produto,
-                          size: showVendaModal.size,
-                          paymentMethod: 'CARTÃO',
-                          quantidade: vendaQuantidade || 1
-                        });
-                      }}
-                      className="py-4 bg-white border border-[#EBEBEB] hover:border-[#111827] text-[#111827] rounded-2xl flex flex-col items-center justify-center gap-1 active:bg-[#EBEBEB] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={resolvedCartItems.length === 0 || cartTotal <= 0}
+                      onClick={() => handlePrepareConfirmVenda('CARTÃO')}
+                      className="py-3.5 bg-white border-2 border-[#111827] hover:bg-slate-50 text-[#111827] rounded-2xl flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                      <DollarSign size={20} />
+                      <DollarSign size={18} />
                       <span className="text-xs font-bold uppercase tracking-wider">Cartão</span>
                     </motion.button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowVendaModal(null)}
-                    className="w-full py-2.5 text-slate-400 hover:text-[#111827] uppercase font-black text-[9px] tracking-[0.15em] block pt-4 transition-colors"
-                  >
-                    Cancelar Venda
-                  </button>
                 </div>
-              </motion.div>
-            </div>
-          );
-        })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* COMPREHENSIVE SALES CONFIRMATION OVERLAY MODAL */}
         {confirmVendaData && (
@@ -2451,68 +2930,71 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
               initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-sm rounded-[2rem] p-6 shadow-md text-left"
+              className="relative bg-[#EBEBEB] border-2 border-[#111827] w-full max-w-md rounded-[2rem] p-6 shadow-md text-left flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 shrink-0">
                 <div className="p-3 rounded-2xl bg-[#111827]/10 text-[#111827] shrink-0 border border-[#111827]/20">
                   <ShoppingBag size={24} />
                 </div>
                 <div>
                   <h3 className="font-montserrat font-black text-lg uppercase text-[#111827] leading-tight">CONFIRMAR VENDA?</h3>
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none">Verifique as informações antes de finalizar</p>
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none">
+                    {confirmVendaData.items.length} {confirmVendaData.items.length === 1 ? 'item selecionado' : 'itens selecionados'} • Verifique antes de finalizar
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-3.5 bg-white border border-[#EBEBEB] rounded-2xl p-4 mb-5 shadow-sm">
-                <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">PRODUTO</span>
-                  <span className="text-sm font-bold text-slate-800 uppercase">{confirmVendaData.produto.name}</span>
+              <div className="bg-white border border-[#EBEBEB] rounded-2xl p-4 mb-5 shadow-sm flex-1 overflow-y-auto custom-scrollbar space-y-3">
+                <div className="divide-y divide-slate-100">
+                  {confirmVendaData.items.map((item) => (
+                    <div key={`confirm-${item.key}`} className="py-2.5 first:pt-0 last:pb-0 flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-extrabold text-slate-800 uppercase leading-tight">{item.produto.name}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          {item.size && (
+                            <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-[9px] px-2 py-0.5 rounded-full uppercase">
+                              Tam: {item.size}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {item.quantity}x R$ {item.produto.price.toFixed(2).replace('.', ',')}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono font-black text-[#111827] shrink-0">
+                        R$ {(item.produto.price * item.quantity).toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
-                {confirmVendaData.size && (
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
                   <div>
-                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">TAMANHO</span>
-                    <span className="inline-block bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/40 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
-                      {confirmVendaData.size}
+                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">FORMA DE PAGAMENTO</span>
+                    <span className={`inline-block font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-widest mt-0.5 ${
+                      confirmVendaData.paymentMethod === 'PIX' 
+                        ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' 
+                        : 'bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/30'
+                    }`}>
+                      {confirmVendaData.paymentMethod}
                     </span>
                   </div>
-                )}
-
-                <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">QUANTIDADE</span>
-                  <span className="text-sm font-bold text-slate-800">{confirmVendaData.quantidade}</span>
-                </div>
-
-                <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">VALOR UNITÁRIO</span>
-                  <span className="text-sm font-mono font-bold text-slate-800">R$ {confirmVendaData.produto.price.toFixed(2).replace('.', ',')}</span>
-                </div>
-
-                <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">TOTAL</span>
-                  <span className="text-xl font-mono font-black text-slate-800">R$ {(confirmVendaData.produto.price * confirmVendaData.quantidade).toFixed(2).replace('.', ',')}</span>
-                </div>
-
-                <div>
-                  <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">FORMA DE PAGAMENTO</span>
-                  <span className={`inline-block font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-widest mt-0.5 ${
-                    confirmVendaData.paymentMethod === 'PIX' 
-                      ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' 
-                      : 'bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/30'
-                  }`}>
-                    {confirmVendaData.paymentMethod}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block">TOTAL GERAL</span>
+                    <span className="text-xl font-mono font-black text-[#111827]">
+                      R$ {confirmVendaData.total.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 shrink-0">
                 <button
                   type="button"
                   disabled={loading}
                   onClick={async () => {
                     const paymentMethod = confirmVendaData.paymentMethod;
                     await handleRegisterVenda(paymentMethod);
-                    setConfirmVendaData(null);
                   }}
                   className="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase text-sm md:text-base rounded-2xl tracking-widest shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
@@ -2524,7 +3006,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                   onClick={() => setConfirmVendaData(null)}
                   className="w-full py-3 text-slate-400 hover:text-[#111827] uppercase font-bold text-[10px] tracking-widest transition-colors block text-center"
                 >
-                  Cancelar
+                  Voltar ao Carrinho
                 </button>
               </div>
             </motion.div>
@@ -2642,8 +3124,12 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                          <div className="bg-white rounded-xl border border-[#EBEBEB] divide-y divide-[#EBEBEB] shadow-sm max-h-[500px] overflow-y-auto custom-scrollbar">
                             {activeEventSales.slice(0, 20).map((sale) => {
                                const isCanceled = sale.status === 'CANCELADA';
-                               const mappedItem = sale.items && sale.items[0];
-                               const displayName = mappedItem ? mappedItem.product_name + (mappedItem.size ? ` ${mappedItem.size}` : '') : 'Produto Desconhecido';
+                               const saleItems = sale.items || [];
+                               const firstItem = saleItems[0];
+                               const displayName = saleItems.length > 1
+                                 ? `${saleItems.length} itens (${firstItem?.product_name || 'Produto'} +${saleItems.length - 1})`
+                                 : (firstItem ? firstItem.product_name + (firstItem.size ? ` ${firstItem.size}` : '') : 'Produto Desconhecido');
+                               const totalUnits = saleItems.reduce((s, it) => s + it.quantity, 0);
                                return (
                                  <div key={sale.id} className={`p-3 ${isCanceled ? 'bg-red-50/50 opacity-60' : ''}`}>
                                     <div className="flex items-start justify-between mb-1">
@@ -2654,8 +3140,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                                        <span className={`text-xs font-bold uppercase truncate pr-2 ${isCanceled ? 'line-through text-slate-400' : 'text-[#111827]'}`}>{displayName}</span>
                                        <span className={`text-xs font-mono font-black shrink-0 ${isCanceled ? 'text-slate-400' : 'text-[#111827]'}`}>R$ {sale.total_price.toFixed(2).replace('.', ',')}</span>
                                     </div>
-                                    {mappedItem && mappedItem.quantity > 1 && (
-                                       <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mt-1">{mappedItem.quantity} unidades</div>
+                                    {saleItems.length > 1 ? (
+                                      <div className="mt-1 space-y-0.5">
+                                        {saleItems.map((si, idx) => (
+                                          <div key={si.id || idx} className="text-[9px] font-bold text-slate-400 uppercase">
+                                            • {si.quantity}x {si.product_name}{si.size ? ` (${si.size})` : ''}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : totalUnits > 1 && (
+                                       <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mt-1">{totalUnits} unidades</div>
                                     )}
                                  </div>
                                )
@@ -2691,7 +3185,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                   </div>
                 ) : (
                   activeEventSales.map((sale) => {
-                    const matchedItem = sale.items && sale.items[0];
+                    const saleItems = sale.items || [];
+                    const matchedItem = saleItems[0];
                     const isCanceled = sale.status === 'CANCELADA';
 
                     return (
@@ -2699,7 +3194,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                         key={sale.id}
                         className={`p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all shadow-sm ${isCanceled ? 'bg-red-50 border border-red-100 opacity-60' : 'bg-white border border-[#EBEBEB] hover:border-[#75BCE8]'}`}
                       >
-                        <div className="flex-1">
+                        <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${isCanceled ? 'bg-red-100 text-red-600 border border-red-200' : sale.payment_method === 'PIX' ? 'bg-[#111827]/10 text-[#111827] border border-[#111827]/20' : 'bg-[#75BCE8]/20 text-[#111827] border border-[#75BCE8]/30'}`}>
                               {isCanceled ? 'Cancelada' : sale.payment_method}
@@ -2709,14 +3204,33 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
                             </span>
                           </div>
                           
-                          <p className={`text-sm font-bold uppercase mt-1.5 leading-tight ${isCanceled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                            {matchedItem ? matchedItem.product_name : 'Produto Desconhecido'}
-                          </p>
+                          {saleItems.length > 1 ? (
+                            <div className="space-y-1 pt-1">
+                              {saleItems.map((si, idx) => (
+                                <div key={si.id || idx} className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`text-xs font-bold uppercase ${isCanceled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                    {si.quantity}x {si.product_name || 'Produto Desconhecido'}
+                                  </span>
+                                  {si.size && (
+                                    <span className="inline-block bg-slate-50 text-slate-500 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-[#EBEBEB]">
+                                      Tam: {si.size}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <>
+                              <p className={`text-sm font-bold uppercase mt-1.5 leading-tight ${isCanceled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                {matchedItem ? `${matchedItem.quantity > 1 ? `${matchedItem.quantity}x ` : ''}${matchedItem.product_name}` : 'Produto Desconhecido'}
+                              </p>
 
-                          {matchedItem?.size && (
-                            <span className="inline-block bg-white text-slate-500 text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1.5 border border-[#EBEBEB]">
-                              Tamanho: {matchedItem.size}
-                            </span>
+                              {matchedItem?.size && (
+                                <span className="inline-block bg-white text-slate-500 text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1.5 border border-[#EBEBEB]">
+                                  Tamanho: {matchedItem.size}
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
 
@@ -2757,20 +3271,28 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`;
               <ShieldAlert size={40} className="mx-auto text-red-500 mb-4 animate-bounce" />
               <h3 className="text-xl font-montserrat uppercase text-[#111827] font-black mb-2 leading-none">Confirmar Cancelamento?</h3>
               <p className="text-slate-500 text-xs uppercase font-extrabold tracking-widest leading-normal mb-6">
-                Esta ação restaura imediatamente os saldos de estoque do produto.
+                Esta ação restaura imediatamente os saldos de estoque dos produtos.
               </p>
 
-              <div className="bg-white p-4 rounded-xl border border-[#EBEBEB] text-left mb-6 shadow-sm">
-                <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Item Vendido</p>
-                <p className="text-sm font-extrabold uppercase text-slate-800">
-                  {showConfirmCancelVenda.items && showConfirmCancelVenda.items[0]?.product_name}
+              <div className="bg-white p-4 rounded-xl border border-[#EBEBEB] text-left mb-6 shadow-sm max-h-40 overflow-y-auto custom-scrollbar">
+                <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest leading-none mb-2">
+                  {(showConfirmCancelVenda.items?.length || 0) > 1 ? 'Itens Vendidos' : 'Item Vendido'}
                 </p>
-                {showConfirmCancelVenda.items?.[0]?.size && (
-                  <p className="text-[10px] text-[#75BCE8] uppercase font-black mt-1">
-                    Tamanho: {showConfirmCancelVenda.items[0].size}
-                  </p>
-                )}
-                <p className="text-xl font-mono text-red-500 font-black mt-2 leading-none">
+                <div className="space-y-1.5">
+                  {(showConfirmCancelVenda.items || []).map((si, idx) => (
+                    <div key={si.id || idx}>
+                      <p className="text-xs font-extrabold uppercase text-slate-800">
+                        {si.quantity}x {si.product_name}
+                      </p>
+                      {si.size && (
+                        <p className="text-[10px] text-[#75BCE8] uppercase font-black">
+                          Tamanho: {si.size}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xl font-mono text-red-500 font-black mt-3 leading-none">
                   - R$ {showConfirmCancelVenda.total_price.toFixed(2).replace('.', ',')}
                 </p>
               </div>
